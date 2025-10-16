@@ -1,0 +1,200 @@
+﻿@page
+@model EShope.Pages.Customer.IndexModel
+@{
+    ViewData["Title"] = "Customers";
+    Layout = "_Layout";
+    // اگر از query string برای search استفاده کردی:
+    // var searchTerm = .Request.Query["searchTerm"].ToString();
+}
+
+@* پیام موفقیت (TempData) *@
+@if (TempData["SuccessMessage"] is string successMsg && !string.IsNullOrWhiteSpace(successMsg))
+{
+    <div class="alert alert-success">
+        @successMsg
+    </div>
+}
+
+@* نمایش پیام های خطا/هشدار از ModelState *@
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach (var entry in ViewData.ModelState)
+            {
+                foreach (var err in entry.Value.Errors)
+                {
+                    <li>@err.ErrorMessage</li>
+                }
+            }
+        </ul>
+    </div>
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="display-6">Customer Directory</h1>
+
+            <div>
+                <!-- فرم جستجو: با Razor Pages از asp-page استفاده کنید -->
+                <form method="get" asp-page="./Index" class="d-flex gap-2 align-items-center">
+                    <div class="input-group" style="max-width: 280px;">
+                        <input type="text" name="searchTerm" class="form-control"
+                         @*       placeholder="Search by National Code" value="@searchTerm" /> *@
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    <a asp-page="./Create" class="btn btn-success" style="font-size: 16px;">
+                        <i class="bi bi-person-plus"></i> New
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Family</th>
+                    <th>Birth Date</th>
+                    <th>National Code</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Customers?.Any() != true)
+                {
+                    <tr>
+                        <td colspan="6" class="text-center">No customers found.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model.Customers)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.Name</td>
+                            <td>@item.Family</td>
+                            <td>@(item.Birth?.ToString("yyyy-MM-dd") ?? "")</td>
+                            <td>@item.NationalCode</td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a class="btn btn-dark btn-circle" asp-page="./Edit" asp-route-id="@item.Id" title="Edit">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    <!-- details با AJAX به handler صفحه می‌زند -->
+                                    <button type="button" class="btn btn-primary btn-circle btn-details" data-id="@item.Id" title="Details">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+
+                                    <!-- حذف با فرم POST به handler صفحه -->
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" class="d-inline"
+                                          onsubmit="return confirm('آیا از حذف این مشتری اطمینان دارید؟');">
+                                        <button type="submit" class="btn btn-danger btn-circle" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Customer Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalDetailContent">
+                    <!-- اینجا با JS پر می‌شود -->
+                    <dl class="row">
+                        <dt class="col-sm-3">Name</dt>
+                        <dd class="col-sm-9" id="d-name"></dd>
+                        <dt class="col-sm-3">Family</dt>
+                        <dd class="col-sm-9" id="d-family"></dd>
+                        <dt class="col-sm-3">National Code</dt>
+                        <dd class="col-sm-9" id="d-national"></dd>
+                        <dt class="col-sm-3">City</dt>
+                        <dd class="col-sm-9" id="d-city"></dd>
+                        <dt class="col-sm-3">State</dt>
+                        <dd class="col-sm-9" id="d-state"></dd>
+                        <dt class="col-sm-3">Tellphone</dt>
+                        <dd class="col-sm-9" id="d-tel"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .btn-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        (function () {
+            // build URL for the page handler: Index?handler=Details&id={id}
+            const detailsHandlerBase = '@Url.Page("./Index", null, new { handler = "Details" }, protocol: null)';
+
+            document.querySelectorAll('.btn-details').forEach(btn => {
+                btn.addEventListener('click', async function () {
+                    const id = this.getAttribute('data-id');
+                    if (!id) return;
+
+                    const url = detailsHandlerBase + (detailsHandlerBase.includes('?') ? '&' : '?') + 'id=' + encodeURIComponent(id);
+
+                    try {
+                        const res = await fetch(url, { credentials: 'same-origin' });
+                        if (!res.ok) {
+                            alert('خطا در دریافت جزئیات مشتری');
+                            return;
+                        }
+                        const data = await res.json();
+
+                        // توجه: اگر API/Serializer شما camelCase می‌دهد، از data.name؛
+                        // اگر PascalCase می‌دهد از data.Name استفاده کن. اینجا از camelCase فرض شده.
+                        document.getElementById('d-name').textContent = data?.name ?? data?.Name ?? '';
+                        document.getElementById('d-family').textContent = data?.family ?? data?.Family ?? '';
+                        document.getElementById('d-national').textContent = data?.nationalCode ?? data?.NationalCode ?? '';
+                        document.getElementById('d-city').textContent = data?.address?.city ?? data?.Address?.City ?? '';
+                        document.getElementById('d-state').textContent = data?.address?.state ?? data?.Address?.State ?? '';
+                        document.getElementById('d-tel').textContent = data?.address?.tellphone ?? data?.Address?.Tellphone ?? '';
+
+                        var myModal = new bootstrap.Modal(document.getElementById('detailModal'));
+                        myModal.show();
+                    } catch (err) {
+                        console.error(err);
+                        alert('خطا در ارتباط با سرور');
+                    }
+                });
+            });
+        })();
+    </script>
+}

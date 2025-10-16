@@ -1,0 +1,78 @@
+﻿@page
+@model EShope.Pages.Product.CreateModel
+
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<div class="container mt-4">
+    <h2>Add New Product</h2>
+    <hr />
+
+    <form asp-action="Add" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="createDto.Brand" class="form-label">Brand</label>
+                <input asp-for="createDto.Brand" class="form-control" placeholder="Enter brand name" required />
+                <span asp-validation-for="createDto.Brand" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="createDto.Type" class="form-label">Type</label>
+                <select asp-for="createDto.Type" asp-items="Html.GetEnumSelectList<ProductType>()" class="form-select">
+                    <option value="">Select a Type</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label asp-for="createDto.ImageFile" class="form-label">تصویر محصول</label>
+                    <input asp-for="createDto.ImageFile" type="file" class="form-control" accept="image/*" required />
+                    <span asp-validation-for="createDto.ImageFile" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label asp-for="createDto.Price" class="form-label">Price</label>
+                    <input asp-for="createDto.Price" class="form-control" placeholder="Enter price" required />
+                    <span asp-validation-for="createDto.Price" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group m-4 d-flex justify-content-center">
+            <button type="submit" class="btn btn-primary me-2">Add Product</button>
+            <a asp-action="Index" class="btn btn-danger">Cancel</a>
+        </div>
+
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Bootstrap 5 validation
+        (function () {
+            'use strict'
+
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+}

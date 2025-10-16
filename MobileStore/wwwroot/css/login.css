@@ -1,0 +1,57 @@
+
+
+<style >
+/* Full-screen background styling */
+body {
+    background: url('Images/top.jpg') no-repeat center center fixed; /* Replace with your image URL */
+    background-size: cover;
+    font-family: Arial, sans-serif;
+    color: #fff;
+}
+
+/* Centered container */
+.login-container {
+    display: flex;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Login card styling */
+.login-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    padding: 30px;
+    width: 350px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Login icon */
+.login-icon {
+    font-size: 40px;
+    color: #007bff;
+    margin-bottom: 15px;
+}
+
+/* Input field styles */
+.form-control {
+    border-radius: 10px;
+    height: 45px;
+    padding: 10px 20px;
+}
+
+.btn-primary {
+    border-radius: 10px;
+    height: 45px;
+}
+
+/* Remember me and forgot password */
+.form-check-label, .forgot-password {
+    color: #555;
+}
+
+    .forgot-password:hover {
+        text-decoration: underline;
+    }
+
+</style >

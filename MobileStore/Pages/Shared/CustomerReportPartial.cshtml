@@ -1,0 +1,15 @@
+﻿@model dynamic
+<div class="alert alert-warning">
+    <h5>📌 گزارش خرید مشتری</h5>
+    <p><strong>نام مشتری:</strong> @Model.CustomerName</p>
+    <p><strong>تعداد کل خریدها:</strong> @Model.TotalPurchased</p>
+    <p><strong>مجموع پرداختی:</strong> @Model.TotalSpent.ToString("C")</p>
+
+    <h6>🛍 لیست خریدها:</h6>
+    <ul>
+        @foreach (var item in Model.PurchasedItems)
+        {
+            <li>@item.Brand - @item.Quantity عدد - @item.TotalPrice.ToString("C")</li>
+        }
+    </ul>
+</div>

@@ -1,0 +1,199 @@
+﻿@* @model List<ClassLibrary.Product>
+
+@{
+    ViewData["Title"] = "Chart";
+    Layout = "_Layout";
+    var labels = ViewBag.Labels as List<string>;
+    var data = ViewBag.Data as List<int>;
+ }
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<div>
+    <canvas id="myChart"></canvas>
+</div>
+      
+<script>
+    const ctx = document.getElementById('myChart');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(Json.Serialize(labels)),
+            datasets: [{
+                label: 'Number of Phones Sold',
+                data: @Html.Raw(Json.Serialize(data)),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
+
+ *@
+ @model List<ClassLibrary.Product>
+
+@{
+    ViewData["Title"] = "Chart";
+    Layout = "_Layout";
+    var labels = ViewBag.Labels as List<string>;
+    var data = ViewBag.Data as List<int>;
+}
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<div class="container-fluid">
+    <div class="row">     
+        <div class="col-md-12">
+            <!-- Top Row for Four Divs -->
+            <div class="container my-4">
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="shadow-lg p-3 bg-white rounded">
+                            <h5 class="text-center">Metric 1</h5>
+                            <p class="text-center">Details about Metric 1</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="shadow-lg p-3 bg-white rounded">
+                            <h5 class="text-center">Metric 2</h5>
+                            <p class="text-center">Details about Metric 2</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="shadow-lg p-3 bg-white rounded">
+                            <h5 class="text-center">Metric 3</h5>
+                            <p class="text-center">Details about Metric 3</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="shadow-lg p-3 bg-white rounded">
+                            <h5 class="text-center">Metric 4</h5>
+                            <p class="text-center">Details about Metric 4</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container bg-white ">
+                <!-- Row for both charts -->
+                <div class="row">
+                    <!-- First Chart Column (Bar Chart) -->
+                    <div class="col-lg-8 col-md-12 mb-4">
+                        <div class="chart-container shadow-lg p-4 bg-white rounded">
+                            <h4 class="text-center">Number of Product Sold</h4>
+                            <canvas id="myBarChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Second Chart Column (Pie Chart) -->
+                    <div class="col-lg-4 col-md-12 mb-4">
+                        <div class="chart-container shadow-lg p-4 bg-white rounded">
+                            <h4 class="text-center">Most Cities Bueing From My Website</h4>
+                            <canvas id="myPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Bar Chart
+    const ctxBar = document.getElementById('myBarChart');
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(Json.Serialize(labels)),
+            datasets: [{
+                label: 'Number of Phones Sold',
+                data: @Html.Raw(Json.Serialize(data)),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Pie Chart
+    const ctxPie = document.getElementById('myPieChart');
+    new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: @Html.Raw(Json.Serialize(labels)),
+            datasets: [{
+                data: @Html.Raw(Json.Serialize(data)),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+</script>

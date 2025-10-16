@@ -1,0 +1,119 @@
+﻿@page
+@model EShope.Pages.Customer.CreateModel
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "_Layout";
+}
+
+@Html.AntiForgeryToken()
+
+<h1 class="mx-5 my-2"> Create </h1>
+
+<form method="post" asp-action="Create" class="mx-5">
+    @Html.AntiForgeryToken()
+    @* Validation Summary *@
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row">
+        <div class="form-group col-md-6">
+            <label asp-for="Customer.Name">Name</label>
+            <input asp-for="Customer.Name" type="text" class="form-control" placeholder="name">
+            <span asp-validation-for="Customer.Name" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Customer.Family">Last Name</label>
+            <input asp-for="Customer.Family" type="text" class="form-control" placeholder="last name">
+            <span asp-validation-for="Customer.Family" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group col-md-6">
+            <label asp-for="Customer.Birth">Birth Date</label>
+            <input asp-for="Customer.Birth" type="date" class="form-control" id="birth">
+            <span asp-validation-for="Customer.Birth" class="text-danger"></span>
+        </div>
+
+        <div class="form-group col-md-6">
+            <label asp-for="Customer.NationalCode">National Code</label>
+            <input asp-for="Customer.NationalCode" type="tel" class="form-control" placeholder="national code">
+            <span asp-validation-for="Customer.NationalCode" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group mt-2">
+        <label asp-for="Customer.Name">Tell</label>
+        <input asp-for="Customer.Name" type="tel" class="form-control" placeholder="+98">
+        <span asp-validation-for="Customer.Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-2">
+        <label asp-for="Customer.Name">Address</label>
+        <input asp-for="Customer.Name" type="text" class="form-control" placeholder="Apartment, studio, or floor">
+        <span asp-validation-for="Customer.Name" class="text-danger"></span>
+    </div>
+
+    <div class="row mt-2">
+        <div class="form-group col-md-6">
+            <label asp-for="Customer.Name">State</label>
+            <input asp-for="Customer.Name" type="text" class="form-control" placeholder="state name">
+            <span asp-validation-for="Customer.Name" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Customer.Name">City</label>
+            <input asp-for="Customer.Name" type="text" class="form-control" placeholder="city name">
+            <span asp-validation-for="Customer.Name" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row col-md-9 mt-4">
+        <div class="offset-sm-4 col-sm-4 d-grid">
+            <button type="submit" class="btn btn-primary">Save Data</button>
+        </div>
+        <div class="col-sm-4 d-grid">
+            <a class="btn btn-outline-danger" asp-controller="Customer" asp-action="Index" role="button">
+                Cancel
+            </a>
+        </div>
+    </div>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $("#customerForm").submit(function (event) {
+            event.preventDefault(); // جلوگیری از ارسال فرم به روش سنتی
+
+            var formData = {
+                Name: $("#Name").val(),
+                Family: $("#Family").val(),
+                Birth : $("#Birth").val(),
+                NationalCode: $("#NationalCode").val(),
+                City: $("#City").val(),
+                State: $("#State").val(),
+                AdressDetail: $("#AdressDetail").val(),
+                Tellphone: $("#Tellphone").val()
+            };
+
+            $.ajax({
+                url: "/Customer/Create",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    if (response.success) {
+                        $("#resultMessage").html('<div class="alert alert-success">' + response.message + '</div>');
+                        $("#customerForm")[0].reset(); // پاک کردن فرم
+                    } else {
+                        $("#resultMessage").html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function () {
+                     console.log(xhr.responseText); // نمایش جزئیات خطا
+                    $("#resultMessage").html('<div class="alert alert-danger">خطایی در ارسال درخواست رخ داد</div>');
+                }
+            });
+        });
+    });
+</script> 

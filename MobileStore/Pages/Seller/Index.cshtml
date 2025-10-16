@@ -1,0 +1,39 @@
+﻿@page
+@model EShope.Pages.Seller.IndexModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<div class="container py-4">
+    <h2 class="mb-3">فروشنده‌ها</h2>
+
+    @if(TempData["Message"] != null) {
+        <div class="alert alert-info">@TempData["Message"]</div>
+    }
+
+    <div class="row">
+        @foreach(var seller in Model.Sellers)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3 mb-4 d-flex justify-content-center">
+                <div class="card" style="width: 18rem;">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@seller.SellerName</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@seller.NationalCode</h6>
+                        <p class="card-text">@(!string.IsNullOrWhiteSpace(seller.SellerDescription) ? seller.SellerDescription : "—")</p>
+
+                        <div class="mt-auto">
+                            <small class="d-block mb-2">تعداد محصولات: @seller.ProductsCount</small>
+
+                            <a asp-page="./Details" asp-route-id="@seller.Id" class="card-link">جزئیات</a>
+                            <a asp-page="./Edit" asp-route-id="@seller.Id" class="card-link">ویرایش</a>
+
+                            <form method="post" asp-page-handler="Delete" class="d-inline" onsubmit="return confirm('آیا مطمئن هستید؟');">
+                                <input type="hidden" name="id" value="@seller.Id" />
+                                <button type="submit" class="btn btn-link p-0 card-link">حذف</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+

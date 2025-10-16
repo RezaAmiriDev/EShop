@@ -1,0 +1,88 @@
+﻿ @model ClassLibrary.ViewModel.CusProDto
+@{
+    ViewData["Title"] = "Create";
+    Layout = "_Layout";
+}
+
+@Html.AntiForgeryToken()
+
+<h1 class="mx-5 my-2"> Create </h1>
+<Form  method="post" asp-action="Create"  class="mx-5">
+    <div class="row">
+        <div class="form-group col-md-6">
+            <label asp-for="Name">Name</label>
+            <input asp-for="Name"  type="text" class="form-control" placeholder="name">
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Family">Last Name</label>
+            <input asp-for="Family" type="text" class="form-control" placeholder="last name">
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-6">
+            <label asp-for="Birth"> Birth Date</label>
+            <input asp-for="Birth" type="date" class="form-control" id="birth">
+        </div>
+       
+        <div class="form-group col-md-6">
+            <label asp-for="NationalCode">National Code</label>
+            <input asp-for="NationalCode" type="tel" class="form-control" placeholder="national code">
+        </div>
+    </div>
+@*     <div class="form-group">
+        <label asp-for="Tellphone">Tell</label>
+        <input asp-for="Tellphone" type="tel" class="form-control" placeholder="+98">
+    </div>
+    <div class="form-group">
+        <label asp-for="AdressDetail">Address</label>
+        <input asp-for="AdressDetail" type="text" class="form-control" placeholder="Apartment, studio, or floor">
+    </div> *@
+    <div class="row">
+        @* <div class="form-group col-md-3">
+            <label asp-for="StartDate">Warranty Start Date</label>
+            <input asp-for="StartDate"  class="form-control" id="start date">
+        </div>
+        <div class="form-group col-md-3">
+            <label asp-for="EndDate" for="inputCity">Warranty End Date</label>
+            <input asp-for="EndDate" class="form-control" id="end date">
+        </div> *@
+  @*       <div class="form-group col-md-3">
+            <label asp-for="State">State</label>
+            <input asp-for="State" type="text" class="form-control" placeholder="state name">
+        </div>
+        <div class="form-group col-md-3">
+            <label asp-for="City">City</label>
+            <input asp-for="City" type="text" class="form-control" placeholder="city name">
+        </div> *@
+      @*   <div class="form-group col-md-2">
+            <label asp-for="Price"> Price </label>
+            <input asp-for="Price" class="form-control" id="start date">
+        </div>
+        <div class="form-group col-md-4">
+            <label class="col-sm-4 col-from-lable">lable</label>
+            <div class="col-sm-12">
+                <input type="file" class="form-control" asp-for="ImageFile">
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            </div>
+        </div> *@
+    </div>
+ 
+    <div class="form-group m-2">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="gridCheck">
+            <label class="form-check-label" for="gridCheck">
+                Have Warranty
+            </label>
+        </div>
+    </div>
+    <div class="row col-md-9">
+        <div class="offset-sm-4 col-sm-4 d-grid">
+            <button type="submit" class="btn btn-primary">Save Data</button>
+        </div>
+        <div class="col-sm-4 d-grid">
+          <a class=" btn btn-outline-danger" asp-controller="Customer" asp-action="Index" role="button">
+              Cancel
+          </a>
+        </div>
+    </div>
+</Form> 

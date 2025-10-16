@@ -1,0 +1,95 @@
+﻿@page
+@model EShope.Pages.Product.EditModel
+
+@{
+    ViewData["Title"] = "Update";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Add a New Product</h2>
+    <form id="updateProductForm" enctype="multipart/form-data">
+        <input type="hidden" asp-for="updateDto.Id" />
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label asp-for="updateDto.Brand" class="form-label"></label>
+            <input asp-for="updateDto.Brand" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="updateDto.Type" class="form-label"></label>
+            <select asp-for="updateDto.Type" class="form-select">
+                <option value="">Select a Type</option>
+                @foreach (var type in Enum.GetValues(typeof(ProductType)).Cast<ProductType>())
+                {
+                    <option value="@type">@type.ToString()</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="updateDto.Price" class="form-label"></label>
+            <input asp-for="updateDto.Price" class="form-control" type="number" required />
+        </div>
+
+        <div class="mb-3 text-center">
+            <label class="form-label">Upload Image</label>
+            <input type="file" id="imageInput" name="ImageFile" class="form-control" accept="image/*" />
+            <img id="imagePreview" src="#" alt="Selected Image" class="d-none mt-2" style="max-height: 150px; border-radius: 10px;">
+        </div>
+
+        <button type="submit" class="btn btn-success">ذخیره</button>
+        <a asp-action="Index" class="btn btn-danger">لغو</a>
+    </form>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        $("#updateProductForm").submit(function (e) {
+            e.preventDefault(); // جلوگیری از ارسال فرم به روش معمولی
+
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: "/Product/Update",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        window.location.href = "/Product/Index"; // هدایت به صفحه لیست محصولات
+                    } else {
+                         let errorMessage = response.message;
+                           if (response.errors) {
+                             errorMessage += "\n" + response.errors.join("\n");
+                              }
+                        alert("خطا: " + response.message);
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr); // برای دیدن پاسخ کامل
+                     let errorMessage = "خطای سرور";
+        if (xhr.responseJSON && xhr.responseJSON.detail) {
+            errorMessage += ": " + xhr.responseJSON.detail;
+        }
+                    alert("خطای سرور: " + xhr.responseText);
+                }
+            });
+        });
+
+        // نمایش تصویر انتخاب شده در پیش‌نمایش
+        $("#imageInput").change(function (event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    $("#imagePreview").attr("src", e.target.result).removeClass("d-none");
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+</script>

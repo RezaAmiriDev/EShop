@@ -1,0 +1,81 @@
+﻿body {
+    background: url('https://source.unsplash.com/1600x900/?abstract,technology') no-repeat center center/cover;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.login-title {
+    background: rgba(255, 255, 255, 0.3);
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* ✅ Bordered input fields with right-side icons */
+.input-group {
+    border: 2px solid white; /* Border */
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    position: relative;
+}
+
+.form-control {
+    border: none;
+    background: transparent;
+    color: black;
+    padding: 12px;
+    font-size: 1rem;
+}
+
+    .form-control::placeholder {
+        color: black;
+        opacity: 0.7;
+    }
+
+.input-group-text {
+    background: transparent;
+    border: none;
+    color: black;
+    font-size: 1.2rem;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.forgot-password {
+    color: black;
+    font-size: 0.9rem;
+}
+
+.login-btn {
+    background: white;
+    color: black;
+    font-weight: bold;
+    border-radius: 20px;
+    padding: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.register-link {
+    color: black;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}

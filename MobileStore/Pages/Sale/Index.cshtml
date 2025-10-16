@@ -1,0 +1,242 @@
+﻿@page
+@model EShope.Pages.Sale.IndexModel
+@{
+    ViewData["Title"] = "فروش‌ها";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<div class="container py-4">
+    <h2 class="mb-3">مدیریت فروش</h2>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <div class="row gy-3">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">مجموع فروش‌ها</h5>
+                    <p class="card-text display-6">@Model.TotalSales.ToString("N0")</p>
+                    <button id="refreshTotalBtn" class="btn btn-sm btn-outline-primary">بروز رسانی</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">جستجوی فروش‌ها بر اساس مشتری</h5>
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <input id="customerIdInput" class="form-control" placeholder="CustomerId (GUID)" />
+                        </div>
+                        <div class="col-md-2">
+                            <button id="searchCustomerBtn" class="btn btn-primary w-100">جستجو</button>
+                        </div>
+                        <div class="col-md-2">
+                            <button id="clearCustomerBtn" class="btn btn-outline-secondary w-100">پاک کردن</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mt-3">
+                        <table class="table table-striped" id="customerSalesTable">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Total Price</th>
+                                    <th>SaleDate</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div id="customerMsg" class="mt-2"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">جستجوی فروش‌ها بر اساس محصول</h5>
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <input id="productIdInput" class="form-control" placeholder="ProductId (GUID)" />
+                        </div>
+                        <div class="col-md-2">
+                            <button id="searchProductBtn" class="btn btn-primary w-100">جستجو</button>
+                        </div>
+                        <div class="col-md-2">
+                            <button id="clearProductBtn" class="btn btn-outline-secondary w-100">پاک کردن</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mt-3">
+                        <table class="table table-striped" id="productSalesTable">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Customer</th>
+                                    <th>Quantity</th>
+                                    <th>Total Price</th>
+                                    <th>SaleDate</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div id="productMsg" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // اگر API روی دامین/پورت متفاوتی است این را تغییر بده
+    const apiBase = '/api/sale';
+
+    const customerTableBody = document.querySelector('#customerSalesTable tbody');
+    const productTableBody = document.querySelector('#productSalesTable tbody');
+    const customerMsg = document.getElementById('customerMsg');
+    const productMsg = document.getElementById('productMsg');
+
+    function clearTable(body) {
+        body.innerHTML = '';
+    }
+
+    function renderCustomerRows(data) {
+        clearTable(customerTableBody);
+        data.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${s.id ?? s.Id}</td>
+                <td>${s.productName ?? s.ProductName ?? s.productId ?? s.ProductId}</td>
+                <td>${s.quantity ?? s.Quantity}</td>
+                <td>${s.totalPrice ?? s.TotalPrice}</td>
+                <td>${formatDate(s.saleDate ?? s.SaleDate)}</td>
+            `;
+            customerTableBody.appendChild(tr);
+        });
+    }
+
+    function renderProductRows(data) {
+        clearTable(productTableBody);
+        data.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${s.id ?? s.Id}</td>
+                <td>${s.customerName ?? s.CustomerName ?? s.customerId ?? s.CustomerId}</td>
+                <td>${s.quantity ?? s.Quantity}</td>
+                <td>${s.totalPrice ?? s.TotalPrice}</td>
+                <td>${formatDate(s.saleDate ?? s.SaleDate)}</td>
+            `;
+            productTableBody.appendChild(tr);
+        });
+    }
+
+    function formatDate(d) {
+        try {
+            const dt = new Date(d);
+            if (isNaN(dt)) return '-';
+            return dt.toLocaleString();
+        } catch {
+            return '-';
+        }
+    }
+
+    async function fetchJson(url) {
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        const json = await res.json();
+        return { ok: res.ok, json };
+    }
+
+    document.getElementById('searchCustomerBtn').addEventListener('click', async () => {
+        customerMsg.innerHTML = '';
+        clearTable(customerTableBody);
+
+        const id = document.getElementById('customerIdInput').value.trim();
+        if (!id) {
+            customerMsg.innerHTML = '<div class="alert alert-warning">شناسه مشتری را وارد کنید.</div>';
+            return;
+        }
+
+        try {
+            const { ok, json } = await fetchJson(`${apiBase}/customer/${id}`);
+            if (!ok) {
+                customerMsg.innerHTML = `<div class="alert alert-danger">خطا: ${json?.Message ?? JSON.stringify(json)}</div>`;
+                return;
+            }
+            // Api شما احتمالاً ServiceResultByData<List<SaleDto>> برمی‌گرداند
+            const data = json?.Data ?? json;
+            if (!data || data.length === 0) {
+                customerMsg.innerHTML = '<div class="alert alert-info">موردی یافت نشد.</div>';
+                return;
+            }
+            renderCustomerRows(data);
+        } catch (err) {
+            customerMsg.innerHTML = `<div class="alert alert-danger">خطا در درخواست: ${err}</div>`;
+        }
+    });
+
+    document.getElementById('searchProductBtn').addEventListener('click', async () => {
+        productMsg.innerHTML = '';
+        clearTable(productTableBody);
+
+        const id = document.getElementById('productIdInput').value.trim();
+        if (!id) {
+            productMsg.innerHTML = '<div class="alert alert-warning">شناسه محصول را وارد کنید.</div>';
+            return;
+        }
+
+        try {
+            const { ok, json } = await fetchJson(`${apiBase}/product/${id}`);
+            if (!ok) {
+                productMsg.innerHTML = `<div class="alert alert-danger">خطا: ${json?.Message ?? JSON.stringify(json)}</div>`;
+                return;
+            }
+            const data = json?.Data ?? json;
+            if (!data || data.length === 0) {
+                productMsg.innerHTML = '<div class="alert alert-info">موردی یافت نشد.</div>';
+                return;
+            }
+            renderProductRows(data);
+        } catch (err) {
+            productMsg.innerHTML = `<div class="alert alert-danger">خطا در درخواست: ${err}</div>`;
+        }
+    });
+
+    document.getElementById('clearCustomerBtn').addEventListener('click', () => {
+        document.getElementById('customerIdInput').value = '';
+        clearTable(customerTableBody);
+        customerMsg.innerHTML = '';
+    });
+
+    document.getElementById('clearProductBtn').addEventListener('click', () => {
+        document.getElementById('productIdInput').value = '';
+        clearTable(productTableBody);
+        productMsg.innerHTML = '';
+    });
+
+    document.getElementById('refreshTotalBtn').addEventListener('click', async () => {
+        // بازخوانی مجموع فروش از API و جایگزینی مقدار در صفحه (سرور-ساید نیز on reload خواهد بود)
+        try {
+            const { ok, json } = await fetchJson(`${apiBase}/total`);
+            if (ok) {
+                const val = json?.Data ?? json;
+                // نمایش به‌صورت عددی با جداکننده هزارگان
+                const formatted = (typeof val === 'number') ? val.toLocaleString() : val;
+                document.querySelector('.card-text.display-6').innerText = formatted;
+            } else {
+                alert(`خطا در دریافت مجموع: ${json?.Message ?? JSON.stringify(json)}`);
+            }
+        } catch (err) {
+            alert('خطا در دریافت مجموع: ' + err);
+        }
+    });
+</script>

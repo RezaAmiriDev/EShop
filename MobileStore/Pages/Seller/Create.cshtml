@@ -1,0 +1,36 @@
+﻿@page
+@model EShope.Pages.Seller.CreateModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<h3>ایجاد فروشنده</h3>
+
+<form method="post">
+    <div class="mb-3">
+        <label asp-for="Seller.SellerName" class="form-label"></label>
+        <input asp-for="Seller.SellerName" class="form-control"/>
+        <span asp-validation-for="Seller.SellerName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Seller.SellerDescription" class="form-label"></label>
+        <textarea asp-for="Seller.SellerDescription" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Seller.NationalCode" class="form-label"></label>
+        <input asp-for="Seller.NationalCode" class="form-control"/>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Seller.AddressId" class="form-label"></label>
+        <input asp-for="Seller.AddressId" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">ایجاد</button>
+    <a asp-page="./Index" class="btn btn-secondary">انصراف</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

@@ -1,0 +1,182 @@
+﻿@page
+@model EShope.Pages.Product.IndexModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@{
+    ViewData["Title"] = "Products";
+    var antiforgeryToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
+}
+
+@if (ViewData["ApiError"] != null)
+{
+    <div class="alert alert-danger my-2">
+        <strong>API Error:</strong> @ViewData["ApiError"]
+    </div>
+}
+<div class="mb-2">
+    <small class="text-muted">API Base: @ViewData["ApiBase"] | StatusCode: @ViewData["ApiStatusCode"] | Items: @ViewData["Count"]</small>
+</div>
+
+
+<div class="row align-items-center px-4 m-2">
+    <div class="col-md-6 d-flex align-items-center">
+        <h1 class="mb-0 me-5">Products</h1>
+    </div>
+
+    <div class="col-md-6">
+        <form id="searchForm" class="d-flex align-items-center" onsubmit="return false;">
+            <input type="text" id="searchInput" name="name" class="form-control form-control-md me-2" placeholder="Search by Product Name">
+            <button id="searchBtn" class="btn btn-success btn-md me-2">Search</button>
+            <a asp-page="/Product/Create" class="btn btn-info btn-md text-light d-flex align-items-center">
+                <i class="bi bi-plus-circle me-1"></i> Add
+            </a>
+        </form>
+    </div>
+</div>
+
+<div class="container mt-4" id="productResults">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4" id="productGrid">
+        @foreach (var product in Model.readDto)
+        {
+            <div class="col product-card" data-id="@product.Id">
+                <div class="card h-100">
+                    <img src="@(string.IsNullOrEmpty(product.ImagePath) ? "/Images/default.png" : product.ImagePath)" class="card-img-top" alt="Product Image">
+                    <div class="card-body">
+                        <h5 class="card-title">@product.Brand</h5>
+                        <p class="card-text">Type: @product.Type</p>
+                        <!-- <p class="card-text">Price: product.Price.ToString("C")</p>-->
+                    </div>
+                    <div class="card-footer d-flex justify-content-between">
+                        <a asp-page="/Product/Edit" asp-route-id="@product.Id" class="btn btn-primary btn-sm">Edit Product</a>
+                        <button class="btn btn-danger btn-sm delete-product" data-id="@product.Id">Remove</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const ERROR_CLASS = "alert-danger";
+    const WARNING_CLASS = "alert-warning";
+
+    const antiforgeryToken = '@antiforgeryToken';
+
+    $(function() {
+        initSearch();
+        initDelete();
+    });
+
+    function initSearch() {
+        $("#searchBtn").on("click", function (e) {
+            e.preventDefault();
+            const term = $("#searchInput").val().trim();
+            if (!term) {
+                showAlert("لطفا عبارت جستجو را وارد کنید", WARNING_CLASS);
+                return;
+            }
+
+            // call page handler: GET /Product?handler=Search&name=term
+            $.getJSON(`/Product?handler=Search&name=${encodeURIComponent(term)}`)
+                .done(function (data) {
+                    updateProductList(data);
+                })
+                .fail(function (xhr) {
+                    console.error("Search Error:", xhr);
+                    showAlert("خطا در جستجو: " + xhr.statusText, ERROR_CLASS);
+                });
+        });
+    }
+
+    function initDelete() {
+        $(document).on("click", ".delete-product", function() {
+            const id = $(this).data("id");
+            if (!confirm("حذف محصول را تایید کنید؟")) return;
+
+            $.ajax({
+                url: '/Product?handler=Delete',
+                method: 'POST',
+                data: { id: id },
+                headers: {
+                    'RequestVerificationToken': antiforgeryToken
+                },
+                dataType: 'json'
+            })
+            .done(function(response) {
+                if (response && response.success) {
+                    // حذف کارت مربوطه یا رفرش لیست
+                    $(`.product-card[data-id='${id}']`).remove();
+                } else {
+                    alert("خطا: " + (response?.message ?? "Failed to delete"));
+                }
+            })
+            .fail(function(xhr) {
+                alert("خطا در حذف: " + xhr.statusText);
+            });
+        });
+    }
+
+    function updateProductList(products) {
+        if (!Array.isArray(products)) {
+            showAlert("نتیجهٔ نامعتبر از سرور", ERROR_CLASS);
+            return;
+        }
+
+        if (products.length === 0) {
+            $("#productGrid").html('<div class="col-12"><div class="alert alert-info text-center">محصولی یافت نشد.</div></div>');
+            return;
+        }
+
+        let html = '';
+        products.forEach(p => {
+            const img = p.imagePath && p.imagePath.length ? p.imagePath : '/Images/default.png';
+            html += `
+            <div class="col product-card" data-id="${p.id}">
+                <div class="card h-100">
+                    <img src="${img}" class="card-img-top" alt="Product Image">
+                    <div class="card-body">
+                        <h5 class="card-title">${escapeHtml(p.brand)}</h5>
+                        <p class="card-text">Type: ${escapeHtml(p.type)}</p>
+                        <p class="card-text">Price: ${formatCurrency(p.price)}</p>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between">
+                        <a href="/Product/Edit?id=${p.id}" class="btn btn-primary btn-sm">Edit Product</a>
+                        <button class="btn btn-danger btn-sm delete-product" data-id="${p.id}">Remove</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        $("#productGrid").html(html);
+    }
+
+    function showAlert(message, alertClass) {
+        $("#productGrid").html(`<div class="col-12"><div class="alert ${alertClass} text-center">${message}</div></div>`);
+    }
+
+    function handleSearchError(xhr) {
+        console.error("Search Error:", xhr.responseText);
+        showAlert("خطا در جستجو: " + xhr.statusText, ERROR_CLASS);
+    }
+
+    // ساده‌سازی: فرمت قیمت (می‌توان locale را تغییر داد)
+    function formatCurrency(v) {
+        try {
+            return new Intl.NumberFormat('fa-IR', { style: 'currency', currency: 'IRR' }).format(v);
+        } catch {
+            return v;
+        }
+    }
+
+    // امن‌سازی متن برای درج در HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+    }
+</script>

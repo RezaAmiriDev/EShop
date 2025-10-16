@@ -1,0 +1,28 @@
+﻿@model IEnumerable<ClassLibrary.Product>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+    @foreach (var product in Model)
+    {
+        <div class="col">
+            <div class="card h-100">
+                <img src="@(string.IsNullOrEmpty(product.ImagePath) ? "/images/default.png" : product.ImagePath)"
+                     class="card-img-top"
+                     alt="Product Image">
+                <div class="card-body">
+                    <h5 class="card-title">@product.Brand</h5>
+                    <p class="card-text">Type: @product.Type</p>
+                    <p class="card-text">Price: @product.Price.ToString("C")</p>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Update" asp-route-id="@product.Id" class="btn btn-primary btn-sm">Edit</a>
+                    <button class="btn btn-danger btn-sm delete-product" data-id="@product.Id">Remove</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-warning text-center">No products found.</div>
+}
