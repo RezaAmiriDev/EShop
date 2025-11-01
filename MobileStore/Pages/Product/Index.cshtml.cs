@@ -21,7 +21,7 @@ namespace EShope.Pages.Product
             _logger = logger;
         }
 
-        public List<ProductReadDto> readDto { get; set; } = new();
+        public List<ProductDto> readDto { get; set; } = new();
 
         public async Task OnGetAsync()
         {
@@ -32,7 +32,7 @@ namespace EShope.Pages.Product
                 if (!resp.IsSuccessStatusCode) return;
 
                 var json = await resp.Content.ReadAsStringAsync();
-                readDto = JsonSerializer.Deserialize<List<ProductReadDto>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                readDto = JsonSerializer.Deserialize<List<ProductDto>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
 
                 var baseUri = client.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
                 foreach (var p in readDto)
@@ -45,38 +45,29 @@ namespace EShope.Pages.Product
             {
                 _logger.LogError(ex, "Error loading products");
                 // در صورت خطا می‌توان یک پیام نشان داد یا لیست را خالی نگه داشت
-                readDto = new List<ProductReadDto>();
+                readDto = new List<ProductDto>();
             }
         }
 
-        public async Task<IActionResult> OnGetSearchAsync(string name)
+        public async Task<IActionResult> OnGetSearchAsync(string term)
         {
             try
             {
                 var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
-                var resp = await client.GetAsync("api/Product");
+                var resp = await client.GetAsync($"api/Product/search?term={Uri.EscapeDataString(term)}");
                 if (!resp.IsSuccessStatusCode)
                 {
-                    return BadRequest(new { message = "Failed to fetch products" });
+                    return new JsonResult(Array.Empty<ProductDto>());
                 }
 
                 var json = await resp.Content.ReadAsStringAsync();
-                var list = JsonSerializer.Deserialize<List<ProductReadDto>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                var list = JsonSerializer.Deserialize<List<ProductDto>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
 
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    var term = name.Trim();
-                    list = list.Where(p =>
-                    (!string.IsNullOrWhiteSpace(p.Brand) && p.Brand.Contains(term, System.StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrWhiteSpace(p.Type.ToString()) && p.Type.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
-                    ).ToList();
-                }
-
-                var baseUri = client.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
+                var baseUri = client.BaseAddress?.ToString().TrimEnd('/') ?? "";
                 foreach(var p in  list)
                 {
-                    if(!string.IsNullOrWhiteSpace(p.ImagePath) && !p.ImagePath.StartsWith("http" , StringComparison.OrdinalIgnoreCase))
-                        p.ImagePath = baseUri + "/" + p.ImagePath.TrimStart('/');
+                    if(!string.IsNullOrWhiteSpace(p.ImagePath) && !p.ImagePath.StartsWith("http"))
+                        p.ImagePath = $"{baseUri}/{p.ImagePath.TrimStart('/')}";
                 }
 
                 return new JsonResult(list);
@@ -84,7 +75,7 @@ namespace EShope.Pages.Product
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Search error");
-                return StatusCode(500, new { message = "Server error" });
+                return new JsonResult(Array.Empty<ProductDto>());
             }
 
         }

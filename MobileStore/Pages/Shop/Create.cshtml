@@ -1,0 +1,58 @@
+﻿@page
+@model EShope.Pages.Shop.CreateModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<h3>ایجاد فروشنده</h3>
+
+<form method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label asp-for="Seller.ShopName" class="form-label"></label>
+        <input asp-for="Seller.ShopName" class="form-control" />
+        <span asp-validation-for="Seller.ShopName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Seller.Description" class="form-label"></label>
+        <textarea asp-for="Seller.Description" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Seller.ShopCode" class="form-label"></label>
+        <input asp-for="Seller.ShopCode" class="form-control" />
+    </div>
+
+    <!-- avatar file -->
+    <div class="mb-3">
+        <label asp-for="Seller.Avatar" class="form-label">تصویر فروشگاه</label>
+        <input asp-for="Seller.Avatar" type="file" class="form-control" />
+        <span asp-validation-for="Seller.Avatar" class="text-danger"></span>
+    </div>
+
+    <h5>آدرس</h5>
+    <div class="mb-3">
+        <label asp-for="Seller.AddressDto.City" class="form-label"></label>
+        <input asp-for="Seller.AddressDto.City" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Seller.AddressDto.State" class="form-label"></label>
+        <input asp-for="Seller.AddressDto.State" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Seller.AddressDto.Tellphone" class="form-label"></label>
+        <input asp-for="Seller.AddressDto.Tellphone" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Seller.AddressDto.AdressDetail" class="form-label"></label>
+        <input asp-for="Seller.AddressDto.AdressDetail" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">ایجاد</button>
+    <a asp-page="./Index" class="btn btn-secondary">انصراف</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

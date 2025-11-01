@@ -6,114 +6,117 @@
     Layout = "_Layout";
 }
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success mx-5">
+        @Html.Raw(TempData["Success"])
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger mx-5">
+        @Html.Raw(TempData["Error"])
+    </div>
+}
+
 @Html.AntiForgeryToken()
 
-<h1 class="mx-5 my-2"> Create </h1>
+<h1 class="mx-5 my-2">Create</h1>
 
-<form method="post" asp-action="Create" class="mx-5">
+<form method="post" class="mx-5" id="customerForm">
     @Html.AntiForgeryToken()
-    @* Validation Summary *@
+
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="row">
         <div class="form-group col-md-6">
-            <label asp-for="Customer.Name">Name</label>
-            <input asp-for="Customer.Name" type="text" class="form-control" placeholder="name">
+            <label asp-for="Customer.Name" class="form-label">Name *</label>
+            <input asp-for="Customer.Name" type="text" class="form-control" placeholder="name" required>
             <span asp-validation-for="Customer.Name" class="text-danger"></span>
         </div>
         <div class="form-group col-md-6">
-            <label asp-for="Customer.Family">Last Name</label>
-            <input asp-for="Customer.Family" type="text" class="form-control" placeholder="last name">
+            <label asp-for="Customer.Family" class="form-label">Last Name *</label>
+            <input asp-for="Customer.Family" type="text" class="form-control" placeholder="last name" required>
             <span asp-validation-for="Customer.Family" class="text-danger"></span>
         </div>
     </div>
 
     <div class="row">
         <div class="form-group col-md-6">
-            <label asp-for="Customer.Birth">Birth Date</label>
-            <input asp-for="Customer.Birth" type="date" class="form-control" id="birth">
+            <label asp-for="Customer.Birth" class="form-label">Birth Date *</label>
+            <input asp-for="Customer.Birth" type="date" class="form-control" id="birth" required>
             <span asp-validation-for="Customer.Birth" class="text-danger"></span>
         </div>
 
         <div class="form-group col-md-6">
-            <label asp-for="Customer.NationalCode">National Code</label>
-            <input asp-for="Customer.NationalCode" type="tel" class="form-control" placeholder="national code">
+            <label asp-for="Customer.NationalCode" class="form-label">National Code *</label>
+            <input asp-for="Customer.NationalCode" type="tel" class="form-control" placeholder="national code"
+                   maxlength="10" pattern="[0-9]{10}" title="کد ملی باید 10 رقم باشد" required>
             <span asp-validation-for="Customer.NationalCode" class="text-danger"></span>
         </div>
     </div>
 
     <div class="form-group mt-2">
-        <label asp-for="Customer.Name">Tell</label>
-        <input asp-for="Customer.Name" type="tel" class="form-control" placeholder="+98">
-        <span asp-validation-for="Customer.Name" class="text-danger"></span>
+        <label asp-for="Customer.addressDto!.Tellphone" class="form-label">Tell *</label>
+        <input asp-for="Customer.addressDto!.Tellphone" type="tel" class="form-control" placeholder="+98" required>
+        <span asp-validation-for="Customer.addressDto!.Tellphone" class="text-danger"></span>
     </div>
 
     <div class="form-group mt-2">
-        <label asp-for="Customer.Name">Address</label>
-        <input asp-for="Customer.Name" type="text" class="form-control" placeholder="Apartment, studio, or floor">
-        <span asp-validation-for="Customer.Name" class="text-danger"></span>
+        <label asp-for="Customer.addressDto!.AdressDetail" class="form-label">Address *</label>
+        <input asp-for="Customer.addressDto!.AdressDetail" type="text" class="form-control" placeholder="Apartment, studio, or floor" required>
+        <span asp-validation-for="Customer.addressDto!.AdressDetail" class="text-danger"></span>
     </div>
 
     <div class="row mt-2">
         <div class="form-group col-md-6">
-            <label asp-for="Customer.Name">State</label>
-            <input asp-for="Customer.Name" type="text" class="form-control" placeholder="state name">
-            <span asp-validation-for="Customer.Name" class="text-danger"></span>
+            <label asp-for="Customer.addressDto!.State" class="form-label">State *</label>
+            <input asp-for="Customer.addressDto!.State" type="text" class="form-control" placeholder="state name" required>
+            <span asp-validation-for="Customer.addressDto!.State" class="text-danger"></span>
         </div>
         <div class="form-group col-md-6">
-            <label asp-for="Customer.Name">City</label>
-            <input asp-for="Customer.Name" type="text" class="form-control" placeholder="city name">
-            <span asp-validation-for="Customer.Name" class="text-danger"></span>
+            <label asp-for="Customer.addressDto!.City" class="form-label">City *</label>
+            <input asp-for="Customer.addressDto!.City" type="text" class="form-control" placeholder="city name" required>
+            <span asp-validation-for="Customer.addressDto!.City" class="text-danger"></span>
         </div>
     </div>
+
     <div class="row col-md-9 mt-4">
         <div class="offset-sm-4 col-sm-4 d-grid">
             <button type="submit" class="btn btn-primary">Save Data</button>
         </div>
         <div class="col-sm-4 d-grid">
-            <a class="btn btn-outline-danger" asp-controller="Customer" asp-action="Index" role="button">
+            <a asp-page="./Index" class="btn btn-outline-danger" role="button">
                 Cancel
             </a>
         </div>
     </div>
 </form>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 
-<script>
-    $(document).ready(function () {
-        $("#customerForm").submit(function (event) {
-            event.preventDefault(); // جلوگیری از ارسال فرم به روش سنتی
-
-            var formData = {
-                Name: $("#Name").val(),
-                Family: $("#Family").val(),
-                Birth : $("#Birth").val(),
-                NationalCode: $("#NationalCode").val(),
-                City: $("#City").val(),
-                State: $("#State").val(),
-                AdressDetail: $("#AdressDetail").val(),
-                Tellphone: $("#Tellphone").val()
-            };
-
-            $.ajax({
-                url: "/Customer/Create",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(formData),
-                success: function (response) {
-                    if (response.success) {
-                        $("#resultMessage").html('<div class="alert alert-success">' + response.message + '</div>');
-                        $("#customerForm")[0].reset(); // پاک کردن فرم
-                    } else {
-                        $("#resultMessage").html('<div class="alert alert-danger">' + response.message + '</div>');
-                    }
-                },
-                error: function () {
-                     console.log(xhr.responseText); // نمایش جزئیات خطا
-                    $("#resultMessage").html('<div class="alert alert-danger">خطایی در ارسال درخواست رخ داد</div>');
-                }
-            });
+    <script>
+        // اعتبارسنجی سمت کلاینت برای کد ملی
+        document.getElementById('customerForm').addEventListener('submit', function(e) {
+            const nationalCodeInput = document.querySelector('input[name="Customer.NationalCode"]');
+            if (nationalCodeInput && nationalCodeInput.value.length !== 10) {
+                e.preventDefault();
+                alert('کد ملی باید دقیقاً 10 رقم باشد');
+                nationalCodeInput.focus();
+                return false;
+            }
         });
-    });
-</script> 
+
+        // محدود کردن ورود فقط اعداد برای کد ملی
+        document.querySelector('input[name="Customer.NationalCode"]')?.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // محدود کردن ورود فقط اعداد برای تلفن
+        document.querySelector('input[name="Customer.addressDto.Tellphone"]')?.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9+]/g, '');
+        });
+    </script>
+}

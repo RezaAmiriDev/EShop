@@ -35,15 +35,16 @@
 </div>
 
 <div class="container mt-4" id="productResults">
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4" id="productGrid">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4" id="productGrid">
         @foreach (var product in Model.readDto)
         {
             <div class="col product-card" data-id="@product.Id">
                 <div class="card h-100">
                     <img src="@(string.IsNullOrEmpty(product.ImagePath) ? "/Images/default.png" : product.ImagePath)" class="card-img-top" alt="Product Image">
                     <div class="card-body">
-                        <h5 class="card-title">@product.Brand</h5>
-                        <p class="card-text">Type: @product.Type</p>
+                        <h5 class="card-title">Brand : @product.Brand</h5>
+                        <p class="card-text">Type : @product.Type</p>
+                        <p class="card-text">Price : @product.Price</p>
                         <!-- <p class="card-text">Price: product.Price.ToString("C")</p>-->
                     </div>
                     <div class="card-footer d-flex justify-content-between">
@@ -56,7 +57,7 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
     const ERROR_CLASS = "alert-danger";
     const WARNING_CLASS = "alert-warning";
@@ -78,7 +79,7 @@
             }
 
             // call page handler: GET /Product?handler=Search&name=term
-            $.getJSON(`/Product?handler=Search&name=${encodeURIComponent(term)}`)
+            $.getJSON(`/Product?handler=Search&term=${encodeURIComponent(term)}`)
                 .done(function (data) {
                     updateProductList(data);
                 })

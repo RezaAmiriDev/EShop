@@ -31,9 +31,6 @@ namespace ClassLibrary
         [Display(Name="Image file")]
         public string? ImagePath { get; set; }
 
-        [NotMapped] // این ویژگی را در دیتابیس ذخیره نکنید
-        public IFormFile? ImageFile { get; set; }
-
         [Precision(16 , 2)]
         [Display(Name = "قیمت")]
         public decimal Price {  get; set; }

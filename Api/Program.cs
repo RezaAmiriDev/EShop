@@ -2,13 +2,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using AutoMapper;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebFrameWork.Configuration;
 using WebFrameWork.Mapper;
-using ServiceLayer.Services;
 using ClassLibrary.Repository;
 using ModelLayer.Reposetotry;
 
@@ -89,6 +86,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+// serve wwwroot static files (images, css, js, ...)
+app.UseStaticFiles();
+app.UseRouting();
 
 app.UseCors("AllowWebApp");
 

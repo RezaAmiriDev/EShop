@@ -14,11 +14,13 @@ namespace MobileStore.Controllers
         private readonly ProductService _productService;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<ProductRepo> _logger;
-        public ProductController(ProductService productService, IWebHostEnvironment webHostEnvironment, ILogger<ProductRepo> logger)
+        private readonly FileService _file;
+        public ProductController(ProductService productService, IWebHostEnvironment webHostEnvironment, ILogger<ProductRepo> logger , FileService fileService)
         {
             _productService = productService;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+            _file = fileService;
         }
 
         [HttpGet]
@@ -36,78 +38,70 @@ namespace MobileStore.Controllers
 
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create(ProductCreateDto dto)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
         {
+            var product = await _productService.GetByIdAsync(id);
+            if (product == null) return NotFound();
+
+            return Ok(product);
+        }
+
+        [HttpPost]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Create([FromForm]ProductDto dto , CancellationToken ct)
+        {
+            if (!ModelState.IsValid) return BadRequest();
+
             try
             {
-                var product = await _productService.CreateAsync(dto);
-                if (product.Status == ResponseStatus.Success)
+                if(dto.ImageFile != null && dto.ImageFile.Length > 0)
                 {
-                    return BadRequest(product);
+                    dto.ImagePath = await _file.SaveFileAsync(dto.ImageFile , _webHostEnvironment.WebRootPath , "images/products");
                 }
-                return Ok(product);
+
+                var result = await _productService.CreateAsync(dto , ct);
+                if (result.Status != ResponseStatus.Success)
+                {
+                    return BadRequest(result);
+                }
+
+                return Ok(result);
             }
             catch (Exception)
             {
                 return BadRequest(new ServiceResult(ResponseStatus.ServerError, null));
             }
-            //if(product.ImageFile == null || product.ImageFile.Length == 0)
-            //{
-            //   ModelState.AddModelError("ImageFile", "لطفاً یک تصویر انتخاب کنید");
-            //}
-            //if (!ModelState.IsValid)
-            //{
-            //    return View(product);
-            //}
-            //string uniqueFileName = null!;
-
-            ////save image file   ذخیره فایل تصویر
-            //if(product.ImageFile != null)
-            //{
-            //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/products");
-            //    if (!Directory.Exists(uploadsFolder))
-            //    {
-            //        Directory.CreateDirectory(uploadsFolder);
-            //    }
-
-            //    uniqueFileName = DateTime.Now.ToString("yyyyMMddHHmmssfff") + Path.GetExtension(product.ImageFile.FileName);
-            //    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            //    // چاپ مسیر فایل برای بررسی
-            //    Console.WriteLine("File saved to: " + filePath);
-
-            //    // ذخیره فایل در مسیر مشخص‌شده
-            //    using (var fileStream = new FileStream(filePath, FileMode.Create))
-            //    {
-            //        await product.ImageFile.CopyToAsync(fileStream);
-            //    }
-            //}
-            //// ذخیره اطلاعات محصول در دیتابیس
-            //Product newProduct = new Product()
-            //{
-            //    Brand = product.Brand,
-            //    Type = product.Type,
-            //    ImagePath = "/uploads/products/" + uniqueFileName, // ذخیره مسیر نسبی
-            //    Price = product.Price
-            //};
-
-            //_context.Products.Add(newProduct);
-            //await _context.SaveChangesAsync();
-
-            //return RedirectToAction("Index", "Product");
-        }
+          }
 
         [HttpPut("{id:guid}")]
-        public async Task<IActionResult> Update(Guid id, ProductUpdateDto dto)
+        public async Task<IActionResult> Update(Guid id,[FromForm] ProductDto dto ,CancellationToken token = default)
         {
+            if(!ModelState.IsValid) return BadRequest(ModelState);
+            if (dto == null) return BadRequest();
+            dto.Id = id;
+
+            var existing = await _productService.GetByIdAsync(id, token);
+            if (existing == null) return NotFound("محصول یافت نشد.");
             try
             {
-                var product = await _productService.UpdateAsync(dto);
-                if (id != dto.Id)
+                if(dto.ImageFile != null && dto.ImageFile.Length > 0)
                 {
-                    return BadRequest("Id mismatch");
+                    if (!string.IsNullOrEmpty(existing.ImagePath) && System.IO.File.Exists(Path.Combine(_webHostEnvironment.WebRootPath , existing.ImagePath)))
+                    {
+                        _file.DeleteFile(existing.ImagePath , _webHostEnvironment.WebRootPath);
+            
+                    }
+                    dto.ImagePath = await _file.SaveFileAsync(dto.ImageFile, _webHostEnvironment.WebRootPath, "images/products");
                 }
+                else
+                {
+                    dto.ImagePath = existing.ImagePath;
+                    // اگر آپلود نشده، میتونیم ImagePath موجود را نگه داریم یا بر اساس dto تصمیم بگیریم
+                    //dto.ImagePath = string.IsNullOrWhiteSpace(dto.ImagePath) ? existing.ImagePath : dto.ImagePath;
+                }
+
+                var product = await _productService.UpdateAsync(dto);
                 return Ok(product);
             }
             catch (Exception)
@@ -127,6 +121,18 @@ namespace MobileStore.Controllers
             {
                 return BadRequest(new ServiceResult(ResponseStatus.ServerError, null));
             }
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string term , CancellationToken ct)
+        {
+            if(string.IsNullOrWhiteSpace(term))
+            {
+                return Ok(Array.Empty<ProductDto>());
+            }
+
+            var result = await _productService.SearchAsync(term, ct);
+            return Ok(result);
         }
 
         //public IActionResult Chart()

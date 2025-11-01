@@ -15,4 +15,8 @@
     <ProjectReference Include="..\WorkConection\WorkConection.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="uploads\" />
+  </ItemGroup>
+
 </Project>

@@ -219,19 +219,19 @@ namespace ModelLayer.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "bbb5672a-ab4e-43e8-b5ae-ee698067387f",
+                            Id = "f43920b9-ad76-4e4b-a4ae-85c3ba859fc3",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "c85f9fb9-ac0f-49fe-b12a-0e477dda0329",
+                            Id = "864a8741-6f33-4dff-8369-13d988f3fe1c",
                             Name = "client",
                             NormalizedName = "CLIENT"
                         },
                         new
                         {
-                            Id = "e737f0d4-46d0-4b89-a007-e6efbbc72e93",
+                            Id = "d62e479d-16b2-4d4e-83fd-7554b2238d98",
                             Name = "seller",
                             NormalizedName = "SELLER"
                         });
@@ -563,10 +563,16 @@ namespace ModelLayer.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("DislikesCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("LikesCount")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("NumberOfproducts")
                         .HasColumnType("int");
 
                     b.Property<string>("ShopCode")

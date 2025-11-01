@@ -1,0 +1,429 @@
+﻿@page
+@model EShope.Pages.Shop.IndexModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<style>
+    .avatar {
+        width: 84px;
+        height: 84px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    }
+
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+
+    .card-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .btn-like, .btn-dislike {
+        min-width: 80px;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-5 gap-4 flex-wrap">
+        <h2 class="mb-0">فروشنده‌ها</h2>
+       
+        <div class="flex-grow-1">
+            @if (TempData["Message"] != null)
+            {
+                <div id="messageBox" class="alert alert-success alert-dismissible fade show w-100" role="alert">
+                    @TempData["Message"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+        </div>
+        <form method="get" class="d-flex align-items-stretch gap-2 ms-auto">
+            <div class="input-group input-group-sm" style="max-width: 300px;">
+                <input name="SearchTerm" value="@Model.SearchTerm" class="form-control"
+                       placeholder="جستجو در نام یا کد فروشگاه..." />
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+            <a asp-page="./Create" class="btn btn-primary btn-sm d-flex align-items-center gap-2">
+                <i class="bi bi-plus-lg"></i>
+                افزودن فروشگاه
+            </a>
+        </form>
+    </div>
+
+    @if (!Model.Sellers.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-shop display-1 text-muted"></i>
+            <h4 class="mt-3">فروشگاهی یافت نشد</h4>
+            <p class="text-muted">می‌توانید اولین فروشگاه را اضافه کنید</p>
+        </div>
+    }
+    else
+    {
+        <div class="row gy-4">
+            @foreach (var seller in Model.Sellers)
+            {
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card shadow border-0 h-100">
+                        <div class="card-body position-relative">
+                            <!-- منو -->
+                            <div class="position-absolute top-0 end-0 mt-2 me-2">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light rounded-circle"
+                                            data-bs-toggle="dropdown"
+                                            style="width: 32px; height: 32px;">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" asp-page="./Update" asp-route-id="@seller.Id">
+                                                <i class="bi bi-pencil me-2"></i>ویرایش
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="showShopDetails('@seller.Id')">
+                                                <i class="bi bi-eye me-2"></i>مشاهده جزئیات
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="post" asp-page-handler="Delete"
+                                                  onsubmit="return confirm('آیا از حذف فروشگاه «@seller.ShopName» مطمئن هستید؟');">
+                                                <input type="hidden" name="id" value="@seller.Id" />
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="bi bi-trash me-2"></i>حذف
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- تصویر -->
+                            <div class="text-center mb-3">
+                                @{
+                                    var imageUrl = Model.GetImageUrl(seller.ImagePath);
+                                }
+                                <img src="@imageUrl"
+                                     class="avatar rounded-circle border border-white"
+                                     style="width:150px;height:150px;object-fit:cover;"
+                                     loading="lazy"
+                                     onerror="this.onerror=null; this.src='/images/default-avatar.jpg';" />
+                            </div>
+
+                            <!-- اطلاعات -->
+                            <h5 class="card-title text-center mb-2">@seller.ShopName</h5>
+
+                            @if (!string.IsNullOrEmpty(seller.ShopCode))
+                            {
+                                <p class="text-center text-muted small mb-2">Code: @seller.ShopCode</p>
+                            }
+
+                        <p class="text-muted small mb-3 text-center" style="min-height: 10px;">
+                            @(seller.Description?.Length > 60 ? seller.Description.Substring(0, 60) + "..." :
+                                                    seller.Description ?? "بدون توضیحات")
+                    </p>
+
+                            <!-- آمار -->
+                            <div class="d-flex justify-content-center mb-3">
+                                <div class="badge bg-body-secondary text-dark px-3 py-2">
+                                    <div class="fw-bold">@(seller.NumberOfproducts ?? 0)</div>
+                                    <small class="text-muted">محصول</small>
+                                </div>
+                            </div>
+
+                            <!-- لایک/دیسلایک -->
+                            <div class="d-flex justify-content-center gap-2 mb-3">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-success btn-like d-flex align-items-center gap-1"
+                                        onclick="likeShop('@seller.Id', this)">
+                                    <i class="bx bx-like"></i>
+                                    <span class="like-count">@seller.LikesCount</span>
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-dislike d-flex align-items-center gap-1"
+                                        onclick="dislikeShop('@seller.Id', this)">
+                                    <i class="bx bx-dislike"></i>
+                                    <span class="dislike-count">@(seller.DislikesCount)</span>
+                                </button>
+                            </div>
+
+                            <!-- دکمه جزئیات -->
+                            <button class="btn btn-primary btn-sm w-100 mt-auto"
+                                    onclick="showShopDetails('@seller.Id')">
+                                <i class="bi bi-info-circle me-1"></i>
+                                مشاهده جزئیات
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                }
+        </div>
+    }
+</div>
+
+<!-- Modal جزئیات -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-shop me-2"></i>
+                    Store Detail
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Loading -->
+                <div id="loadingSpinner" class="text-center py-5">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">در حال بارگذاری...</span>
+                    </div>
+                    <p class="mt-3 text-muted">در حال دریافت اطلاعات فروشگاه...</p>
+                </div>
+
+                <!-- Error -->
+                <div id="errorMessage" class="alert alert-danger text-center" style="display: none;">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span id="errorText">خطا در دریافت اطلاعات</span>
+                </div>
+
+                <!-- Content -->
+                <div id="shopDetails" style="display: none;">
+                    <!-- اینجا با JavaScript پر می‌شود -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                <a id="editShopLink" href="#" class="btn btn-primary">
+                    <i class="bi bi-pencil-square me-1"></i>
+                    ویرایش فروشگاه
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = '@Model.ApiBaseUrl';
+
+        async function showShopDetails(shopId) {
+            const modal = new bootstrap.Modal('#detailModal');
+            const loading = document.getElementById('loadingSpinner');
+            const error = document.getElementById('errorMessage');
+            const content = document.getElementById('shopDetails');
+
+            // Reset
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+            content.innerHTML = '';
+
+            try {
+                modal.show();
+
+                const response = await fetch(`?handler=Details&id=${shopId}`);
+
+                if (response.ok) {
+                    const shop = await response.json();
+
+                    // ساخت URL تصویر
+                    let imageUrl;
+                    if (!shop.imagePath || shop.imagePath.toLowerCase() === 'null')
+                    {
+                        imageUrl = '/images/default-avatar.jpg'
+                    }
+                    else
+                    {
+                            // اضافه کردن BaseAddress به مسیر تصویر
+                         imageUrl = '@Model.ApiBaseUrl' + shop.imagePath;
+                    }
+
+                       // سپس تنظیم src تصویر
+                  //   document.getElementById('detailShopImage').src = imageUrl;
+                    // HTML جزئیات
+                    const html = `
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3 mb-md-0">
+                                <img src="${imageUrl}"
+                                     class="img-fluid rounded-circle border"
+                                     style="width: 150px; height: 150px; object-fit: cover;"
+                                     onerror="this.src='/images/default-avatar.jpg'"
+                                     alt="${shop.shopName || 'فروشگاه'}">
+                            </div>
+                            <div class="col-md-8">
+                                <h4 class="mb-1">${shop.shopName || 'بدون نام'}</h4>
+                                ${shop.shopCode ? `<p class="text-muted mb-3"><strong>store code :</strong> ${shop.shopCode}</p>` : ''}
+
+                                <div class="mb-4">
+                                    <h6 class="text-secondary"><strong>discreption : </strong></h6>
+                                    <p class="text-muted">${shop.description || 'توضیحاتی ثبت نشده است.'}</p>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6 col-md-3 mb-3">
+                                        <div class="card bg-light border-0">
+                                            <div class="card-body text-center py-3">
+                                                <div class="h4 mb-0">${shop.numberOfproducts || 0}</div>
+                                                <small class="text-muted">محصول</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3 mb-3">
+                                        <div class="card bg-light border-0">
+                                            <div class="card-body text-center py-3">
+                                                <div class="h4 mb-0 text-success">${shop.likesCount || 0}</div>
+                                                <small class="text-muted">لایک</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3 mb-3">
+                                        <div class="card bg-light border-0">
+                                            <div class="card-body text-center py-3">
+                                                <div class="h4 mb-0 text-danger">${shop.dislikesCount || 0}</div>
+                                                <small class="text-muted">دیسلایک</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    content.innerHTML = html;
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+
+                    // تنظیم لینک ویرایش
+                    document.getElementById('editShopLink').href = `/Shop/Update?id=${shopId}`;
+
+                } else if (response.status === 401) {
+                    // Unauthorized
+                    window.location.href = '@Model.Setting?.LoginPath' || '/Account/Login';
+                } else {
+                    throw new Error('خطا در دریافت اطلاعات');
+                }
+
+            } catch (err) {
+                console.error('Error:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                document.getElementById('errorText').textContent =
+                    'خطا در دریافت اطلاعات فروشگاه. لطفاً دوباره تلاش کنید.';
+            }
+        }
+
+        async function likeShop(shopId, button) {
+            const likeCount = button.querySelector('.like-count');
+
+            try {
+                const response = await fetch(`?handler=Like&id=${shopId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    likeCount.textContent = result.newLikesCount || 0;
+
+                    // نمایش پیام موفقیت
+                    showToast('success', 'لایک ثبت شد');
+                }
+            } catch (error) {
+                console.error('Error liking shop:', error);
+                showToast('error', 'خطا در ثبت لایک');
+            }
+        }
+
+        async function dislikeShop(shopId, button) {
+            const dislikeCount = button.querySelector('.dislike-count');
+
+            try {
+                const response = await fetch(`?handler=Dislike&id=${shopId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    dislikeCount.textContent = result.newDislikesCount || 0;
+
+                    // نمایش پیام موفقیت
+                    showToast('success', 'دیسلایک ثبت شد');
+                }
+            } catch (error) {
+                console.error('Error disliking shop:', error);
+                showToast('error', 'خطا در ثبت دیسلایک');
+            }
+        }
+
+        // تابع کمکی برای نمایش Toast
+        function showToast(type, message) {
+            // اگر bootstrap toast موجود نیست، ساده alert نشان دهید
+            if (typeof bootstrap === 'undefined' || !bootstrap.Toast) {
+                alert(message);
+                return;
+            }
+
+            const toastHtml = `
+                <div class="toast align-items-center text-bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle'} me-2"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+            const container = document.getElementById('toastContainer') || createToastContainer();
+            container.innerHTML = toastHtml;
+
+            const toastEl = container.querySelector('.toast');
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+             const msg = document.getElementById("messageBox");
+            if (msg) {
+                setTimeout(() => {
+                    msg.classList.remove("show");
+                    msg.classList.add("fade");
+                    setTimeout(() => msg.remove(), 400);
+                }, 3000);
+            }
+        });
+        // وقتی صفحه لود شد
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Shop page loaded. API Base URL:', apiBaseUrl);
+        });
+    </script>
+}

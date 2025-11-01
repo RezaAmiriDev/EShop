@@ -1,0 +1,151 @@
+﻿@page
+@model EShope.Pages.Shop.UpdateModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "ویرایش فروشنده";
+}
+
+<div class="container py-4">
+    <h3 class="mb-3">ویرایش فروشنده</h3>
+
+    <form method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+        <input asp-for="Seller.Id" type="hidden" />
+        <input asp-for="Seller.ImagePath" type="hidden" />
+        <input asp-for="Seller.AddressDto.Id" type="hidden" />
+
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Seller.ShopName" class="form-label">نام فروشنده</label>
+                <input asp-for="Seller.ShopName" class="form-control" />
+                <span asp-validation-for="Seller.ShopName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="Seller.ShopCode" class="form-label">کد فروشگاه</label>
+                <input asp-for="Seller.ShopCode" class="form-control" />
+                <span asp-validation-for="Seller.ShopCode" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Seller.Description" class="form-label">توضیحات</label>
+            <textarea asp-for="Seller.Description" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Seller.Description" class="text-danger"></span>
+        </div>
+
+ 
+
+        <div class="row">
+            <!-- شهر -->
+            <div class="col-md-6 mb-3">
+                <label asp-for="Seller.AddressDto.City" class="form-label">شهر</label>
+                <input asp-for="Seller.AddressDto.City" class="form-control" />
+                <span asp-validation-for="Seller.AddressDto.City" class="text-danger"></span>
+            </div>
+            <!-- استان -->
+            <div class="col-md-6 mb-3">
+                <label asp-for="Seller.AddressDto.State" class="form-label">استان</label>
+                <input asp-for="Seller.AddressDto.State" class="form-control" />
+                <span asp-validation-for="Seller.AddressDto.State" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- تلفن -->
+            <div class="col-md-6 mb-3">
+                <label asp-for="Seller.AddressDto.Tellphone" class="form-label">تلفن</label>
+                <input asp-for="Seller.AddressDto.Tellphone" class="form-control" />
+                <span asp-validation-for="Seller.AddressDto.Tellphone" class="text-danger"></span>
+            </div>
+
+            <!-- آدرس کامل -->
+            <div class="col-md-6 mb-3">
+                <label asp-for="Seller.AddressDto.AdressDetail" class="form-label">آدرس کامل</label>
+                <input asp-for="Seller.AddressDto.AdressDetail" class="form-control" />
+                <span asp-validation-for="Seller.AddressDto.AdressDetail" class="text-danger"></span>
+            </div>
+        </div>
+        <!-- بخش آپلود و پیش‌نمایش -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">تصویر فروشگاه</label>
+
+            <div class="text-center mb-3">
+                <img id="avatarPreview"
+                     src="@Model.Seller.ImagePath"
+                     alt="پیش‌نمایش تصویر"
+                     class="img-thumbnail rounded shadow-sm"
+                     style="max-width: 220px; display:@(string.IsNullOrEmpty(Model.Seller.ImagePath) ? "none" : "block");" />
+            </div>
+
+            <div class="input-group">
+                <input type="file"
+                       asp-for="Seller.Avatar"
+                       class="form-control"
+                       accept=".jpg,.jpeg,.png,.webp"
+                       id="avatarInput" />
+                <label class="input-group-text bg-primary text-white" for="avatarInput" style="cursor:pointer;">
+                    انتخاب فایل
+                </label>
+            </div>
+
+            <small class="form-text text-muted d-block mt-1">
+                فرمت‌های مجاز: JPG, PNG, WebP — حداکثر حجم: 5MB
+            </small>
+        </div>
+        @* 
+        @if (!string.IsNullOrEmpty(Model.Seller.ImagePath))
+        {
+            <div class="mb-3">
+                <label class="form-label">تصویر فعلی</label>
+                <div>
+                    <img src="@Model.Seller.ImagePath" alt="تصویر فروشگاه"
+                         style="max-width: 200px; max-height: 200px;" class="img-thumbnail" />
+                </div>
+            </div>
+        } *@
+
+        <div class="d-flex gap-2 justify-content-center">
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+            <a asp-page="./Index" class="btn btn-secondary">انصراف</a>
+        </div>
+    </form>
+</div>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // پیش‌نمایش تصویر
+            const avatarInput = document.querySelector('#avatarInput');
+            const preview = document.querySelector('#avatarPreview');
+
+            if (avatarInput && preview) {
+                avatarInput.addEventListener('change', function (e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (ev) {
+                            preview.src = ev.target.result;
+                            preview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // اعتبارسنجی ShopCode
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function (e) {
+                const shopCode = document.querySelector('#Seller_ShopCode').value;
+                if (shopCode && !/^[a-zA-Z0-9]+$/.test(shopCode)) {
+                    e.preventDefault();
+                    alert('کد فروشگاه معتبر نیست');
+                }
+            });
+
+        });
+    </script>
+}

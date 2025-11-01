@@ -1,78 +1,107 @@
 ﻿@page
 @model EShope.Pages.Product.CreateModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 @{
-    ViewData["Title"] = "Add Product";
+    ViewData["Title"] = "ایجاد محصول";
 }
 
 <div class="container mt-4">
-    <h2>Add New Product</h2>
-    <hr />
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
 
-    <form asp-action="Add" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label asp-for="createDto.Brand" class="form-label">Brand</label>
-                <input asp-for="createDto.Brand" class="form-control" placeholder="Enter brand name" required />
-                <span asp-validation-for="createDto.Brand" class="text-danger"></span>
-            </div>
-            <div class="col-md-6">
-                <label asp-for="createDto.Type" class="form-label">Type</label>
-                <select asp-for="createDto.Type" asp-items="Html.GetEnumSelectList<ProductType>()" class="form-select">
-                    <option value="">Select a Type</option>
-                </select>
-            </div>
-        </div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">ایجاد محصول جدید</h5>
+                </div>
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group mb-3">
-                    <label asp-for="createDto.ImageFile" class="form-label">تصویر محصول</label>
-                    <input asp-for="createDto.ImageFile" type="file" class="form-control" accept="image/*" required />
-                    <span asp-validation-for="createDto.ImageFile" class="text-danger"></span>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+
+                        <!-- Brand -->
+                        <div class="mb-3">
+                            <label asp-for="dto.Brand" class="form-label fw-semibold">برند</label>
+                            <input asp-for="dto.Brand" class="form-control" placeholder="مثال: Samsung" />
+                            <span asp-validation-for="dto.Brand" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Type & Price -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="dto.Type" class="form-label fw-semibold">نوع محصول</label>
+                                <select asp-for="dto.Type"
+                                        class="form-select"
+                                        asp-items="Html.GetEnumSelectList<ProductType>()">
+                                    <option value="">انتخاب کنید</option>
+                                </select>
+                                <span asp-validation-for="dto.Type" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="dto.Price" class="form-label fw-semibold">قیمت</label>
+                                <div class="input-group">
+                                    <input asp-for="dto.Price" class="form-control" placeholder="0" />
+                                    <span class="input-group-text">تومان</span>
+                                </div>
+                                <span asp-validation-for="dto.Price" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Image -->
+                        <div class="mb-3">
+                            <label asp-for="dto.ImageFile" class="form-label fw-semibold">تصویر محصول</label>
+                            <input asp-for="dto.ImageFile"
+                                   type="file"
+                                   class="form-control"
+                                   accept="image/*"
+                                   onchange="previewImage(this)" />
+                            <span asp-validation-for="dto.ImageFile" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <div class="mb-3 text-center">
+                            <img id="imagePreview"
+                                 src="/images/no-image.png"
+                                 class="img-thumbnail d-none"
+                                 style="max-height: 200px;" />
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a asp-page="/Product/Index" class="btn btn-outline-secondary">
+                                انصراف
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                ذخیره محصول
+                            </button>
+                        </div>
+
+                    </form>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="form-group mb-3">
-                    <label asp-for="createDto.Price" class="form-label">Price</label>
-                    <input asp-for="createDto.Price" class="form-control" placeholder="Enter price" required />
-                    <span asp-validation-for="createDto.Price" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
-        <div class="form-group m-4 d-flex justify-content-center">
-            <button type="submit" class="btn btn-primary me-2">Add Product</button>
-            <a asp-action="Index" class="btn btn-danger">Cancel</a>
-        </div>
 
-    </form>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 
     <script>
-        // Bootstrap 5 validation
-        (function () {
-            'use strict'
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
 
-            // Fetch all the forms we want to apply custom Bootstrap validation styles to
-            var forms = document.querySelectorAll('.needs-validation')
-
-            // Loop over them and prevent submission
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-        })()
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.classList.add('d-none');
+                preview.src = '';
+            }
+        }
     </script>
 }

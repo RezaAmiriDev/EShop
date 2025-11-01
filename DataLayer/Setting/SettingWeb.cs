@@ -10,4 +10,5 @@
     public string LogoutPath { get; set; } = "/Account/Logout";
     public string Name { get; set; } = ".MyAppCookie";     // نام کوکی احراز هویت
     public string AccessDeniedPath { get; set; } = "/Account/Denied";
+    public bool RequiresAuth { get; set; } = false;
 }

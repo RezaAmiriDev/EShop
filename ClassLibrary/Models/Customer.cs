@@ -39,6 +39,9 @@ namespace ClassLibrary
         [DisplayFormat(DataFormatString = "{0: yyyy/MM/dd}")]
         public DateTime CreateDate { get; set; }
 
+        //public DateTime? ModifiedDate { get; set; }
+        //public string? ModifiedBy { get; set; }
+
         public Guid AddressId { get; set; }
 
         [ForeignKey(nameof(AddressId))]

@@ -17,11 +17,11 @@ namespace ModelLayer.Models
         public string? Description { get; set; }
         public string? ShopCode { get; set; }
         public int LikesCount { get; set; } = 0;
+        public int DislikesCount { get; set; } = 0;
+        public int? NumberOfproducts { get; set; }
 
         [Display(Name = "Image file")]
         public string? ImagePath { get; set; }
-        [NotMapped] // این ویژگی را در دیتابیس ذخیره نکنید
-        public IFormFile? ImageFile { get; set; }
         public Guid AddressId { get; set; }
         [ForeignKey(nameof(AddressId))]
         public Address? Address { get; set; }

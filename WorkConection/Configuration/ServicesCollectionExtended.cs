@@ -13,16 +13,17 @@ namespace WebFrameWork.Configuration
     {
         public static void RegisterServicesEntities(this IServiceCollection services)
         {
-            services.AddScoped<IAdressRepository, AddressRepo>();
-            services.AddScoped<ICustomerRepository, CustomerRepo>();
-            services.AddScoped<IProductRepository, ProductRepo>();
-            services.AddScoped<IOrderReposetory, OrderRepo>();
-            services.AddScoped<ISellerRepository , SellerRepo>();
-
+            services.AddScoped<IAdressRepository , AddressRepo>();
+            services.AddScoped<ICustomerRepository , CustomerRepo>();
+            services.AddScoped<IProductRepository , ProductRepo>();
+            services.AddScoped<IOrderReposetory , OrderRepo>();
+            services.AddScoped<IShopRepository , ShopRepo>();
+            services.AddScoped<IFileRepository , FileService>();
 
             services.AddScoped<CustomerService>();
             services.AddScoped<ProductService>();
-            services.AddScoped<SellerService>();
+            services.AddScoped<ShopService>();
+            services.AddScoped<FileService>();
 
         }
         //public static void RegisterJwtService(this IServiceCollection services, SecuritySetting _siteSetting)

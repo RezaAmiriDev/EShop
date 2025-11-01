@@ -16,51 +16,47 @@ namespace ServiceLayer.Services
     {
         private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper;
-        private readonly IHostEnvironment _env;
         private readonly ILogger<ProductService> _logger;
 
-        public ProductService(IProductRepository productRepository, IMapper mapper, IHostEnvironment env, ILogger<ProductService> logger)
+        public ProductService(IProductRepository productRepository, IMapper mapper, ILogger<ProductService> logger)
         {
             _productRepository = productRepository;
             _mapper = mapper;
-            _env = env;
             _logger = logger;
         }
 
-        public async Task<IEnumerable<ProductReadDto>> GetAllAsync(CancellationToken ct = default)
+        public async Task<IEnumerable<ProductDto>> GetAllAsync(CancellationToken ct = default)
         {
             return await _productRepository.TableNoTracking
-                .ProjectTo<ProductReadDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(ct);
         }
 
-        public async Task<ProductReadDto> GetByIdAsync(Guid id, CancellationToken ct = default)
-        {
-            var e = await _productRepository.GetByIdAsync(id);
-            if (e == null) return null!;
-            return _mapper.Map<ProductReadDto>(e);
-        }
-
-        public async Task<ServiceResult> CreateAsync(ProductCreateDto dto , CancellationToken ct = default)
+        public async Task<ProductDto> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             try
             {
-                var entity = _mapper.Map<Product>(dto);
-                entity.Id = Guid.NewGuid();
-                entity.DateOfOperation = DateTime.UtcNow;
+                var e = await _productRepository.GetByIdAsync(id, ct);
+                if (e == null) return null!;
+                return _mapper.Map<ProductDto>(e);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Get By ID In ProductService Err : {ex.Message}");
+                return null!;
+            }
+            
+        }
 
-                if(dto.ImageFile != null)
-                {
-                    var folder = Path.Combine(_env.ContentRootPath ?? "wwwroot", "uploads");
-                    Directory.CreateDirectory(folder);
-                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.ImageFile.FileName)}";
-                    var path = Path.Combine(folder, fileName);
-                    using var fs = System.IO.File.Create(path);
-                    await dto.ImageFile.CopyToAsync(fs, ct);
-                    entity.ImagePath = $"/uploads/{fileName}";
-                }
+        public async Task<ServiceResult> CreateAsync(ProductDto dto , CancellationToken ct = default)
+        {
+            try
+            {
+                var product = _mapper.Map<Product>(dto);
+                product.Id = Guid.NewGuid();
+                product.DateOfOperation = DateTime.UtcNow;
 
-                var result = await _productRepository.AddAsync(entity);
+                var result = await _productRepository.AddAsync(product , ct);
                 if (result == null)
                 {
                     _logger.LogWarning("Create product failed: {@Result}", result);
@@ -76,11 +72,16 @@ namespace ServiceLayer.Services
             }
         }
    
-        public async Task<ServiceResult> UpdateAsync(ProductUpdateDto dto , CancellationToken ct = default)
+        public async Task<ServiceResult> UpdateAsync(ProductDto dto , CancellationToken ct = default)
         {
             try
             {
-                var existing = await _productRepository.GetByIdAsync(dto.Id);
+                if(dto.Id == null || dto.Id == Guid.Empty)
+                {
+                    return new ServiceResult(ResponseStatus.BadRequest, "شناسه محصول نامعتبر است.");
+                }
+
+                var existing = await _productRepository.GetByIdAsync(dto.Id.Value , ct);
                 if (existing == null)
                 {
                     return new ServiceResult(ResponseStatus.NotFound, null);
@@ -88,33 +89,14 @@ namespace ServiceLayer.Services
 
                 _mapper.Map(dto, existing);
 
-                if(dto.ImageFile != null)
-                {
-                    var folder = Path.Combine(_env.ContentRootPath ?? "wwwroot", "uploads");
-                    Directory.CreateDirectory(folder);
-                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.ImageFile.FileName)}";
-                    var path = Path.Combine(folder, fileName);
-                    using var fs = System.IO.File.Create(path);
-                    await dto.ImageFile.CopyToAsync(fs, ct);
+                var res = await _productRepository.UpdateAsync(existing , ct);
 
-                    if (!string.IsNullOrEmpty(existing.ImagePath))
-                    {
-                        try
-                        {
-                            var old = Path.Combine(_env.ContentRootPath ?? "wwwroot", existing.ImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-                            if (System.IO.File.Exists(old)) System.IO.File.Delete(old);
-                        }
-                        catch { }
-                    }
-
-                    existing.ImagePath = $"/uploads/{fileName}";
-                }
-                var res = await _productRepository.UpdateAsync(existing);
-                return new ServiceResult(ResponseStatus.Success, null);
-            }catch(Exception ex)
+                return new ServiceResult(ResponseStatus.ServerError, "خطا در به‌روزرسانی محصول");
+            }
+            catch(Exception ex)
             {
                 _logger.LogError(ex, "Error updating product {Id}", dto.Id);
-                return new ServiceResult(ResponseStatus.NotFound, null);
+                return new ServiceResult(ResponseStatus.ServerError, null);
             }
         }
  
@@ -122,27 +104,15 @@ namespace ServiceLayer.Services
         {
             try
             {
-                var entity = await _productRepository.GetByIdAsync(id);
-                if (entity != null)
+                var entity = await _productRepository.GetByIdAsync(id , ct);
+                if (entity == null)
                 {
-                    return new ServiceResult(ResponseStatus.NotFound, null);
+                    return new ServiceResult(ResponseStatus.NotFound, "محصول یافت نشد.");
                 }
 
-                var res = await _productRepository.DeleteAsync(entity);
-                if (res == null)
-                {
-                    return new ServiceResult(ResponseStatus.NotFound, null);
-                }
+                var res = await _productRepository.DeleteAsync(entity, ct);
+                if (res != null) return res;
 
-                if (!string.IsNullOrEmpty(entity.ImagePath))
-                {
-                    try
-                    {
-                        var old = Path.Combine(_env.ContentRootPath ?? "wwwroot", entity.ImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-                        if (System.IO.File.Exists(old)) System.IO.File.Delete(old);
-                    }
-                    catch { /* ignore */ }
-                }
                 return new ServiceResult(ResponseStatus.NotFound,null);
             }
             catch (Exception ex)
@@ -152,22 +122,15 @@ namespace ServiceLayer.Services
             }
         }
 
-        public async Task<IEnumerable<ProductReadDto>> SearchAsync(string trem , CancellationToken ct = default)
+        public async Task<IEnumerable<ProductDto>> SearchAsync(string term , CancellationToken ct = default)
         {
-            if(string.IsNullOrEmpty(trem)) return Array.Empty<ProductReadDto>();
+            if(string.IsNullOrEmpty(term)) return Array.Empty<ProductDto>();
 
-            // اگر ProductRepo متدی به نام Search دارد از آن استفاده کن (بهینه)y
-            if(_productRepository is ProductRepo pr)
-            {
-                var list = await pr.Search(trem); // returns List<Product>
-                return _mapper.Map<List<ProductReadDto>>(list);
-            }
+            var list = await _productRepository.TableNoTracking
+                .Where(p => EF.Functions.Like(p.Brand ?? string.Empty  , $"%{term}%"))
+                .ProjectTo<ProductDto>(_mapper.ConfigurationProvider).ToListAsync(ct);
 
-            var list2 = await _productRepository.TableNoTracking
-                .Where(p => EF.Functions.Like(p.Brand ?? string.Empty, $"%{trem}%"))
-                .ProjectTo<ProductReadDto>(_mapper.ConfigurationProvider).ToListAsync();
-
-            return list2;
+            return list;
         }
     }
 }

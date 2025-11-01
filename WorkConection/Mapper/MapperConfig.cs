@@ -10,52 +10,59 @@ namespace WebFrameWork.Mapper
     {
         public MapperConfig()
         {
-
-            // Address ⇄ AddressDto
+            // AddressDto -> Address (برای Create/Update)
             CreateMap<Address, AddressDto>();
             CreateMap<AddressDto, Address>()
-                .ForMember(dest => dest.Customers, opt => opt.Ignore());
+                .ForMember(d => d.Id, opt => opt.Condition((src, dest, srcMember) =>
+                src.Id.HasValue && src.Id.Value != Guid.Empty))
+                .ForMember(d => d.Customers, opt => opt.Ignore());
 
-            // Customer ⇄ CusProDto
-            CreateMap<Customer, CusProDto>().ReverseMap()
-                .ForMember(dest => dest.Address , opt => opt.MapFrom(src => src.addressDto));
-
-            // برای تبدیل در جهت معکوس (DTO -> Entity) — مفید برای create/update
+            // Customer -> CusProDto (نمایش)
+            CreateMap<Customer, CusProDto>()
+                .ForMember(dest => dest.addressDto, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Family, opt => opt.MapFrom(src => src.Family))
+                .ForMember(dest => dest.NationalCode, opt => opt.MapFrom(src => src.NationalCode))
+                .ForMember(dest => dest.Birth, opt => opt.MapFrom(src => src.Birth))
+                .ForMember(dest => dest.CreateDate, opt => opt.MapFrom(src => src.CreateDate));
+            // CusProDto -> Customer (Create/Update)
             CreateMap<CusProDto, Customer>()
-                // اگر Customer دارای collection/navigation است، آن‌ها را ایگنور کن
-                .ForMember(dest => dest.AddressId, opt => opt.MapFrom(src => src.addressDto))
-                .ForMember(dest => dest.Sales, opt => opt.Ignore())   // مثال: collection ها را ایگنور کن
-                .ForMember(dest => dest.products, opt => opt.Ignore()) // بر اساس مدلت
-                .ForMember(dest => dest.CreateDate, opt => opt.Ignore()); // CreateDate معمولاً سمت سرور set می‌شود
-
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.addressDto))
+                // .ForMember(dest => dest.Id , opt => opt.Ignore())
+                .ForMember(dest => dest.CreateDate, opt => opt.Ignore()) // ✅ در به‌روزرسانی تغییر نده
+                .ForMember(dest => dest.Id, opt => opt.Condition((src, dest, srcMember) => src.Id != null && src.Id != Guid.Empty))
+                .ForMember(dest => dest.Sales, opt => opt.Ignore())
+                .ForMember(dest => dest.products, opt => opt.Ignore())
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrWhiteSpace(srcMember?.ToString())));
 
             // Entity -> ReadDto
-            CreateMap<Product, ProductReadDto>();
-
+            CreateMap<Product, ProductDto>();
             // CreateDto -> Entity
-            CreateMap<ProductCreateDto, Product>()
+            CreateMap<ProductDto, Product>()
                 .ForMember(d => d.Id, o => o.Ignore())
                 .ForMember(d => d.DateOfOperation, o => o.Ignore())
-                .ForMember(d => d.ImagePath, o => o.Ignore())
                 .ForMember(d => d.Sales, o => o.Ignore())
                 .ForMember(d => d.customers, o => o.Ignore())
-                .ForMember(d => d.sellers, o => o.Ignore());
-
-            // UpdateDto -> Entity (map into existing), don't overwrite Id/DateOfOperation/ImagePath
-            CreateMap<ProductUpdateDto, Product>()
-                .ForMember(d => d.Id, o => o.Ignore())
-                .ForMember(d => d.DateOfOperation, o => o.Ignore())
-                .ForMember(d => d.ImagePath, o => o.Ignore())
+                .ForMember(d => d.sellers, o => o.Ignore())
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
-            CreateMap<Shop, SellerDto>()
-     .ForMember(d => d.AddressId, opt => opt.MapFrom(s => s.Address))   // اگر AddressDto تنظیم است
-     .ForMember(d => d.ProductsCount, opt => opt.Ignore()); // یا map محصولات طبق نیاز
-
-            CreateMap<SellerDto, Shop>()
+            // Shop -> ShopDto (خواندن)
+            CreateMap<Shop, ShopDto>()
+                .ForMember(d => d.NumberOfproducts, opt => opt.MapFrom(s => s.products != null ? s.products.Count : 0))
+                .ForMember(d => d.ImagePath, opt => opt.MapFrom(s => string.IsNullOrEmpty(s.ImagePath) ? "/images/default-avatar.png" : s.ImagePath))
+                .ForMember(d => d.DislikesCount, opt => opt.MapFrom(s => s.DislikesCount))
+                .ForMember(d => d.AddressDto, opt => opt.MapFrom(s => s.Address));
+            // ShopDto -> Shop (برای Create/Update)
+            CreateMap<ShopDto, Shop>()
+                // Id را فقط درصورتی که DTO شامل Id معتبر است نگاشت کن (تا در آپدیت Id موجود حفظ شود)
+                .ForMember(d => d.Id, opt => opt.Condition((src, dest, srcMember) => srcMember != null && srcMember != Guid.Empty))
+                .ForMember(d => d.Address, opt => opt.MapFrom(s => s.AddressDto))
+                .ForMember(d => d.ImagePath, opt => opt.MapFrom(s => s.ImagePath))
                 .ForMember(d => d.products, opt => opt.Ignore())
-                .ForMember(d => d.Id, opt => opt.Condition((src, dest, srcMember) => srcMember != null));
-
+                .ForMember(d => d.LikesCount, opt => opt.Ignore())
+                .ForMember(d => d.DislikesCount, opt => opt.Ignore())
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
         }
     }
