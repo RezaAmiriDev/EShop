@@ -5,11 +5,26 @@
     ViewData["Title"] = "Edit";
 }
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
 <h1 class="mb-3">Edit Customer</h1>
+
 
 <form method="post" class="needs-validation" novalidate>
     @Html.AntiForgeryToken()
-
+    
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
     @* Hidden Id *@
@@ -48,38 +63,37 @@
                 <span asp-validation-for="Customer.NationalCode" class="text-danger"></span>
             </div>
         </div>
-@* 
         <div class="row mb-3">
             <label class="col-sm-2 col-form-label">State:</label>
             <div class="col-sm-10">
-                <input asp-for="Customer.State" class="form-control" />
-                <span asp-validation-for="Customer.State" class="text-danger"></span>
+                <input asp-for="Customer.addressDto!.State" class="form-control" />
+                <span asp-validation-for="Customer.addressDto!.State" class="text-danger"></span>
             </div>
         </div>
 
         <div class="row mb-3">
             <label class="col-sm-2 col-form-label">City:</label>
             <div class="col-sm-10">
-                <input asp-for="Customer.City" class="form-control" />
-                <span asp-validation-for="Customer.City" class="text-danger"></span>
+                <input asp-for="Customer.addressDto!.City" class="form-control" />
+                <span asp-validation-for="Customer.addressDto!.City" class="text-danger"></span>
             </div>
         </div>
 
         <div class="row mb-3">
             <label class="col-sm-2 col-form-label">Address Detail:</label>
             <div class="col-sm-10">
-                <input asp-for="Customer.AdressDetail" class="form-control" />
-                <span asp-validation-for="Customer.AdressDetail" class="text-danger"></span>
+                <input asp-for="Customer.addressDto!.AdressDetail" class="form-control" />
+                <span asp-validation-for="Customer.addressDto!.AdressDetail" class="text-danger"></span>
             </div>
         </div>
 
         <div class="row mb-3">
             <label class="col-sm-2 col-form-label">Telephone:</label>
             <div class="col-sm-10">
-                <input asp-for="Customer.Tellphone" type="tel" class="form-control" />
-                <span asp-validation-for="Customer.Tellphone" class="text-danger"></span>
+                <input asp-for="Customer.addressDto!.Tellphone" type="tel" class="form-control" />
+                <span asp-validation-for="Customer.addressDto!.Tellphone" class="text-danger"></span>
             </div>
-        </div> *@
+        </div> 
 
         <div class="row">
             <div class="col-sm-10 offset-sm-2 d-flex gap-2">

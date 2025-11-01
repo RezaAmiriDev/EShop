@@ -1,4 +1,5 @@
 ﻿using ClassLibrary.ViewModel;
+using Common.Pagination;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,7 @@ namespace EShope.Pages.Customer
         private readonly SettingWeb _settingWeb;
         private readonly ILogger<IndexModel> _logger;
 
-        public  IndexModel(IHttpClientFactory httpClientFactory , SettingWeb settingWeb , ILogger<IndexModel> logger)
+        public IndexModel(IHttpClientFactory httpClientFactory, SettingWeb settingWeb, ILogger<IndexModel> logger)
         {
             _httpClient = httpClientFactory;
             _settingWeb = settingWeb;
@@ -27,52 +28,76 @@ namespace EShope.Pages.Customer
         {
             var client = _httpClient.CreateClient(_settingWeb.ClinetName);
             var token = User.FindFirst(_settingWeb.TokenName);
-            if(token != null)
+            if (token != null)
             {
-                client.DefaultRequestHeaders.Authorization = 
-                    new AuthenticationHeaderValue(_settingWeb.TokenType , token.Value);
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue(_settingWeb.TokenType, token.Value);
             }
             return client;
         }
 
+        [BindProperty(SupportsGet = true)]
+        public string? SearchTerm { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int PageNumber { get; set; } = 1;
+
+        [BindProperty(SupportsGet = true)]
+        public int PageSize { get; set; } = 10;
+
+        public int TotalPages { get; set; }
+        public int TotalRecords { get; set; }
+
         public List<CusProDto> Customers { get; set; } = new();
 
-        public async Task<IActionResult> OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
         {
-            if (!User.Identity?.IsAuthenticated ?? true)
-            {
-                // به شکل امن درخواست ورود (Challenge) یا RedirectToPage
+            if (!User.Identity?.IsAuthenticated ?? true) 
                 return Challenge();
+
+            var tokenClaim = User.FindFirst(_settingWeb.TokenName);
+            if (tokenClaim == null)
+            {
+                await HttpContext.SignOutAsync();
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
             try
             {
                 var client = CreateApiClient();
 
-                // اگر توکن وجود ندارد، بهتر SignOut و ریدایرکت به لاگین انجام شود
-                var tokenClaim = User.FindFirst(_settingWeb.TokenName);
-                if (tokenClaim == null)
+                // تضمین مقادیر منطقی
+                if (PageNumber <= 0) PageNumber = 1;
+                if (PageSize <= 0) PageSize = 10;
+
+                // ساختِ بدنهٔ درخواست مطابق ساختار مورد انتظار سرور
+                var requestBody = new PagedRequest<CusProDto>
                 {
-                    await HttpContext.SignOutAsync(); // پاک کردن احراز هویت محلی
-                    return RedirectToPage("/Account/Login", new { area = "Identity" });
-                }
+                    PageNumber = PageNumber,
+                    PageSize = PageSize,
+                    StartIndex = (PageNumber - 1) * PageSize,
+                    Data = new CusProDto
+                    {
+                        NationalCode = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim(),
+                        Name = (string?)null // اگر خواستی فیلتر نام‌هم اضافه کنی
+                    }
+                };
 
                 HttpResponseMessage response;
-
                 try
                 {
-                    response = await client.GetAsync("api/Customer");
+                    response = await client.PostAsJsonAsync("api/Customer/paged", requestBody, cancellationToken);
                 }
-                catch(HttpRequestException hex)
+                catch (HttpRequestException hex)
                 {
-                    _logger.LogError(hex , "Unable to reach API at {BaseAddress}" , _settingWeb.BaseAddress);
+                    _logger.LogError(hex, "Unable to reach API for paged customers");
                     ModelState.AddModelError(string.Empty, "خطا در ارتباط با سرویس. لطفاً اتصال اینترنت یا وضعیت سرویس را بررسی کنید.");
                     Customers = new List<CusProDto>();
                     return Page();
                 }
-                catch(TaskCanceledException tcex)
+                catch (TaskCanceledException tcex) when (!cancellationToken.IsCancellationRequested)
                 {
-                    _logger.LogError(tcex, "Request to API timed out");
+                    _logger.LogError(tcex, "Paged request to API timed out");
                     ModelState.AddModelError(string.Empty, "درخواست به سرویس پاسخ نداد (Timeout). لطفاً مجدداً تلاش کنید.");
                     Customers = new List<CusProDto>();
                     return Page();
@@ -82,85 +107,54 @@ namespace EShope.Pages.Customer
                 {
                     if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     {
-                        // توکن نامعتبر یا منقضی شده — پاک کن و به صفحه لاگین ببر
                         await HttpContext.SignOutAsync();
                         return RedirectToPage("/Account/Login", new { area = "Identity" });
                     }
-                    // وضعیت 404 یعنی داده‌ای نیست — این را نشان بده ولی خطا نیست
-                    if(response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    {
-                        _logger.LogInformation("GET api/Customer returned 404 (no data).");
-                        ModelState.AddModelError(string.Empty, "اطلاعاتی برای نمایش وجود ندارد.");
-                        Customers = new List<CusProDto>();
-                        return Page();
-                    }
-                    // وضعیت 400 (BadRequest) یا 500 (Server Error) — تلاش برای خواندن متن خطا
-                    string errorText = string.Empty;
-                    try
-                    {
-                        errorText = await response.Content.ReadAsStringAsync();
-                    }
-                    catch { /* ignore */ }
 
-                    _logger.LogWarning("API returned non-success for GET api/Customer: {Status} - {Text}", (int)response.StatusCode, errorText);
+                    var text = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("Paged API returned {Status}: {Text}", response.StatusCode, text);
 
-                    // نمایش پیام مناسب بر اساس status code
-                    if ((int)response.StatusCode >= 500)
-                        ModelState.AddModelError(string.Empty, "خطای داخلی سرور رخ داده است. لطفاً بعداً تلاش کنید.");
-                    else if ((int)response.StatusCode == 400)
-                        ModelState.AddModelError(string.Empty, $"درخواست نامعتبر: {(!string.IsNullOrWhiteSpace(errorText) ? errorText : response.ReasonPhrase)}");
+                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                        ModelState.AddModelError(string.Empty, "موردی برای نمایش یافت نشد.");
                     else
-                        ModelState.AddModelError(string.Empty, $"خطا در دریافت اطلاعات: {(int)response.StatusCode} {response.ReasonPhrase}");
+                        ModelState.AddModelError(string.Empty, "خطا در دریافت اطلاعات صفحه‌بندی");
 
                     Customers = new List<CusProDto>();
                     return Page();
                 }
 
-                try
+                // روی سرور انتظار داریم PagedResponse<List<CusProDto>> برگردد
+                var paged = await response.Content.ReadFromJsonAsync<PagedResult<List<CusProDto>>>(cancellationToken: cancellationToken);
+                if (paged != null)
                 {
-                    Customers = await response.Content.ReadFromJsonAsync<List<CusProDto>>() ?? new List<CusProDto>();
-                    return Page();
+                    Customers = paged.Data ?? new List<CusProDto>();
+                    PageNumber = paged.PageNumber > 0 ? paged.PageNumber : PageNumber;
+                    PageSize = paged.PageSize > 0 ? paged.PageSize : PageSize;
+                    TotalPages = paged.TotalPages > 0 ? paged.TotalPages : 1;
+                    TotalRecords = paged.TotalRecords;
                 }
-                catch (System.Text.Json.JsonException jex)
+                else
                 {
-                    _logger.LogError(jex, "Failed to deserialize api/Customer response");
-                    ModelState.AddModelError(string.Empty, "مشکل در پردازش داده‌های برگشتی از سرویس. لطفاً با پشتیبانی تماس بگیرید.");
                     Customers = new List<CusProDto>();
-                    return Page();
+                    TotalPages = 1;
+                    TotalRecords = 0;
                 }
-               
+
+                return Page();
             }
             catch (Exception ex)
             {
-                // اگر خطای غیرمنتظره‌ای پیش آمد، لاگ کن و به کاربر پیام بده (بدون ریدایرکت)
-                _logger.LogError(ex, "Unexpected error in Customer Index");
+                _logger.LogError(ex, "Unexpected error in Customer Index (paged)");
                 ModelState.AddModelError(string.Empty, "خطای داخلی رخ داد. لطفاً بعداً تلاش کنید.");
                 Customers = new List<CusProDto>();
                 return Page();
             }
         }
 
-            //var client = _httpClient.CreateClient(_settingWeb.ClinetName);
-            //var token = User.FindFirst(_settingWeb.TokenName);
-            //if (token == null) return RedirectToAction("SignOut", "Account");
-            //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_settingWeb.TokenType, token.Value);
-
-            //var response = await client.GetAsync("api/Customer");
-            //if (!response.IsSuccessStatusCode)
-            //{
-            //    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            //        return RedirectToAction("SignOut", "Account");
-            //    // برای خطای دیگر می‌تونی لاگ کنی یا صفحه خطا برگردونی
-            //    return RedirectToAction("ErrorPage", "Home");
-            //}
-
-            //Customers = await response.Content.ReadFromJsonAsync<List<CusProDto>>() ?? new List<CusProDto>();
-            //return Page();
-
         // Handler برای گرفتن جزئیات یک مشتری به صورت JSON — کلاینت (JS) این handler را صدا می‌زند
         public async Task<IActionResult> OnGetDetailsAsync(Guid id)
         {
-            
+
             if (id == Guid.Empty) return BadRequest();
             if (!User.Identity?.IsAuthenticated ?? true) return Unauthorized();
 
@@ -170,12 +164,26 @@ namespace EShope.Pages.Customer
                 var response = await client.GetAsync($"api/Customer/{id}");
                 if (response.IsSuccessStatusCode)
                 {
+                    // خواندن پاسخ به صورت string برای دیباگ
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("API Response for customer {CustomerId}: {Response}", id, jsonString);
                     var dto = await response.Content.ReadFromJsonAsync<CusProDto>();
-                    return new JsonResult(dto);
+                    return new JsonResult(dto, new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = null // استفاده از PascalCase
+                    });
                 }
 
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return NotFound();
-                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized) return Unauthorized();
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning("Customer {CustomerId} not found", id);
+                    return NotFound();
+                }
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("Unauthorized access to customer {CustomerId}", id);
+                    return Unauthorized();
+                }
 
                 return StatusCode(500);
             }
@@ -205,12 +213,12 @@ namespace EShope.Pages.Customer
                     // حذف موفق — بازگشت به خودِ صفحه تا لیست تازه شود
                     return RedirectToPage();
                 }
-                if(res.StatusCode == System.Net.HttpStatusCode.NotFound)
+                if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
                     ModelState.AddModelError(string.Empty, "مشتری مورد نظر پیدا نشد.");
                     return Page();
                 }
-                if(res.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                if (res.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
                     return RedirectToAction("SignOut", "Account");
                 }
@@ -219,7 +227,8 @@ namespace EShope.Pages.Customer
                 var text = await res.Content.ReadAsStringAsync();
                 ModelState.AddModelError(string.Empty, $"خطا در حذف: {text}");
                 return Page();
-            }catch (Exception)
+            }
+            catch (Exception)
             {
                 ModelState.AddModelError(string.Empty, "خطای سرور هنگام حذف");
                 return Page();

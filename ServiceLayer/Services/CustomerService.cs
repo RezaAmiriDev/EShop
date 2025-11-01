@@ -42,67 +42,71 @@ namespace ServiceLayer.Services
                 return Enumerable.Empty<CusProDto>();
             }
         }
-        public async Task<CusProDto> GetById(Guid Id)
+        public async Task<CusProDto> GetByIdAsync(Guid Id, CancellationToken token = default)
         {
             try
             {
+                var customerEntity = await _customerRepository.TableNoTracking
+                .Include(c => c.Address)
+                .FirstOrDefaultAsync(c => c.Id == Id, token);
 
-                var customer = await _customerRepository.GetByIdAsync(Id);
-                return _mapper.Map<CusProDto>(customer);
+                if (customerEntity == null) return null!;
+                //return _mapper.Map<CusProDto>(customerEntity);
+
+                // استفاده از مپینگ دستی برای اطمینان
+                var result = new CusProDto
+                {
+                    Id = customerEntity.Id,
+                    Name = customerEntity.Name,
+                    Family = customerEntity.Family,
+                    Birth = customerEntity.Birth,
+                    NationalCode = customerEntity.NationalCode,
+                    CreateDate = customerEntity.CreateDate,
+                    addressDto = customerEntity.Address == null ? null : new AddressDto
+                    {
+                        Id = customerEntity.Address.Id,
+                        City = customerEntity.Address.City,
+                        State = customerEntity.Address.State,
+                        Tellphone = customerEntity.Address.Tellphone,
+                        AdressDetail = customerEntity.Address.AdressDetail
+                    }
+                };
+
+                return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null!;
+                Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
+                throw;
             }
         }
-        //public async Task<CusProDto> GetCustomerById(string Id)
-        //{
-        //    try
-        //    {
-        //        var customer = await _customerRepository.TableNoTracking.Include(c => c.AddressId)
-        //            .Select(c => new CusProDto
-        //            {
-        //                Id = c.Id,
-        //                Name = c.Name,
-        //                NationalCode = c.NationalCode,
-        //                CreateDate = c.CreateDate,
-        //                Address = c.Address!,
-        //                Family = c.Family,
-        //            }).FirstOrDefaultAsync(d => d.Id == new Guid(Id));
-        //        return customer!;
 
-        //    }
-        //    catch (Exception)
-        //    {
-        //        throw new Exception("خطا در دریافت اطلاعات مشتری");
-        //    }
-        //}
         public async Task<CusProDto> GetByNationalCode(string NationalCode)
         {
             try
             {
-                if(string.IsNullOrWhiteSpace(NationalCode))
+                if (string.IsNullOrWhiteSpace(NationalCode))
                     return null!;
 
-               var customer = await _customerRepository.TableNoTracking
-                .Where(c => c.NationalCode == NationalCode)
-                .Select(c => new CusProDto
-                {
-                    Id = c.Id,
-                    NationalCode = c.NationalCode,
-                    Name = c.Name,
-                    Family = c.Family,
-                    Birth = c.Birth,
-                    CreateDate = c.CreateDate,
-                    addressDto = c.Address == null ? null : new AddressDto
-                    {
-                        Id = c.Id,
-                        City = c.Address.City,
-                        State = c.Address.State,
-                        Tellphone = c.Address.Tellphone,
-                        AdressDetail = c.Address.AdressDetail,
-                    } 
-                }).FirstOrDefaultAsync();
+                var customer = await _customerRepository.TableNoTracking
+                 .Where(c => c.NationalCode == NationalCode)
+                 .Select(c => new CusProDto
+                 {
+                     Id = c.Id,
+                     NationalCode = c.NationalCode,
+                     Name = c.Name,
+                     Family = c.Family,
+                     Birth = c.Birth,
+                     CreateDate = c.CreateDate,
+                     addressDto = c.Address == null ? null : new AddressDto
+                     {
+                         Id = c.Address.Id,
+                         City = c.Address.City,
+                         State = c.Address.State,
+                         Tellphone = c.Address.Tellphone,
+                         AdressDetail = c.Address.AdressDetail,
+                     }
+                 }).FirstOrDefaultAsync();
 
                 return customer!;
             }
@@ -111,75 +115,140 @@ namespace ServiceLayer.Services
                 throw new Exception("خطا در دریافت مشتری بر اساس کد ملی", ex);
             }
         }
-        public async Task<PagedResponse<IEnumerable<CusProDto>>> GetByPgination(PagedResponse<CusProDto> pageResponse)
+        public async Task<PagedResponse<List<CusProDto>>> GetByPgination(PagedResponse<CusProDto> pageResponse, CancellationToken token = default)
         {
             try
             {
                 // محافظت در برابر null
-                var filterDto = pageResponse?.Data ?? new CusProDto();
+                if (pageResponse == null) throw new ArgumentNullException(nameof(pageResponse));
+                var filterDto = pageResponse.Data ?? new CusProDto();
 
                 var Query = _customerRepository.TableNoTracking.AsQueryable();
 
                 if (!string.IsNullOrEmpty(filterDto.NationalCode))
                 {
-                    Query = Query.Where(d => d.NationalCode.Contains(filterDto.NationalCode));
+                    Query = Query.Where(d => d.NationalCode!.Contains(filterDto.NationalCode));
                 }
                 if (!string.IsNullOrEmpty(filterDto.Name))
                 {
-                    Query = Query.Where(d => d.Name.Contains(filterDto.Name));
+                    Query = Query.Where(d => d.Name!.Contains(filterDto.Name));
                 }
-                var Total = await Query.CountAsync();
-                var list = await Query.Select(c => new CusProDto
-                {
-                    Id = c.Id,
-                    NationalCode = c.NationalCode,
-                    Name = c.Name,
-                    Family = c.Family,
-                    Birth = c.Birth,
-                    CreateDate = c.CreateDate,
-                    addressDto = c.Address == null ? null : new AddressDto
+                var Total = await Query.CountAsync(token);
+                var list = await Query
+                    .OrderByDescending(s => s.CreateDate)
+                    .Skip(pageResponse.StartIndex)
+                    .Take(pageResponse.PageSize)
+                    .Select(c => new CusProDto
                     {
-                        Id = c.Address.Id,
-                        City = c.Address.City,
-                        State = c.Address.State,
-                        Tellphone = c.Address.Tellphone,
-                        AdressDetail = c.Address.AdressDetail,
-                    }
-                   
-                }).OrderByDescending(s => s.CreateDate).Skip(pageResponse.StartIndex)
-                .Take(pageResponse.PageSize).ToListAsync();
+                        Id = c.Id,
+                        NationalCode = c.NationalCode,
+                        Name = c.Name,
+                        Family = c.Family,
+                        Birth = c.Birth,
+                        CreateDate = c.CreateDate,
+                        addressDto = c.Address == null ? null : new AddressDto
+                        {
+                            Id = c.Address.Id,
+                            City = c.Address.City,
+                            State = c.Address.State,
+                            Tellphone = c.Address.Tellphone,
+                            AdressDetail = c.Address.AdressDetail,
+                        }
 
-                return new PagedResponse<IEnumerable<CusProDto>>(pageResponse.PageNumber, Total, list);
+                    }).ToListAsync(token);
+
+                return new PagedResponse<List<CusProDto>>(pageResponse.PageNumber, Total, list);
             }
             catch (Exception)
             {
                 throw new Exception(EnumExtention.GetEnumDescription(ResponseStatus.ServerError));
             }
         }
-        public async Task<ServiceResult> Create(CusProDto customerDto, string UserID)
+        public async Task<ServiceResult> CreateAsync(CusProDto customerDto, string UserID, CancellationToken token = default)
         {
             try
             {
+                var existingCustomer = await _customerRepository.TableNoTracking.AnyAsync(
+                    c => c.NationalCode == customerDto.NationalCode, token);
+                if (existingCustomer)
+                {
+                    return new ServiceResult(ResponseStatus.BadRequest, "کد ملی تکراری است");
+                }
+
                 var customer = _mapper.Map<Customer>(customerDto);
-                var result = await _customerRepository.AddAsync(customer);
+                customer.CreateDate = DateTime.Now; // ✅ تنظیم تاریخ ایجاد
+
+                if (customer.Address != null && (customer.Address.Id == Guid.Empty || customer.Address.Id == null))
+                {
+                    customer.Address.Id = Guid.NewGuid();
+                }
+
+                var result = await _customerRepository.AddAsync(customer, token);
                 return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error in CreateAsync: {ex.Message}");
                 return new ServiceResult(ResponseStatus.ServerError, null);
             }
         }
-        public async Task<ServiceResult> Update(CusProDto customerDto, string UserID)
+
+        public async Task<ServiceResult> UpdateAsync(CusProDto customerDto, string UserID, CancellationToken token = default)
         {
             try
             {
-                var customer = _mapper.Map<Customer>(customerDto);
-                var Result = await _customerRepository.UpdateAsync(customer);
+                // بررسی وجود مشتری
+                var existingCustomer = await _customerRepository.Table
+                    .Include(c => c.Address).FirstOrDefaultAsync(c => c.Id == customerDto.Id);
+                if (existingCustomer == null)
+                {
+                    return new ServiceResult(ResponseStatus.NotFound, "مشتری یافت نشد");
+                }
+
+                var duplicateNationalCode = await _customerRepository.TableNoTracking
+                    .AnyAsync(c => c.NationalCode == customerDto.NationalCode && c.Id != customerDto.Id, token);
+                if (duplicateNationalCode)
+                {
+                    return new ServiceResult(ResponseStatus.BadRequest, "کد ملی تکراری است");
+                }
+
+                // به‌روزرسانی فیلدهای اصلی
+                // مپ کردن فقط فیلدهای قابل تغییر
+                existingCustomer.Name = customerDto.Name;
+                existingCustomer.Family = customerDto.Family;
+                existingCustomer.Birth = customerDto.Birth;
+                existingCustomer.NationalCode = customerDto.NationalCode;
+
+                // مدیریت آدرس
+                if (customerDto.addressDto != null)
+                {
+                    if (existingCustomer.Address == null)
+                    {
+                        // ایجاد آدرس جدید
+                        existingCustomer.Address = _mapper.Map<Address>(customerDto.addressDto);
+                    }
+                    else
+                    {
+                        // به‌روزرسانی آدرس موجود
+                        existingCustomer.Address.City = customerDto.addressDto.City;
+                        existingCustomer.Address.State = customerDto.addressDto.State;
+                        existingCustomer.Address.Tellphone = customerDto.addressDto.Tellphone;
+                        existingCustomer.Address.AdressDetail = customerDto.addressDto.AdressDetail;
+                    }
+                }
+
+                var Result = await _customerRepository.UpdateAsync(existingCustomer, token);
+                if (Result.Status == ResponseStatus.Success)
+                {
+                    return new ServiceResult(ResponseStatus.Success, "مشتری با موفقیت ویرایش شد");
+                }
+
                 return Result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return new ServiceResult(ResponseStatus.ServerError, null);
+                Console.WriteLine($"Error in UpdateAsync: {ex.Message}");
+                return new ServiceResult(ResponseStatus.ServerError, "خطا در ویرایش مشتری");
             }
         }
         public async Task<ServiceResult> Delete(Guid Id, string UserID)

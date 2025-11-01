@@ -1,9 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using DataLayer.Base;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DataLayer.ApiResult;
 
 namespace ClassLibrary.Repository
@@ -13,27 +9,24 @@ namespace ClassLibrary.Repository
         DbSet<TEntity> Entities { get; }
         IQueryable<TEntity> Table {  get; }
         IQueryable<TEntity> TableNoTracking { get; }
-        Task<TEntity> InsertReturnInformation(TEntity entity);
+        Task<TEntity> InsertAndReturnAsync(TEntity entity, CancellationToken token = default);
 
-        // add
-        Task<ServiceResult> AddAsync(TEntity entity);
-        Task<ServiceResult> AddRangeAsync(IEnumerable<TEntity?> entities);
-
-        // delete
-        Task<ServiceResult> DeleteAsync(TEntity entity);
-        Task<ServiceResult> DeleteRangeAsync(IEnumerable<TEntity> entities);
-
-
+        // read or get
         TEntity GetById(params object[] ids);
         Task<TEntity> GetByIdAsync(params object[] ids);
+        Task<List<TEntity>> GetAllAsync(CancellationToken token = default);
+
+        // add
+        Task<ServiceResult> AddAsync(TEntity entity , CancellationToken token = default);
+        Task<ServiceResult> AddRangeAsync(IEnumerable<TEntity?> entities , CancellationToken token = default);
 
         // update
-        Task<ServiceResult> UpdateAsync(TEntity entity);
-        Task<ServiceResult> UpdateRangeAsync(IEnumerable<TEntity?> entities);
+        Task<ServiceResult> UpdateAsync(TEntity entity , CancellationToken token = default);
+        Task<ServiceResult> UpdateRangeAsync(IEnumerable<TEntity?> entities , CancellationToken token = default);
 
+        // delete
+        Task<ServiceResult> DeleteAsync(TEntity entity, CancellationToken token = default);
+        Task<ServiceResult> DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken token = default);
 
-       // Attach/Detach (optional, keep if you need explicit state control)
-       // void Datach(TEntity entity);
-       // void Attach(TEntity entity);
     }
 }

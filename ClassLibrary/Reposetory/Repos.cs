@@ -20,19 +20,39 @@ namespace ModelLayer.Reposetotry
             Entities = _mobiContext.Set<TEntity>();
         }
 
-        #region Add Method
-        public virtual async Task<ServiceResult> AddAsync(TEntity entity)
+       // Rang
+        public virtual TEntity GetById(params object[] ids)
+        {
+            var find = Entities.Find(ids);
+            return find!;
+        }
+        public virtual async Task<TEntity> GetByIdAsync(params object[] ids )
+        {
+            var entry = await Entities.FindAsync(ids);
+            return entry!;
+        }
+        public virtual async Task<List<TEntity>> GetAllAsync(CancellationToken token = default)
+        {
+            return await TableNoTracking.ToListAsync(token);
+        }
+
+       // Add & AddRang
+        public virtual async Task<ServiceResult> AddAsync(TEntity entity, CancellationToken token = default)
         {
             try
             {
                 Guid newId = Guid.NewGuid();
-                var typeId = entity.GetType().GetProperty("Id").PropertyType.Name;
-                if (typeId == "Guid")
+                var prop = entity.GetType().GetProperty("Id");
+                if (prop != null)
                 {
-                    entity.GetType().GetProperty("Id").SetValue(entity, newId);
+                    var typeId = prop.PropertyType.Name;
+                    if(typeId == "Guid")
+                    {
+                        prop.SetValue(entity, newId);
+                    }
                 }
-                await Entities.AddAsync(entity);
-                await _mobiContext.SaveChangesAsync();
+                await Entities.AddAsync(entity , token);
+                await _mobiContext.SaveChangesAsync(token);
                 return new ServiceResult(ResponseStatus.Success, null);
             }
             catch (Exception ex)
@@ -47,12 +67,12 @@ namespace ModelLayer.Reposetotry
                 }
             }
         }
-        public async Task<ServiceResult> AddRangeAsync(IEnumerable<TEntity> entities)
+        public virtual async Task<ServiceResult> AddRangeAsync(IEnumerable<TEntity> entities , CancellationToken token = default)
         {
             try
             {
-                await Entities.AddRangeAsync(entities);
-                await _mobiContext.SaveChangesAsync();
+                await Entities.AddRangeAsync(entities, token);
+                await _mobiContext.SaveChangesAsync(token);
                 return new ServiceResult(ResponseStatus.Success, null);
             }
             catch (Exception)
@@ -61,46 +81,14 @@ namespace ModelLayer.Reposetotry
                 return new ServiceResult(ResponseStatus.ServerError, null);
             }
         }
-        #endregion
-
-        #region Delete Method
-        public virtual async Task<ServiceResult> DeleteAsync(TEntity entity)
-        {
-            try
-            {
-                Entities.Remove(entity);
-                await _mobiContext.SaveChangesAsync();
-                return new ServiceResult(ResponseStatus.Success, null);
-            }
-            catch (Exception)
-            {
-
-                return new ServiceResult(ResponseStatus.ServerError, null);
-            }
-        }
-        public virtual async Task<ServiceResult> DeleteRangeAsync(IEnumerable<TEntity> entities)
-        {
-            try
-            {
-                Entities.RemoveRange(entities);
-                await _mobiContext.SaveChangesAsync();
-                return new ServiceResult(ResponseStatus.Success, null);
-            }
-            catch (Exception)
-            {
-
-                return new ServiceResult(ResponseStatus.ServerError, null);
-            }
-        }
-        #endregion
-
-        #region UpDate Method
-        public virtual async Task<ServiceResult> UpdateAsync(TEntity entity)
+ 
+       // Update & UpdateRang
+        public virtual async Task<ServiceResult> UpdateAsync(TEntity entity , CancellationToken token = default)
         {
             try
             {
                 Entities.Update(entity);
-                await _mobiContext.SaveChangesAsync();
+                await _mobiContext.SaveChangesAsync(token);
                 return new ServiceResult(ResponseStatus.Success, null);
             }
             catch (Exception)
@@ -109,12 +97,12 @@ namespace ModelLayer.Reposetotry
                 return new ServiceResult(ResponseStatus.ServerError, null);
             }
         }
-        public async Task<ServiceResult> UpdateRangeAsync(IEnumerable<TEntity> entities)
+        public virtual async Task<ServiceResult> UpdateRangeAsync(IEnumerable<TEntity> entities , CancellationToken token = default)
         {
             try
             {
                 Entities.UpdateRange(entities);
-                await _mobiContext.SaveChangesAsync();
+                await _mobiContext.SaveChangesAsync(token);
                 return new ServiceResult(ResponseStatus.Success, null);
             }
             catch (Exception)
@@ -123,33 +111,58 @@ namespace ModelLayer.Reposetotry
                 return new ServiceResult(ResponseStatus.ServerError, null);
             }
         }
-        #endregion
 
-        #region GetById
-        public virtual async Task<TEntity> GetByIdAsync(params object[] ids)
+       // Delete & DeleteRang
+        public virtual async Task<ServiceResult> DeleteAsync(TEntity entity , CancellationToken token = default)
         {
-            return await Entities.FindAsync(ids);
-        }
-        public virtual TEntity GetById(params object[] ids)
-        {
-            return Entities.Find(ids);
-        }
-        #endregion
+            try
+            {
+                Entities.Remove(entity);
+                await _mobiContext.SaveChangesAsync(token);
+                return new ServiceResult(ResponseStatus.Success, null);
+            }
+            catch (Exception)
+            {
 
-        #region Attach & Detach
-        public async Task<TEntity> InsertReturnInformation(TEntity entity)
+                return new ServiceResult(ResponseStatus.ServerError, null);
+            }
+        }
+        public virtual async Task<ServiceResult> DeleteRangeAsync(IEnumerable<TEntity> entities , CancellationToken token = default)
+        {
+            try
+            {
+                Entities.RemoveRange(entities);
+                await _mobiContext.SaveChangesAsync(token);
+                return new ServiceResult(ResponseStatus.Success, null);
+            }
+            catch (Exception)
+            {
+
+                return new ServiceResult(ResponseStatus.ServerError, null);
+            }
+        }
+
+        //موجودیت (entity) را به DbSet اضافه می‌کند (AddAsync).
+        // با SaveChangesAsync تغییرات را در پایگاه داده ذخیره می‌کند.
+        public virtual async Task<TEntity> InsertAndReturnAsync(TEntity entity , CancellationToken token = default)
         {
             try
             {
                 await Entities.AddAsync(entity);
-                await _mobiContext.SaveChangesAsync();
+                await _mobiContext.SaveChangesAsync(token);
                 return entity;
+            }
+            catch (DbUpdateException)
+            {
+                // لاگ کن
+                // _logger?.LogError(dbEx, "Insert failed");
+                return null;
             }
             catch (Exception)
             {
-                return null!;
+                throw;
             }
         }
-        #endregion
+
     }
 }

@@ -61,4 +61,46 @@ namespace Common.Pagination
             return ((totalRecords - 1) / recordsPerPage) + 1;
         }
     }
+
+    public class PagedRequest<TData>
+    {
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        public int StartIndex { get; set; } = 0;
+        public TData? Data { get; set; }
+    }
+
+    public class PagedResult<TData>
+    {
+        public PagedResult() { }
+
+        // ctor که از PagedResponse<TData> مقداردهی می‌کند
+        public PagedResult(PagedResponse<TData> src)
+        {
+            if (src == null) return;
+            PageNumber = src.PageNumber;
+            PageSize = src.PageSize;
+            FirstPage = src.FirstPage;
+            LastPage = src.LastPage;
+            TotalPages = src.TotalPages;
+            TotalRecords = src.TotalRecords;
+            NextPage = src.NextPage;
+            StartIndex = src.StartIndex;
+            NumberReturned = src.NumberReturned;
+            PreviousPage = src.PreviousPage;
+            Data = src.Data;
+        }
+
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int FirstPage { get; set; }
+        public int LastPage { get; set; }
+        public int TotalPages { get; set; }
+        public int TotalRecords { get; set; }
+        public int NextPage { get; set; }
+        public int StartIndex { get; set; }
+        public int NumberReturned { get; set; }
+        public int PreviousPage { get; set; }
+        public TData? Data { get; set; }
+    }
 }
