@@ -2,6 +2,7 @@
 using ClassLibrary;
 using DataLayer.ApiResult;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ModelLayer.Interface;
 using ModelLayer.Models;
 using ModelLayer.ViewModel;
@@ -18,11 +19,13 @@ namespace ServiceLayer.Services
     {
         private readonly IShopRepository _sellerRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<ShopService> _logger;
 
-        public ShopService(IShopRepository sellerRepository, IMapper mapper)
+        public ShopService(IShopRepository sellerRepository, IMapper mapper, ILogger<ShopService> logger)
         {
             _sellerRepository = sellerRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<ShopDto>> GetAllAsync()
@@ -64,7 +67,7 @@ namespace ServiceLayer.Services
             }
         }
 
-        public async Task<ServiceResult> CreateAsync(ShopDto dto)
+        public async Task<ServiceResult> CreateAsync(ShopDto dto, CancellationToken ct = default)
         {
             try
             {
@@ -72,7 +75,7 @@ namespace ServiceLayer.Services
                 {
                     var code = dto.ShopCode.Trim();
                     var exists = await _sellerRepository.TableNoTracking
-                        .AnyAsync(s => s.ShopCode != null && s.ShopCode.ToLower() == code.ToLower());
+                        .AnyAsync(s => s.ShopCode == dto.ShopCode , ct);
                     if (exists)
                     {
                         return new ServiceResult(ResponseStatus.BadRequest, "کد فروشگاه قبلاً ثبت شده است.");
@@ -80,32 +83,25 @@ namespace ServiceLayer.Services
                 }
 
                 var seller = _mapper.Map<Shop>(dto);
+                seller.Id = Guid.NewGuid();
 
-                if (seller.Id == Guid.Empty) seller.Id = Guid.NewGuid();
-
-                if(seller.Address !=null && seller.Address.Id == Guid.Empty)
+                if(seller.Address != null && seller.Address.Id == Guid.Empty)
                 {
                    seller.Address.Id = Guid.NewGuid();
                 }
 
-                var res = await _sellerRepository.AddAsync(seller);
-
-                if (res.Status != ResponseStatus.Success)
-                {
-                    Console.WriteLine("CreateAsync - repo error: " + (res.Message ?? "no message"));
-                }
-
-                return res;
+                var result = await _sellerRepository.AddAsync(seller , ct);
+                return result ?? new ServiceResult(ResponseStatus.ServerError, null);
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"CreateAsync error: {ex.Message}");
+                _logger.LogError(ex, "CreateAsync failed");
                 return new ServiceResult(ResponseStatus.ServerError, null);
             }
         }
 
-        public async Task<ServiceResult> UpdateAsync(ShopDto dto)
+        public async Task<ServiceResult> UpdateAsync(ShopDto dto , CancellationToken ct = default)
         {
             try
             {
@@ -115,70 +111,71 @@ namespace ServiceLayer.Services
                 }
                 var id = dto.Id.Value;
 
-                if (!string.IsNullOrWhiteSpace(dto.ShopCode))
-                {
-                    var code = dto.ShopCode.Trim();
-                    var exists = await _sellerRepository.TableNoTracking
-                        .AnyAsync(s => s.ShopCode != null && s.ShopCode.ToLower() == code.ToLower() && s.Id != id);
-                    if (exists)
-                    {
-                        return new ServiceResult(ResponseStatus.BadRequest, "کد فروشگاه تکراری است.");
-                    }
-                }
                 var existing = await _sellerRepository.Table
                     .Include(s => s.products)
                     .Include(s => s.Address)
-                    .FirstOrDefaultAsync(s => s.Id == id);
+                    .FirstOrDefaultAsync(s => s.Id == dto.Id.Value, ct);
 
                 if(existing == null)
                 {
                     return new ServiceResult(ResponseStatus.NotFound, "Seller not found");
                 }
-                // داخل ShopService.UpdateAsync
-                if (dto.ShopName != null) existing.ShopName = dto.ShopName;
-                if (dto.Description != null) existing.Description = dto.Description;
-                if (dto.ShopCode != null) existing.ShopCode = dto.ShopCode;
-                if (dto.ImagePath != null) existing.ImagePath = dto.ImagePath; // controller تنظیم می‌کند
 
-                if (dto.AddressDto != null)
+                if (!string.IsNullOrWhiteSpace(dto.ShopCode))
                 {
-                    // اگر می‌خواهی آدرس جدید بسازی یا Id را ست کنی:
-                    if (dto.AddressDto.Id.HasValue && dto.AddressDto.Id.Value != Guid.Empty)
+                    var code = dto.ShopCode.Trim();
+                    var exists = await _sellerRepository.TableNoTracking
+                        .AnyAsync(s => s.ShopCode == dto.ShopCode && s.Id != dto.Id, ct);
+                    if (exists)
                     {
-                        existing.AddressId = dto.AddressDto.Id.Value;
-
-                        // اگر موجودی دارای Address هست، آن را به روز کن، در غیر این صورت new Address
-                        if (existing.Address == null || existing.Address.Id != dto.AddressDto.Id.Value)
-                        {
-                            // اگر navigation موجود نیست یا Id فرق دارد، دستی یک navigation داشته باش
-                            existing.Address = existing.Address ?? new Address { Id = dto.AddressDto.Id.Value };
-                        }
-
-                        // اگر navigation موجود، فیلدهایش را آپدیت کن
-                        if (dto.AddressDto.City != null) existing.Address.City = dto.AddressDto.City;
-                        if (dto.AddressDto.State != null) existing.Address.State = dto.AddressDto.State;
-                        if (dto.AddressDto.Tellphone != null) existing.Address.Tellphone = dto.AddressDto.Tellphone;
-                        if (dto.AddressDto.AdressDetail != null) existing.Address.AdressDetail = dto.AddressDto.AdressDetail;
-                    }
-                    else
-                    {
-                        // 2) اگر Id ارسال نشده اما فیلدهای آدرس وجود دارد => آدرس جاری را آپدیت کن (اگر ندارد بساز)
-                        if (existing.Address == null) existing.Address = new Address { Id = Guid.NewGuid() };
-                        if (dto.AddressDto.City != null) existing.Address.City = dto.AddressDto.City;
-                        if (dto.AddressDto.State != null) existing.Address.State = dto.AddressDto.State;
-                        if (dto.AddressDto.Tellphone != null) existing.Address.Tellphone = dto.AddressDto.Tellphone;
-                        if (dto.AddressDto.AdressDetail != null) existing.Address.AdressDetail = dto.AddressDto.AdressDetail;
-                        // sync FK
-                        existing.AddressId = existing.Address.Id;
+                        return new ServiceResult(ResponseStatus.BadRequest, "کد فروشگاه تکراری است.");
                     }
                 }
+                //// داخل ShopService.UpdateAsync
+                //if (dto.ShopName != null) existing.ShopName = dto.ShopName;
+                //if (dto.Description != null) existing.Description = dto.Description;
+                //if (dto.ShopCode != null) existing.ShopCode = dto.ShopCode;
+                //if (dto.ImagePath != null) existing.ImagePath = dto.ImagePath; // controller تنظیم می‌کند
 
-                //_mapper.Map(dto , existing);
-                return await _sellerRepository.UpdateAsync(existing);
+                //if (dto.AddressDto != null)
+                //{
+                //    // اگر می‌خواهی آدرس جدید بسازی یا Id را ست کنی:
+                //    if (dto.AddressDto.Id.HasValue && dto.AddressDto.Id.Value != Guid.Empty)
+                //    {
+                //        existing.AddressId = dto.AddressDto.Id.Value;
+
+                //        // اگر موجودی دارای Address هست، آن را به روز کن، در غیر این صورت new Address
+                //        if (existing.Address == null || existing.Address.Id != dto.AddressDto.Id.Value)
+                //        {
+                //            // اگر navigation موجود نیست یا Id فرق دارد، دستی یک navigation داشته باش
+                //            existing.Address = existing.Address ?? new Address { Id = dto.AddressDto.Id.Value };
+                //        }
+
+                //        // اگر navigation موجود، فیلدهایش را آپدیت کن
+                //        if (dto.AddressDto.City != null) existing.Address.City = dto.AddressDto.City;
+                //        if (dto.AddressDto.State != null) existing.Address.State = dto.AddressDto.State;
+                //        if (dto.AddressDto.Tellphone != null) existing.Address.Tellphone = dto.AddressDto.Tellphone;
+                //        if (dto.AddressDto.AdressDetail != null) existing.Address.AdressDetail = dto.AddressDto.AdressDetail;
+                //    }
+                //    else
+                //    {
+                //        // 2) اگر Id ارسال نشده اما فیلدهای آدرس وجود دارد => آدرس جاری را آپدیت کن (اگر ندارد بساز)
+                //        if (existing.Address == null) existing.Address = new Address { Id = Guid.NewGuid() };
+                //        if (dto.AddressDto.City != null) existing.Address.City = dto.AddressDto.City;
+                //        if (dto.AddressDto.State != null) existing.Address.State = dto.AddressDto.State;
+                //        if (dto.AddressDto.Tellphone != null) existing.Address.Tellphone = dto.AddressDto.Tellphone;
+                //        if (dto.AddressDto.AdressDetail != null) existing.Address.AdressDetail = dto.AddressDto.AdressDetail;
+                //        // sync FK
+                //        existing.AddressId = existing.Address.Id;
+                //    }
+                //}
+
+                _mapper.Map(dto , existing);
+                return await _sellerRepository.UpdateAsync(existing, ct);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"UpdateAsync error: {ex.Message}");
+                _logger.LogError(ex, "UpdateAsync failed for Shop {Id}", dto.Id);
                 return new ServiceResult(ResponseStatus.ServerError, null);
             }
         }

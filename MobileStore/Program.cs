@@ -81,8 +81,8 @@ app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.WebRootPath, "uploads")),
-    RequestPath = "/uploads"
+        Path.Combine(builder.Environment.WebRootPath, "Images")),
+    RequestPath = "/Images"
 });
 
 app.UseRouting();

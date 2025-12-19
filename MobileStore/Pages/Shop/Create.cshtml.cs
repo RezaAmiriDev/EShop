@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ModelLayer.ViewModel;
-using System.Text.Json;
+using System.Net.Http.Headers;
+
 
 namespace EShope.Pages.Shop
 {
@@ -25,58 +26,63 @@ namespace EShope.Pages.Shop
         }
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid) return Page();
+            if (!ModelState.IsValid) return BadRequest();
 
             var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
 
             try
             {
-                // 1) اگر فایل وجود دارد، اول آپلودش کن
+                using var form = new MultipartFormDataContent();
+                void AddString(string name, string? value)
+                {
+                    if (!string.IsNullOrWhiteSpace(value))
+                        form.Add(new StringContent(value), name);
+                }
+
+                // ===== ShopDto fields =====
+                AddString("ShopName", Seller.ShopName);
+                AddString("Description", Seller.Description);
+                AddString("ShopCode", Seller.ShopCode);
+                AddString("ImagePath", Seller.ImagePath);
+
+                // ===== AddressDto fields =====
+                if (Seller.AddressDto != null)
+                {
+                    AddString("AddressDto.Id", Seller.AddressDto.Id?.ToString());
+                    AddString("AddressDto.City", Seller.AddressDto.City);
+                    AddString("AddressDto.State", Seller.AddressDto.State);
+                    AddString("AddressDto.Tellphone", Seller.AddressDto.Tellphone);
+                    AddString("AddressDto.AdressDetail", Seller.AddressDto.AdressDetail);
+                }
+
+                // ===== Avatar file =====
                 if (Seller.Avatar != null && Seller.Avatar.Length > 0)
                 {
                     using var ms = new MemoryStream();
                     await Seller.Avatar.CopyToAsync(ms);
                     ms.Position = 0;
-                    using var content = new MultipartFormDataContent
-                    {
-                       {
-                         new StreamContent(ms)
-                         {
-                           Headers = {
-                             ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
-                             Seller.Avatar.ContentType ?? "application/octet-stream")
-                           }
-                         }, "file", Seller.Avatar.FileName
-                       }
-                    };
-
-                    var uploadResp = await client.PostAsync("api/shop/upload", content);
-                    if (!uploadResp.IsSuccessStatusCode)
-                    {
-                        ModelState.AddModelError(string.Empty, "ارسال تصویر با خطا مواجه شد.");
-                        return Page();
-                    }
-                    var uploadJson = await uploadResp.Content.ReadFromJsonAsync<JsonElement?>();
-                    if (uploadJson.HasValue && uploadJson.Value.TryGetProperty("path", out var p))
-                    {
-                        Seller.ImagePath = p.GetString();
-                    }
-                       
-                    Seller.Avatar = null;
+                    var fileContent = new StreamContent(ms);
+                    fileContent.Headers.ContentType = new MediaTypeHeaderValue(Seller.Avatar.ContentType ?? "application/octet-stream");
+                    form.Add(fileContent, "Avatar", Seller.Avatar.FileName);
                 }
 
-                // 2) حالا DTO را به صورت JSON بفرست
-                var resp = await client.PostAsJsonAsync("api/shop", Seller);
-                if (resp.IsSuccessStatusCode || resp.StatusCode == System.Net.HttpStatusCode.Created)
+                var response = await client.PostAsync("api/shop", form);
+                if (response.IsSuccessStatusCode)
                     return RedirectToPage("./Index");
 
-                var msg = await resp.Content.ReadAsStringAsync();
-                ModelState.AddModelError(string.Empty, "خطا در ایجاد: " + msg);
+                var error = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError(string.Empty, "خطا در ایجاد فروشگاه: " + error);
+                return Page();
+
+            }
+            catch (HttpRequestException ex)
+            {
+                ModelState.AddModelError(string.Empty, "خطا در ارتباط با سرور: " + ex.Message);
                 return Page();
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, "خطا در ارتباط با سرور: " + ex.Message);
+                ModelState.AddModelError(string.Empty, "خطای غیرمنتظره: " + ex.Message);
                 return Page();
             }
         }
