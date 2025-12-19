@@ -162,59 +162,6 @@
             </div>
         </div>
     </div>
-    @{
-        var cur = Model.PageNumber <= 0 ? 1 : Model.PageNumber;
-        var total = Model.TotalPages <= 0 ? 1 : Model.TotalPages;
-        var startPage = Math.Max(1, cur - 1);
-        var endPage = Math.Min(total, cur + 1);
-        if (endPage - startPage < 2)
-        {
-            if (startPage == 1) endPage = Math.Min(total, startPage + 2);
-            else if (endPage == total) startPage = Math.Max(1, endPage - 2);
-        }
-    }
-    @if (Model.TotalRecords > 0)
-    {
-        <div class="d-flex flex-column align-items-center mt-4">
-            <div class="mb-2">
-                <small class="text-muted">
-                    نمایش @((Model.PageNumber - 1) * Model.PageSize + 1)
-                    تا @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalRecords))
-                    از @Model.TotalRecords
-                </small>
-            </div>
-
-            <nav aria-label="Page navigation" class="d-flex justify-content-center">
-                <ul class="pagination mb-0">
-                    <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
-                        <a class="page-link " asp-page="./Index" asp-route-searchTerm="@(Model.SearchTerm)"
-                           asp-route-pageNumber="1" asp-route-pageSize="@(Model.PageSize)">اول</a>
-                    </li>
-                    <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
-                        <a class="page-link " asp-page="./Index" asp-route-searchTerm="@(Model.SearchTerm)"
-                           asp-route-pageNumber="@(Math.Max(1, Model.PageNumber - 1))" asp-route-pageSize="@(Model.PageSize)">قبلی</a>
-                    </li>
-
-                    @for (int p = startPage; p <= endPage; p++)
-                    {
-                        <li class="page-item @(p == Model.PageNumber ? "active" : "")">
-                            <a class="page-link" asp-page="./Index" asp-route-searchTerm="@(Model.SearchTerm)"
-                               asp-route-pageNumber="@p" asp-route-pageSize="@(Model.PageSize)">@p</a>
-                        </li>
-                    }
-
-                    <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" asp-page="./Index" asp-route-searchTerm="@(Model.SearchTerm)"
-                           asp-route-pageNumber="@(Math.Min(Model.TotalPages, Model.PageNumber + 1))" asp-route-pageSize="@(Model.PageSize)">بعدی</a>
-                    </li>
-                    <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" asp-page="./Index" asp-route-searchTerm="@(Model.SearchTerm)"
-                           asp-route-pageNumber="@(Model.TotalPages)" asp-route-pageSize="@(Model.PageSize)">آخر</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    }
 
 </div>
 

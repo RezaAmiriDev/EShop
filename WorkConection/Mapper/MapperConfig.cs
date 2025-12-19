@@ -10,31 +10,23 @@ namespace WebFrameWork.Mapper
     {
         public MapperConfig()
         {
-            // AddressDto -> Address (برای Create/Update)
+
+            // Address ⇄ AddressDto
             CreateMap<Address, AddressDto>();
             CreateMap<AddressDto, Address>()
-                .ForMember(d => d.Id, opt => opt.Condition((src, dest, srcMember) =>
-                src.Id.HasValue && src.Id.Value != Guid.Empty))
-                .ForMember(d => d.Customers, opt => opt.Ignore());
+                .ForMember(dest => dest.Customers, opt => opt.Ignore());
 
-            // Customer -> CusProDto (نمایش)
-            CreateMap<Customer, CusProDto>()
-                .ForMember(dest => dest.addressDto, opt => opt.MapFrom(src => src.Address))
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
-                .ForMember(dest => dest.Family, opt => opt.MapFrom(src => src.Family))
-                .ForMember(dest => dest.NationalCode, opt => opt.MapFrom(src => src.NationalCode))
-                .ForMember(dest => dest.Birth, opt => opt.MapFrom(src => src.Birth))
-                .ForMember(dest => dest.CreateDate, opt => opt.MapFrom(src => src.CreateDate));
-            // CusProDto -> Customer (Create/Update)
+            // Customer ⇄ CusProDto
+            CreateMap<Customer, CusProDto>().ReverseMap()
+                .ForMember(dest => dest.Address , opt => opt.MapFrom(src => src.addressDto));
+
+            // برای تبدیل در جهت معکوس (DTO -> Entity) — مفید برای create/update
             CreateMap<CusProDto, Customer>()
-                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.addressDto))
-                // .ForMember(dest => dest.Id , opt => opt.Ignore())
-                .ForMember(dest => dest.CreateDate, opt => opt.Ignore()) // ✅ در به‌روزرسانی تغییر نده
-                .ForMember(dest => dest.Id, opt => opt.Condition((src, dest, srcMember) => src.Id != null && src.Id != Guid.Empty))
-                .ForMember(dest => dest.Sales, opt => opt.Ignore())
-                .ForMember(dest => dest.products, opt => opt.Ignore())
-                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null && !string.IsNullOrWhiteSpace(srcMember?.ToString())));
+                // اگر Customer دارای collection/navigation است، آن‌ها را ایگنور کن
+                .ForMember(dest => dest.AddressId, opt => opt.MapFrom(src => src.addressDto))
+                .ForMember(dest => dest.Sales, opt => opt.Ignore())   // مثال: collection ها را ایگنور کن
+                .ForMember(dest => dest.products, opt => opt.Ignore()) // بر اساس مدلت
+                .ForMember(dest => dest.CreateDate, opt => opt.Ignore()); // CreateDate معمولاً سمت سرور set می‌شود
 
             // Entity -> ReadDto
             CreateMap<Product, ProductDto>();
