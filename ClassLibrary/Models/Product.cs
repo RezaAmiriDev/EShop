@@ -1,13 +1,5 @@
-﻿using ClassLibrary.Models;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using ModelLayer.Models;
 using DataLayer.Base;
 
@@ -24,6 +16,10 @@ namespace ClassLibrary
         [Display(Name = "Brand")]
         [MaxLength(20)]
         public string? Brand { get; set; }
+
+        [Display(Name = "Code")]
+        [MaxLength(20)]
+        public string? ProductCode { get; set; }
 
         [Display(Name = "نوع محصول")]
         public ProductType Type { get; set; }

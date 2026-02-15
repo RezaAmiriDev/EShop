@@ -37,7 +37,7 @@
             <h1 class="display-6">Customer Directory</h1>
 
             <div>
-                <!-- فرم جستجو: با Razor Pages از asp-page استفاده کنید -->
+                <!-- فرم جستجو: با Razor Pages از asp-page استفاده کنید --> 
                 <form method="get" asp-page="./Index" class="d-flex gap-2 align-items-center" style="height: 48px;">
                     <div class="input-group" style="max-width: 280px;  height: 100%;">
                         <input type="text" name="searchTerm" class="form-control h-100"
@@ -113,6 +113,74 @@
         </table>
         
     </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Customer pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+
+                <!-- اولین صفحه -->
+                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-page="./Index"
+                       asp-route-pageNumber="1"
+                       asp-route-pageSize="@Model.PageSize"
+                       asp-route-searchTerm="@Model.SearchTerm">
+                        اولین
+                    </a>
+                </li>
+
+                <!-- قبلی -->
+                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-page="./Index"
+                       asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       asp-route-pageSize="@Model.PageSize"
+                       asp-route-searchTerm="@Model.SearchTerm">
+                        قبلی
+                    </a>
+                </li>
+
+                <!-- شماره صفحات -->
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link"
+                           asp-page="./Index"
+                           asp-route-pageNumber="@i"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-searchTerm="@Model.SearchTerm">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                <!-- بعدی -->
+                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-page="./Index"
+                       asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       asp-route-pageSize="@Model.PageSize"
+                       asp-route-searchTerm="@Model.SearchTerm">
+                        بعدی
+                    </a>
+                </li>
+
+                <!-- آخرین صفحه -->
+                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-page="./Index"
+                       asp-route-pageNumber="@Model.TotalPages"
+                       asp-route-pageSize="@Model.PageSize"
+                       asp-route-searchTerm="@Model.SearchTerm">
+                        آخرین
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+    }
+
 
     <!-- Detail Modal -->
     <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">

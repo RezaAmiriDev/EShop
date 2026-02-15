@@ -5,67 +5,46 @@ namespace Common.Pagination
 {
     public class PagedResponse<TData>
     {
-        public PagedResponse(int pageNumber, int totalRecords, TData data)
+        public PagedResponse(int pageNumber, int pageSize, int totalRecords, TData data)
         {
-            var _StartIndex = 0;
-            if (pageNumber == 0 || pageNumber == 1)
-            {
-                _StartIndex = 0;
-                pageNumber = 1;
-            }
-            else
-            {
-                var Skip = pageNumber - 1;
-                _StartIndex = 10 * Skip;
-            }
-            if (pageNumber == 1)
-            {
-                PreviousPage = pageNumber;
-            }
-            else
-            {
-                PreviousPage = pageNumber - 1;
-            }
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 12;
 
             PageNumber = pageNumber;
-            PageSize = 10;
-            FirstPage = 1;
-            LastPage = totalRecords / PageSize;
-            TotalPages = countPages(totalRecords, PageSize);
+            PageSize = pageSize;
             TotalRecords = totalRecords;
             Data = data;
-            NumberReturned = 10;
-            StartIndex = _StartIndex;
-            NextPage = pageNumber++;
-            if (totalRecords <= 10)
-            {
-                LastPage = 1;
-                NextPage = 1;
-                TotalPages = 1;
-            }
+            TotalPages = CalculateTotalPages(totalRecords, pageSize);
+            StartIndex = (pageNumber - 1) * PageSize;
+            FirstPage = 1;
+            LastPage = TotalPages;
+            PreviousPage = pageNumber > 1 ? pageNumber - 1 : 1;
+            NextPage = pageNumber < TotalPages ?  pageNumber + 1 : TotalPages;
+            NumberReturned = Math.Min(pageSize, totalRecords - StartIndex);
         }
         public int PageNumber { get; set; }
-        public int PageSize { get; } = 10;
-        public int FirstPage { get; }
-        public int LastPage { get; }
-        public int TotalPages { get; }
-        public int TotalRecords { get; }
-        public int NextPage { get; }
-        public int StartIndex { get; }
+        public int PageSize { get; set; }
+        public int FirstPage { get; set; }
+        public int LastPage { get; set; }
+        public int TotalPages { get; set; }
+        public int TotalRecords { get; set; }
+        public int NextPage { get; set; }
+        public int StartIndex { get; set; }
         public int NumberReturned { get; }
-        public int PreviousPage { get; }
+        public int PreviousPage { get; set; }
         public TData Data { get; set; }
 
-        public int countPages(int totalRecords, int recordsPerPage)
+        public int CalculateTotalPages(int totalRecords, int pageSize)
         {
-            return ((totalRecords - 1) / recordsPerPage) + 1;
+            if (pageSize <= 0) return 0;
+            return (int)Math.Ceiling((double)totalRecords / pageSize);
         }
     }
 
     public class PagedRequest<TData>
     {
         public int PageNumber { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
+        public int PageSize { get; set; } = 12;
         public int StartIndex { get; set; } = 0;
         public TData? Data { get; set; }
     }
@@ -74,7 +53,6 @@ namespace Common.Pagination
     {
         public PagedResult() { }
 
-        // ctor که از PagedResponse<TData> مقداردهی می‌کند
         public PagedResult(PagedResponse<TData> src)
         {
             if (src == null) return;

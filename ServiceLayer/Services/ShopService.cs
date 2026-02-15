@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using ClassLibrary;
+using Common.Pagination;
 using DataLayer.ApiResult;
+using DataLayer.EnumHellper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ModelLayer.Interface;
@@ -64,6 +66,53 @@ namespace ServiceLayer.Services
             {
                 Console.WriteLine($"GetByIdAsync error: {ex.Message}");
                 return null!;
+            }
+        }
+
+        public async Task<PagedResponse<List<ShopDto>>> GetByPgination(PagedResponse<ShopDto> paged)
+        {
+            try
+            {
+                if (paged == null) throw new ArgumentNullException(nameof(paged));
+                var filter = paged.Data ?? new ShopDto();
+
+                var Query = _sellerRepository.TableNoTracking.AsQueryable();
+
+                if (!string.IsNullOrEmpty(filter.ShopCode))
+                {
+                    Query = Query.Where(d => d.ShopCode!.Contains(filter.ShopCode));
+                }
+
+                if (!string.IsNullOrEmpty(filter.ShopName))
+                {
+                    Query = Query.Where(d => d.ShopName!.Contains(filter.ShopName));
+                }
+                var Total = await Query.CountAsync();
+                var list = await Query.Skip(paged.StartIndex)
+                    .Take(paged.PageSize)
+                    .Select(s => new ShopDto
+                    {
+                        Id = s.Id,
+                        Description = s.Description,
+                        ShopCode = s.ShopCode,
+                        ImagePath = s.ImagePath,
+                        AddressDto = s.Address == null ? null : new AddressDto
+                        {
+                            Id = s.Address.Id,
+                            City = s.Address.City,
+                            State = s.Address.State,
+                            Tellphone = s.Address.Tellphone,
+                            AdressDetail = s.Address.AdressDetail,
+                        }
+
+
+                    }).ToListAsync();
+
+                return new PagedResponse<List<ShopDto>>(paged.PageNumber,paged.PageSize, Total, list);
+            }
+            catch (Exception)
+            {
+                throw new Exception(EnumExtention.GetEnumDescription(ResponseStatus.ServerError));
             }
         }
 

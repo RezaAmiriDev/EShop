@@ -157,7 +157,7 @@ namespace ServiceLayer.Services
 
                     }).ToListAsync(token);
 
-                return new PagedResponse<List<CusProDto>>(pageResponse.PageNumber, Total, list);
+                return new PagedResponse<List<CusProDto>>(pageResponse.PageNumber,pageResponse.PageSize, Total, list);
             }
             catch (Exception)
             {

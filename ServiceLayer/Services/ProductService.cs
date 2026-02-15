@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ModelLayer.ViewModel;
 using Microsoft.Extensions.Hosting;
+using Common.Pagination;
+using DataLayer.EnumHellper;
 
 
 namespace ServiceLayer.Services
@@ -46,6 +48,44 @@ namespace ServiceLayer.Services
                 return null!;
             }
             
+        }
+
+        public async Task<PagedResponse<List<ProductDto>>> GetByPgination(PagedRequest<ProductDto> pagedResponse)
+        {
+            try
+            {
+                if (pagedResponse == null) throw new ArgumentException(nameof(pagedResponse));
+
+                var filterDto = pagedResponse.Data ?? new ProductDto();
+                var query = _productRepository.TableNoTracking.AsQueryable();
+
+                if (!string.IsNullOrEmpty(filterDto.Brand))
+                {
+                    query = query.Where(p => p.Brand!.Contains(filterDto.Brand));
+                }
+
+                if (!string.IsNullOrEmpty(filterDto.ProductCode))
+                {
+                    query = query.Where(p => p.ProductCode!.Contains(filterDto.ProductCode));
+                }
+
+                var Total = await query.CountAsync();
+                var list = await query.Skip(pagedResponse.StartIndex)
+                    .Take(pagedResponse.PageSize).Select(p => new ProductDto
+                    {
+                        Id = p.Id,
+                        Brand = p.Brand,
+                        ProductCode = p.ProductCode,
+                        Type = p.Type,
+                        ImagePath = p.ImagePath,
+                        Price = p.Price
+                    }).ToListAsync();
+                return new PagedResponse<List<ProductDto>>(pagedResponse.PageNumber,pagedResponse.PageSize, Total, list);
+            }
+            catch(Exception)
+            {
+                throw new Exception(EnumExtention.GetEnumDescription(ResponseStatus.ServerError));
+            }
         }
 
         public async Task<ServiceResult> CreateAsync(ProductDto dto , CancellationToken ct = default)

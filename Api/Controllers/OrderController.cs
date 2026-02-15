@@ -1,78 +1,34 @@
-﻿using DataLayer.ApiResult;
+﻿using Common.Pagination;
+using DataLayer.ApiResult;
 using Microsoft.AspNetCore.Mvc;
 using ModelLayer.ViewModel;
 using ServiceLayer.Services;
 
-namespace MobileStore.Controllers
+namespace Api.Controllers
 {
+
+
     [ApiController]
     [Route("api/[controller]")]
     public class OrderController : ControllerBase
     {
-        private readonly OrderService _saleService;
-
-        public OrderController(OrderService saleService)
+        private readonly OrderService _orderService;
+        public OrderController(OrderService orderService) 
         {
-            _saleService = saleService;
+            _orderService = orderService; 
         }
-
-        //[HttpGet("{id:guid}")]
-        //public async Task<IActionResult> GetById(Guid id)
-        //{
-        //    try
-        //    {
-        //        var result = await _saleService.GetByIdAsync(id); // فرض: ServiceResult با داده SaleDto
-        //        if (result == null)
-        //            return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, "سرویس پاسخی برنگرداند."));
-
-        //        return MapServiceResult(result);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, ex.Message));
-        //    }
-        //}
-
-        /// ایجاد یک فروش جدید
-        [HttpPost]
-        public async Task<IActionResult> CreateSale(SaleDto dto)
-        {
-            try
-            {
-                if (!ModelState.IsValid) return BadRequest(ModelState);
-
-                var result = await _saleService.CreateSaleAsync(dto.CustomerId, dto.ProductId, dto.Quantity);
-
-                // اگر سرویس null برگردوند خطای داخلی
-                if (result == null)
-                {
-                    return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, "سرویس پاسخی برنگرداند."));
-                }
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                // الگوی تو: در catch یک ServiceResult با کد سرور برگردانده می‌شود
-                return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, ex.Message));
-            }
-        }
-     
-        // گزارش خرید مشتری
+      
         [HttpGet("customer/{customerId:guid}")]
         public async Task<IActionResult> GetCustomerReport(Guid customerId)
         {
             try
             {
-                var result = await _saleService.GetSalesByCustomerAsync(customerId);
-                if (result == null)
-                {
-                    return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, "سرویس پاسخی برنگرداند."));
-                }
-
-                return Ok(result);
-            }catch(Exception ex)
+                var result = await _orderService.GetSalesByCustomerAsync(customerId);
+                return StatusCode((int)MapStatusToCode(result.Status), result);
+            }
+            catch (Exception ex)
             {
-                return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, ex.Message));
+                return StatusCode(500, new ServiceResultByData<List<OrderDto>>(ResponseStatus.ServerError, ex.Message, null!));
             }
         }
 
@@ -81,16 +37,12 @@ namespace MobileStore.Controllers
         {
             try
             {
-                var result = await _saleService.GetSalesByProductAsync(productId);
-                if(result == null)
-                {
-                    return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, "سرویس پاسخی برنگرداند."));
-                }
-
-                return Ok(result);
-            }catch(Exception ex)
+                var result = await _orderService.GetSalesByProductAsync(productId);
+                return StatusCode((int)MapStatusToCode(result.Status), result);
+            }
+            catch (Exception ex)
             {
-                return StatusCode(500 , new ServiceResult(ResponseStatus.ServerError, ex.Message));
+                return StatusCode(500, new ServiceResultByData<List<OrderDto>>(ResponseStatus.ServerError, ex.Message, null!));
             }
         }
 
@@ -99,16 +51,44 @@ namespace MobileStore.Controllers
         {
             try
             {
-                var total = await _saleService.GetTotalSalesAsync();
-                if (total == null)
-                    return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, "سرویس پاسخی برنگرداند."));
-                return Ok(total);
+                var result = await _orderService.GetTotalSalesAsync();
+                return StatusCode((int)MapStatusToCode(result.Status), result);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, ex.Message));
+                return StatusCode(500, new ServiceResultByData<decimal>(ResponseStatus.ServerError, ex.Message, 0m));
             }
         }
 
+        [HttpGet("payments")]
+        public async Task<IActionResult> GetRecentPayments(int page = 1, int pageSize = 12)
+        {
+            try
+            {
+                var request = new PagedRequest<PaymentDto>
+                {
+                    PageNumber = page,
+                    PageSize = pageSize,
+                    StartIndex = (page - 1) * pageSize
+                };
+                var result = await _orderService.GetRecentPaymentsAsync(request); 
+                return StatusCode((int)MapStatusToCode(result.Status), result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ServiceResultByData<PagedResponse<List<PaymentDto>>>(ResponseStatus.ServerError, ex.Message, null!));
+            }
+        }
+
+        private static System.Net.HttpStatusCode MapStatusToCode(ResponseStatus status)
+        {
+            return status switch
+            {
+                ResponseStatus.Success => System.Net.HttpStatusCode.OK,
+                ResponseStatus.BadRequest => System.Net.HttpStatusCode.BadRequest,
+                ResponseStatus.NotFound => System.Net.HttpStatusCode.NotFound,
+                _ => System.Net.HttpStatusCode.InternalServerError
+            };
+        }
     }
 }

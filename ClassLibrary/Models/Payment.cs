@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ClassLibrary;
+using DataLayer.Base;
+
 
 namespace ModelLayer.Models
 {
-    public class Payment
+    public class Payment : BaseEntity
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
-        public Guid OrderId { get; set; }      // لینک به سفارش/سِیل
         public decimal Amount { get; set; }    // decimal(18,2)
         public string Currency { get; set; } = "IRR";
         public PaymentProvider Provider { get; set; } = PaymentProvider.Zarinpal;
@@ -25,10 +21,16 @@ namespace ModelLayer.Models
         public string? Note { get; set; }                  // هر توضیح دلخواه
         public string? MetadataJson { get; set; }          // برای ذخیره داده‌های اضافی (json)
         public bool IsVerified { get; set; } = false;      // اگر تایید نهایی انجام شد
+        public Guid OrderId { get; set; }      // لینک به سفارش/سِیل
+        public Order? Order {  get; set; } // navigation
     }
 
-    public enum PaymentProvider { Zarinpal = 0, PayIr = 1, Stripe = 2, Bank = 99 }
-    public enum PaymentStatus { Pending = 0, Redirected = 1, Succeeded = 2, Failed = 3, Refunded = 4, Cancelled = 5 }
-
-
+    public enum PaymentProvider { Zarinpal = 0, Cash = 1, Bank = 3 }
+    public enum PaymentStatus {
+        Pending = 0,
+        Paid = 1,
+        Failed = 2,
+        Refunded = 3,
+        Cancelled = 4
+    }
 }

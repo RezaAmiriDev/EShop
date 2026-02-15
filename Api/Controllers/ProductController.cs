@@ -1,4 +1,5 @@
 ﻿using ClassLibrary.Services;
+using Common.Pagination;
 using DataLayer.ApiResult;
 using Microsoft.AspNetCore.Mvc;
 using ModelLayer.ViewModel;
@@ -7,7 +8,7 @@ using ServiceLayer.Services;
 
 namespace MobileStore.Controllers
 {
-    [Controller]
+    [ApiController]
     [Route("api/[controller]")]
     public class ProductController : ControllerBase
     {
@@ -45,6 +46,36 @@ namespace MobileStore.Controllers
             if (product == null) return NotFound();
 
             return Ok(product);
+        }
+
+        [HttpPost("paged")]
+        public async Task<IActionResult> GetByPagination(PagedRequest<ProductDto> paged)
+        {
+            try
+            {
+                if(paged == null)
+                {
+                    return BadRequest(new ServiceResult(ResponseStatus.BadRequest, "Invalid request payload"));
+                }
+
+                var pageNumber = paged.PageNumber <= 0 ? 1 : paged.PageNumber;
+                var pageSize = paged.PageSize <= 0 ? 12 : paged.PageSize;
+
+                paged.PageNumber = pageNumber;
+                paged.PageSize = pageSize;
+                paged.StartIndex = (pageNumber - 1) * pageSize;
+
+                var result = await _productService.GetByPgination(paged);
+
+             //   var outPaged = new PagedResult<List<ProductDto>>(servicePaged);
+                var response = new PagedResponse<List<ProductDto>>(pageNumber, pageSize, result.TotalRecords, result.Data);
+                
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, ex.Message));
+            }
         }
 
         [HttpPost]

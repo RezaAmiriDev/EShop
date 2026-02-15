@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Common.Pagination;
 using DataLayer.ApiResult;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,17 +41,36 @@ namespace Api.Controllers
             return Ok(dto);
         }
 
-        [HttpPost]
-        [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Create([FromForm] ShopDto model)
+        [HttpPost("pagination")]
+        public async Task<IActionResult> GetByPaginationShop(PagedResponse<ShopDto> paged)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
-            var image = model.Avatar;
             try
             {
-                if(image != null && image.Length > 0)
+                if (paged == null) return BadRequest();
+
+                var pageNumber = paged.PageNumber <= 0 ? 1 : paged.PageNumber;
+                var pageize = paged.PageSize <= 0 ? 12 : paged.PageSize;
+                var result = await _shopService.GetByPgination(paged);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ServiceResult(ResponseStatus.ServerError, ex.Message));
+            }
+        }
+
+        [HttpPost]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Create([FromForm] ShopDto dto)
+        {
+            if(!ModelState.IsValid) return BadRequest(ModelState);
+            
+            try
+            {
+                if(dto.Avatar != null && dto.Avatar.Length > 0)
                 {
-                    model.ImagePath = await _file.SaveFileAsync(image, _env.WebRootPath, "images/shops");
+                    dto.ImagePath = await _file.SaveFileAsync(dto.Avatar, _env.WebRootPath, "images/shops");
                 }
                 //// اگر Id نداشت، یکی بساز تا بتوانیم CreatedAtAction را برگردانیم
                 //if (dto.Id == null || dto.Id == Guid.Empty) dto.Id = Guid.NewGuid();
@@ -60,7 +80,7 @@ namespace Api.Controllers
                 //}
 
                 // 3) ذخیره در دیتابیس
-                var result = await _shopService.CreateAsync(model);
+                var result = await _shopService.CreateAsync(dto);
 
                 if (result.Status != ResponseStatus.Success)
                 {

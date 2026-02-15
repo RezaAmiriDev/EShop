@@ -19,11 +19,14 @@ namespace WebFrameWork.Configuration
             services.AddScoped<IOrderReposetory , OrderRepo>();
             services.AddScoped<IShopRepository , ShopRepo>();
             services.AddScoped<IFileRepository , FileService>();
+            services.AddScoped<IDashboardRepository, DashboardRepo>();
 
             services.AddScoped<CustomerService>();
             services.AddScoped<ProductService>();
             services.AddScoped<ShopService>();
             services.AddScoped<FileService>();
+            services.AddScoped<DashboardService>();
+            services.AddScoped<OrderService>();
 
         }
         //public static void RegisterJwtService(this IServiceCollection services, SecuritySetting _siteSetting)

@@ -60,8 +60,8 @@ namespace EShope.Pages.Shop
                 {
                     using var ms = new MemoryStream();
                     await Seller.Avatar.CopyToAsync(ms);
-                    ms.Position = 0;
-                    var fileContent = new StreamContent(ms);
+                    var bytes = ms.ToArray();
+                    var fileContent = new ByteArrayContent(bytes);
                     fileContent.Headers.ContentType = new MediaTypeHeaderValue(Seller.Avatar.ContentType ?? "application/octet-stream");
                     form.Add(fileContent, "Avatar", Seller.Avatar.FileName);
                 }

@@ -31,11 +31,9 @@
         min-width: 80px;
     }
 </style>
-
 <div class="container py-4">
     <div class="d-flex align-items-center justify-content-between mb-5 gap-4 flex-wrap">
         <h2 class="mb-0">فروشنده‌ها</h2>
-       
         <div class="flex-grow-1">
             @if (TempData["Message"] != null)
             {
@@ -45,6 +43,7 @@
                 </div>
             }
         </div>
+
         <form method="get" class="d-flex align-items-stretch gap-2 ms-auto">
             <div class="input-group input-group-sm" style="max-width: 300px;">
                 <input name="SearchTerm" value="@Model.SearchTerm" class="form-control"
@@ -171,7 +170,80 @@
                 }
         </div>
     }
+
+    <!-- کنترل‌های صفحه‌بندی -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                <!-- اولین صفحه -->
+                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                    <a class="page-link" href="#" aria-label="First" onclick="GoToPage(1)">
+                        <span aria-hidden="true">«</span>
+                        <span class="sr-only">First</span>
+                    </a>
+                </li>
+
+                <!-- قبلی -->
+                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                    <a class="page-link" href="#" aria-label="Previous" onclick="GoToPage(@(Model.PageNumber - 1))">
+                        <span aria-hidden="true">&lt;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+
+                <!-- صفحات بین -->
+                @{
+                    int startPage = Math.Max(1, Model.PageNumber - 2);
+                    int endPage = Math.Min(Model.TotalPages, Model.PageNumber + 2);
+
+                    if (startPage > 1)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+
+                    for (int i = startPage; i <= endPage; i++)
+                    {
+                        if (i == Model.PageNumber)
+                        {
+                            <li class="page-item active" aria-current="page"><span class="page-link">@i</span></li>
+                        }
+                        else
+                        {
+                            <li class="page-item"><a class="page-link" href="#" onclick="GoToPage(@i)">@i</a></li>
+                        }
+                    }
+
+                    if (endPage < Model.TotalPages)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+                }
+
+                <!-- بعدی -->
+                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="#" aria-label="Next" onclick="GoToPage(@(Model.PageNumber + 1))">
+                        <span aria-hidden="true">&gt;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+
+                <!-- آخرین صفحه -->
+                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="#" aria-label="Last" onclick="GoToPage(@Model.TotalPages)">
+                        <span aria-hidden="true">»</span>
+                        <span class="sr-only">Last</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- تعداد صفحات -->
+        <div>
+            <span>صفحه @Model.PageNumber از @Model.TotalPages</span>
+        </div>
+    </div>
 </div>
+
 
 <!-- Modal جزئیات -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
@@ -217,6 +289,12 @@
     </div>
 </div>
 
+@* 
+@section Scripts {
+    <script>
+       
+    </script>
+} *@
 @section Scripts {
     <script>
         const apiBaseUrl = '@Model.ApiBaseUrl';
@@ -409,6 +487,22 @@
             container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
             document.body.appendChild(container);
             return container;
+        }
+
+            function GoToPage(pageNumber) {
+            // ساخت پارامترهای URL
+            let params = new URLSearchParams();
+            params.append('pageNumber', pageNumber);
+            params.append('pageSize', @Model.PageSize);
+
+            // فقط اگر SearchTerm وجود دارد، اضافه شود
+            let searchTerm = '@Model.SearchTerm';
+            if (searchTerm && searchTerm.trim() !== '') {
+                params.append('SearchTerm', searchTerm);
+            }
+
+            // انتقال به صفحه جدید
+            window.location.href = `?${params.toString()}`;
         }
 
         document.addEventListener("DOMContentLoaded", function () {

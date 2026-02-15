@@ -86,7 +86,7 @@ namespace MobileStore.Controllers
                 var pageNumber = req.PageNumber <= 0 ? 1 : req.PageNumber;
                 var pageSize = req.PageSize <= 0 ? 10 : req.PageSize;
 
-                var temp = new Common.Pagination.PagedResponse<CusProDto>(pageNumber, 0, req.Data ?? new CusProDto());
+                var temp = new Common.Pagination.PagedResponse<CusProDto>(pageNumber,pageSize, 0, req.Data ?? new CusProDto());
                 // اما چون ctor PagedResponse شما بعضی چیزها را خودِ سرویس محاسبه می‌کند،
                 // سرویس شما می‌تواند فقط از فیلدهای temp.StartIndex و temp.Data استفاده کند.
 

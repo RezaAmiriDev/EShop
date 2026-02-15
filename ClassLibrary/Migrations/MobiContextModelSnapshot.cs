@@ -106,9 +106,6 @@ namespace ModelLayer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("AmountPaid")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -121,9 +118,6 @@ namespace ModelLayer.Migrations
 
                     b.Property<string>("OrderNumber")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PaymentStatus")
-                        .HasColumnType("int");
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
@@ -182,6 +176,10 @@ namespace ModelLayer.Migrations
                         .HasPrecision(16, 2)
                         .HasColumnType("decimal(16,2)");
 
+                    b.Property<string>("ProductCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
@@ -219,19 +217,19 @@ namespace ModelLayer.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "f43920b9-ad76-4e4b-a4ae-85c3ba859fc3",
+                            Id = "d7e579ff-b72b-43a5-ae7e-dc954e4aa856",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "864a8741-6f33-4dff-8369-13d988f3fe1c",
+                            Id = "32e801d9-353b-4718-818a-33719e10850f",
                             Name = "client",
                             NormalizedName = "CLIENT"
                         },
                         new
                         {
-                            Id = "d62e479d-16b2-4d4e-83fd-7554b2238d98",
+                            Id = "2907db3a-3e20-4845-a68c-9d7bdc9739d2",
                             Name = "seller",
                             NormalizedName = "SELLER"
                         });
@@ -453,6 +451,9 @@ namespace ModelLayer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("DateOfOperation")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal?>("Fee")
                         .HasColumnType("decimal(18,2)");
 
@@ -487,6 +488,10 @@ namespace ModelLayer.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PaymentDate");
 
                     b.ToTable("Payments");
                 });
@@ -699,6 +704,17 @@ namespace ModelLayer.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ModelLayer.Models.Payment", b =>
+                {
+                    b.HasOne("ClassLibrary.Order", "Order")
+                        .WithMany("Payments")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("ModelLayer.Models.SellerLike", b =>
                 {
                     b.HasOne("ModelLayer.Models.Shop", "Shop")
@@ -759,6 +775,11 @@ namespace ModelLayer.Migrations
             modelBuilder.Entity("ClassLibrary.Customer", b =>
                 {
                     b.Navigation("Sales");
+                });
+
+            modelBuilder.Entity("ClassLibrary.Order", b =>
+                {
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("ClassLibrary.Product", b =>

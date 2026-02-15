@@ -103,10 +103,16 @@ namespace ClassLibrary.Models
                 .HasForeignKey(s => s.ProductId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            //// Ensure that ProductType is stored as an integer in the database
-            //modelBuilder.Entity<Product>()
-            //    .Property(p => p.Pro)
-            //    .HasConversion<int>();  // This will store the enum as an integer (e.g., 0, 1, 2)
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Order)
+                .WithMany(o => o.Payments)
+                .HasForeignKey(p => p.OrderId)
+                .OnDelete(DeleteBehavior.NoAction);
+            // ایندکس‌ها
+            modelBuilder.Entity<Payment>().HasIndex(p => p.OrderId);
+            modelBuilder.Entity<Payment>().HasIndex(p => p.PaymentDate);
+            modelBuilder.Entity<Order>().HasIndex(o => o.CustomerId);
+
         }
     }
 }

@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure;
+using Common.Pagination;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using ModelLayer.ViewModel;
 using Microsoft.Extensions.Options;
+using ModelLayer.ViewModel;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 
 namespace EShope.Pages.Shop
 {
@@ -28,8 +31,15 @@ namespace EShope.Pages.Shop
             ApiBaseUrl = _setting.BaseAddress;
         }
 
-        public IEnumerable<ShopDto> Sellers { get; set; } = new List<ShopDto>();
+        public List<ShopDto> Sellers { get; set; } = new List<ShopDto>();
         [TempData] public string? Message { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int PageNumber { get; set; } = 1;
+        [BindProperty(SupportsGet = true)]
+        public int PageSize { get; set; } = 12;
+        public int TotalPages { get; set; }
+
         [BindProperty(SupportsGet = true)] public string? SearchTerm { get; set; }
 
         // آدرس API از تنظیمات
@@ -38,42 +48,61 @@ namespace EShope.Pages.Shop
 
         public async Task OnGetAsync()
         {
+            if (PageNumber <= 0) PageNumber = 1;
+            if (PageSize <= 0) PageSize = 12;
+
             var client = _httpClientFactory.CreateClient(_setting.ClinetName);
+
+            var request = new PagedRequest<ShopDto>
+            {
+                PageNumber = PageNumber,
+                PageSize = PageSize,
+                StartIndex = (PageNumber - 1) * PageSize,
+                Data = new ShopDto
+                {
+                    ShopCode = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim(),
+                    ShopName = null
+                }
+            };
 
             try
             {
                 // دریافت لیست فروشگاه‌ها از API
-                var response = await client.GetAsync("api/shop");
-
+                var response = await client.PostAsJsonAsync("api/shop/pagination" , request);
+           
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<IEnumerable<ShopDto>>();
-                    Sellers = result ?? Enumerable.Empty<ShopDto>();
+                    var result = await response.Content.ReadFromJsonAsync<PagedResponse<List<ShopDto>>>();
 
-                    // اعمال جستجو
-                    if (!string.IsNullOrWhiteSpace(SearchTerm))
+                    if(result != null & result.Data != null)
                     {
-                        var term = SearchTerm.Trim();
-                        Sellers = Sellers.Where(s =>
-                            (!string.IsNullOrEmpty(s.ShopName) &&
-                             s.ShopName.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-                            (!string.IsNullOrEmpty(s.ShopCode) &&
-                             s.ShopCode.Contains(term, StringComparison.OrdinalIgnoreCase))
-                        ).ToList();
+                        Sellers = result.Data ?? new List<ShopDto>();
+                        PageNumber = result.PageNumber > 0 ? result.PageNumber : PageNumber;
+                        PageSize = result.PageSize > 0 ? result.PageSize : PageSize;
+                        TotalPages = result.TotalPages > 0 ? result.TotalPages : 1;
+                        //TotalRecords = result.TotalRecords;
+                      //  TotalPages = (int)Math.Ceiling(result.TotalPages / (double)PageSize);
+                      // _logger.LogInformation("Successfully loaded {Count} shop ", Sellers.Count);
+                    }
+                    else
+                    {
+                        Sellers = new List<ShopDto>();
+                        _logger.LogWarning("API returned empty data for shops");
                     }
                 }
                 else
                 {
+                    Sellers = new List<ShopDto>();
+                    var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogError("API returned {StatusCode} for shop list", response.StatusCode);
                     Message = "خطا در دریافت لیست فروشگاه‌ها";
-                    Sellers = Enumerable.Empty<ShopDto>();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "خطا در دریافت فروشگاه‌ها از API");
                 Message = "خطا در اتصال به سرور";
-                Sellers = Enumerable.Empty<ShopDto>();
+                Sellers = new List<ShopDto>();
             }
         }
 

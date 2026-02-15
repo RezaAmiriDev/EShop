@@ -1,0 +1,345 @@
+﻿@page
+@model EShope.Pages.Dashboard.IndexModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Dashboard";
+
+    var jsonOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false
+    };
+
+    var dailyJson = JsonSerializer.Serialize(Model.Daily, jsonOptions);
+    var cityJson = JsonSerializer.Serialize(Model.Cities, jsonOptions);
+    var topProductsJson = JsonSerializer.Serialize(Model.TopProducts, jsonOptions);
+
+    var error = ViewData["Error"] as string ?? string.Empty;
+    string fmt(int v) => v.ToString("N0");
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<style>
+    /* ظاهرسازی آیکون‌ها در کارت‌ها */
+    .dash-card {
+        min-height: 90px;
+    }
+
+        .dash-card .icon {
+            width: 46px;
+            height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background-color: rgba(13,110,253,0.08); /* light primary bg */
+            color: #0d6efd; /* primary */
+            font-size: 1.25rem;
+        }
+
+        .dash-card .metric {
+            font-weight: 700;
+            font-size: 1.6rem;
+            line-height: 1;
+        }
+    @@media (max-width: 576px) {
+        .dash-card .metric
+
+    {
+        font-size: 1.25rem;
+    }
+
+    }
+</style>
+
+<div class="container py-4" dir="rtl" lang="fa">
+    <h2 class="mb-3">داشبورد</h2>
+
+    @* Error banner *@
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="alert alert-danger" role="alert">
+            <strong>خطا:</strong> @Html.Raw(Html.Encode(error))
+        </div>
+    }
+
+    <div class="row mb-4 g-3">
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3 h-100 dash-card">
+                <div class="d-flex align-items-center gap-3">                   
+                    <div class="flex-grow-1">
+                        <div class="metric" id="customersCount">@fmt(Model.Summary.CustomersCount)</div>
+                        <div class="text-muted">تعداد مشتریان</div>
+                    </div>
+                    <div class="icon" aria-hidden="true">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3 h-100 dash-card">
+                <div class="d-flex align-items-center gap-3">                   
+                    <div class="flex-grow-1">
+                        <div class="metric" id="productsCount">@fmt(Model.Summary.ProductsCount)</div>
+                        <div class="text-muted">تعداد محصولات</div>
+                    </div>
+                    <div class="icon" aria-hidden="true">
+                        <i class="bi bi-phone-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3 h-100 dash-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-grow-1">
+                        <div class="metric" id="shopsCount">@fmt(Model.Summary.ShopsCount)</div>
+                        <div class="text-muted">تعداد فروشگاه‌ها</div>
+                    </div>
+                    <div class="icon" aria-hidden="true">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm p-3 h-100 dash-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-grow-1">
+                        <div class="metric" id="ordersCount">@fmt(Model.Summary.OrdersCount)</div>
+                        <div class="text-muted">تعداد سفارش‌ها</div>
+                    </div>
+                    <div class="icon" aria-hidden="true">
+                        <i class="bi bi-cart-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row gy-3">
+
+        <!-- نمودار اصلی -->
+        <div class="col-12">
+            <div class="card shadow-sm p-3">
+                <h5 class="mb-3">نمودار فروش روزانه (آخرین 15 روز) — مبلغ کل</h5>
+                <div class="position-relative" style="min-height:340px;">
+                    <canvas id="dailyChart" aria-label="نمودار فروش روزانه"></canvas>
+                    <div id="dailyNoData" class="text-center text-muted mt-4" style="display:none;">
+                        داده‌ای برای نمایش وجود ندارد.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نمودارهای تحلیلی -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm p-3 h-100">
+                <h6 class="mb-2">6 شهر برتر (تعداد سفارش)</h6>
+                <div class="position-relative flex-grow-1" style="min-height:260px;">
+                    <canvas id="cityChart" aria-label="نمودار شهرها"></canvas>
+                    <div id="cityNoData" class="text-center text-muted mt-4" style="display:none;">
+                        داده‌ای برای نمایش وجود ندارد.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm p-3 h-100">
+                <h6 class="mb-2">پرفروش‌ترین محصولات (تعداد)</h6>
+                <div class="position-relative flex-grow-1" style="min-height:260px;">
+                    <canvas id="topProductsChart" aria-label="نمودار پرفروش‌ترین محصولات"></canvas>
+                    <div id="productsNoData" class="text-center text-muted mt-4" style="display:none;">
+                        داده‌ای برای نمایش وجود ندارد.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // داده‌ها را از Razor به JS منتقل می‌کنیم (camelCase در سمت سرور آماده شده)
+    const dailyData = @Html.Raw(dailyJson);
+    const cityData = @Html.Raw(cityJson);
+    const topProductsData = @Html.Raw(topProductsJson);
+
+    function formatNumber(value) {
+        try {
+            return Number(value).toLocaleString('fa-IR');
+        } catch {
+            return value;
+        }
+    }
+
+    function formatCurrency(value) {
+        try {
+            return Number(value).toLocaleString('fa-IR') + ' تومان';
+        } catch {
+            return value;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // charts (همان کد قبلی شما) ...
+        // ---------- Daily Chart ----------
+        const dailyChartEl = document.getElementById('dailyChart');
+        const dailyNoDataEl = document.getElementById('dailyNoData');
+
+        if (!dailyData || dailyData.length === 0) {
+            if (dailyNoDataEl) dailyNoDataEl.style.display = 'block';
+        } else {
+            const labels = dailyData.map(x => new Date(x.date).toLocaleDateString('fa-IR'));
+            const values = dailyData.map(x => x.totalAmount ?? 0);
+
+            if (dailyChartEl) {
+                new Chart(dailyChartEl.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'مبلغ فروش',
+                            data: values,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1,
+                            maxBarThickness: 40
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return formatCurrency(context.parsed.y);
+                                    }
+                                }
+                            },
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) { return formatNumber(value); }
+                                }
+                            },
+                            x: {
+                                ticks: { maxRotation: 45, minRotation: 0 }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // ---------- City Pie Chart ----------
+        const cityChartEl = document.getElementById('cityChart');
+        const cityNoData = document.getElementById('cityNoData');
+
+        if (!cityData || cityData.length === 0) {
+            if (cityNoData) cityNoData.style.display = 'block';
+        } else {
+            const labels = cityData.map(x => x.city);
+            const values = cityData.map(x => x.orderCount ?? 0);
+
+            if (cityChartEl) {
+                new Chart(cityChartEl.getContext('2d'), {
+                    type: 'pie',
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.6)',
+                                'rgba(54, 162, 235, 0.6)',
+                                'rgba(255, 206, 86, 0.6)',
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(153, 102, 255, 0.6)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const v = context.raw ?? 0;
+                                        return `${context.label}: ${formatNumber(v)}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // ---------- Top Products Bar ----------
+        const topProductsEl = document.getElementById('topProductsChart');
+        const productsNoData = document.getElementById('productsNoData');
+
+        if (!topProductsData || topProductsData.length === 0) {
+            if (productsNoData) productsNoData.style.display = 'block';
+        } else {
+            const labels = topProductsData.map(x => x.productName.length > 30 ? x.productName.slice(0, 28) + '…' : x.productName);
+            const values = topProductsData.map(x => x.totalQuantity ?? 0);
+
+            if (topProductsEl) {
+                new Chart(topProductsEl.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'تعداد فروخته‌شده',
+                            data: values,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return formatNumber(context.parsed.y);
+                                    }
+                                }
+                            },
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) { return formatNumber(value); }
+                                }
+                            },
+                            x: {
+                                ticks: { maxRotation: 45, minRotation: 0 }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+</script>

@@ -1,4 +1,5 @@
 ﻿using DataLayer.Base;
+using ModelLayer.Models;
 
 
 namespace ClassLibrary
@@ -16,7 +17,6 @@ namespace ClassLibrary
         public decimal UnitPrice { get; set; }    // قیمت هر واحد در زمان سفارش
 
         public int Quantity { get; set; }    // تعداد محصول فروخته‌شده
-        public decimal AmountPaid { get; set; }
         public decimal ShippingCost { get; set; }
         public decimal TotalPrice { get; set; } // قیمت کل این فروش
         public DateTime SaleDate { get; set; } = DateTime.UtcNow; // تاریخ فروش
@@ -24,14 +24,11 @@ namespace ClassLibrary
         public string Currency { get; set; } = "IRR";
         // وضعیت‌ها و پیگیری
         public OrderStatus Status { get; set; } = OrderStatus.Pending;
-        public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.NotPaid;
 
         // ارتباطات
         public Customer? Customer { get; set; }
         public Product? Product { get; set; }
-
-        // helper کوتاه برای محاسبه باقیمانده
-        public decimal BalanceDue => (TotalPrice + ShippingCost) - AmountPaid;
+        public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 
         public enum OrderStatus
@@ -44,13 +41,6 @@ namespace ClassLibrary
             Refunded = 5
         }
 
-        public enum PaymentStatus
-        {
-            NotPaid = 0,
-            PartiallyPaid = 1,
-            Paid = 2,
-            Refunded = 3,
-            Failed = 4
-        }
+      
 
 }
