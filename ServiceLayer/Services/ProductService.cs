@@ -172,5 +172,34 @@ namespace ServiceLayer.Services
 
             return list;
         }
+
+        public async Task<List<ProductListItemDto>> GetProductsForHomeAsync(int take = 12, CancellationToken ct = default)
+        {
+            var query = _productRepository.TableNoTracking
+                .Select(p => new ProductListItemDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Brand = p.Brand,
+                    ProductCode = p.ProductCode,
+                    ImagePath = p.ImagePath,
+                    Price = p.Price,
+                    ShortDescription = p.ShortDescription,
+                    AverageRating = p.Ratings!
+                    .Where(r => r.IsApproved).Select(r => (double)r.Review).DefaultIfEmpty(0.0).Average(),
+                    ShopName = p.sellers!.OrderBy(s => s.ShopName).Select(s => s.ShopName).FirstOrDefault()
+                }).OrderBy(p => p.Name).Take(take);
+
+            return await query.ToListAsync(ct);
+        }
+
+        //public async Task<List<ProductListItemDto>> GetProductsForHomeAsync(int take = 12, CancellationToken ct = default)
+        //{
+        //    return await _productRepository.TableNoTracking
+        //               .ProjectTo<ProductListItemDto>(_mapper.ConfigurationProvider)
+        //               .OrderBy(p => p.Name)
+        //               .Take(take)
+        //               .ToListAsync(ct);
+        //}
     }
 }

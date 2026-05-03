@@ -98,6 +98,98 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
+        (function () {
+            const form = document.getElementById('customerForm');
+            const nationalInput = document.querySelector('input[name="Customer.NationalCode"]');
+            const phoneInput = document.querySelector('input[name="Customer.addressDto.Tellphone"]');
+            const errorContainer = () => {
+                // استفاده از TempData در سرور برای پیام کلی کافی است، اما برای الارم آنی:
+                let el = document.getElementById('clientErrorBox');
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = 'clientErrorBox';
+                    el.className = 'alert alert-danger mx-5';
+                    form.parentNode.insertBefore(el, form);
+                }
+                return el;
+            };
+
+            // نمایش پیام خطا client-side
+            function showClientError(msg) {
+                const box = errorContainer();
+                box.innerText = msg;
+            }
+
+            function clearClientError() {
+                const el = document.getElementById('clientErrorBox');
+                if (el) el.remove();
+            }
+
+            // فقط اعداد برای کد ملی
+            nationalInput?.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+
+            // تلفن: اجازه + و اعداد
+            phoneInput?.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9+]/g, '');
+            });
+
+            // قبل از submit، اعتبارسنجی HTML5 و سپس بررسی تکراری بودن کد ملی (AJAX)
+            form.addEventListener('submit', async function (e) {
+                clearClientError();
+
+                // HTML5 validation
+                if (!form.checkValidity()) {
+                    // اجازه دهید مرورگر پیام‌های استاندارد را نشان دهد
+                    // ولی ما هم یک پیام جمعی می‌گذاریم
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showClientError('لطفا فیلدهای الزامی را کامل کنید یا فرمت‌شان را اصلاح کنید.');
+                    return false;
+                }
+
+                // چک طول کد ملی
+                if (nationalInput && nationalInput.value.length !== 10) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showClientError('کد ملی باید دقیقاً 10 رقم باشد.');
+                    nationalInput.focus();
+                    return false;
+                }
+
+                // بررسی تکراری بودن کد ملی با یک درخواست GET به API (اختیاری اما مفید)
+                try {
+                    const nc = encodeURIComponent(nationalInput.value);
+                    const resp = await fetch(`/api/Customer/exists?nationalCode=${nc}`, { method: 'GET' });
+                    if (resp.ok) {
+                        const body = await resp.json();
+                        if (body.exists) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            showClientError('کد ملی وارد شده در سیستم وجود دارد. لطفا کد ملی دیگری وارد کنید.');
+                            nationalInput.focus();
+                            return false;
+                        }
+                    } else {
+                        // اگر endpoint دردسترس نبود، ادامه می‌دهیم و اجازه می‌دهیم سرور بررسی کند
+                        console.warn('National code existence check failed', resp.status);
+                    }
+                } catch (err) {
+                    console.warn('Error checking national code exists', err);
+                    // در صورت خطای شبکه، به سرور اجازه بررسی بدید (fail open)
+                }
+
+                // اگر همه‌چیز خوب بود، اجازه ارسال فرم داده می‌شود (صفحه فرم ارسال خواهد شد).
+                return true;
+            }, false);
+        })();
+    </script>
+
+
+   @*  <partial name="_ValidationScriptsPartial" />
+
+    <script>
         // اعتبارسنجی سمت کلاینت برای کد ملی
         document.getElementById('customerForm').addEventListener('submit', function(e) {
             const nationalCodeInput = document.querySelector('input[name="Customer.NationalCode"]');
@@ -118,5 +210,5 @@
         document.querySelector('input[name="Customer.addressDto.Tellphone"]')?.addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9+]/g, '');
         });
-    </script>
+    </script> *@
 }

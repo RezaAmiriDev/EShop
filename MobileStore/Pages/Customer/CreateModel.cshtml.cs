@@ -45,19 +45,15 @@ namespace EShope.Pages.Customer
 
                 var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
                 var token = User.FindFirst(_settingWeb.TokenName);
-                if (token == null)
-                {
-                    // توکن وجود ندارد -> logout
-                    return RedirectToPage("/Account/SignOut");
-                }
+                if (token == null) return RedirectToPage("/Account/SignOut");   // توکن وجود ندارد -> logout
 
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_settingWeb.TokenType, token.Value);
 
 
                 // لاگ داده‌های ارسالی
                 Console.WriteLine($"Sending customer data: Name={Customer.Name}, NationalCode={Customer.NationalCode}");
-                var response = await client.PostAsJsonAsync("api/Customer", Customer);
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var response = await client.PostAsJsonAsync("api/Customer", Customer, cancellationToken);
+                var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 Console.WriteLine($"API Response: {response.StatusCode} - {responseContent}");
 

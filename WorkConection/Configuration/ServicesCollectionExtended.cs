@@ -20,6 +20,7 @@ namespace WebFrameWork.Configuration
             services.AddScoped<IShopRepository , ShopRepo>();
             services.AddScoped<IFileRepository , FileService>();
             services.AddScoped<IDashboardRepository, DashboardRepo>();
+            services.AddScoped<ISliderRepository,  SliderRepo>();
 
             services.AddScoped<CustomerService>();
             services.AddScoped<ProductService>();
@@ -27,6 +28,8 @@ namespace WebFrameWork.Configuration
             services.AddScoped<FileService>();
             services.AddScoped<DashboardService>();
             services.AddScoped<OrderService>();
+            services.AddScoped<SliderService>();
+            services.AddScoped<HomeService>();
 
         }
         //public static void RegisterJwtService(this IServiceCollection services, SecuritySetting _siteSetting)

@@ -158,7 +158,7 @@ namespace ModelLayer.Reposetotry
             {
                 // لاگ کن
                 // _logger?.LogError(dbEx, "Insert failed");
-                return null;
+                return null!;
             }
             catch (Exception)
             {

@@ -4,6 +4,7 @@ using ClassLibrary.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ModelLayer.Migrations
 {
     [DbContext(typeof(MobiContext))]
-    partial class MobiContextModelSnapshot : ModelSnapshot
+    [Migration("20260224203647_FinlyHomePage")]
+    partial class FinlyHomePage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -220,19 +223,19 @@ namespace ModelLayer.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "415870e9-7202-4d45-b22c-df178f375de9",
+                            Id = "cd69039d-47a3-44d6-8545-6c4fcb2d1b11",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "7bb485e3-d9c2-480e-aa9c-8a191c8f024d",
+                            Id = "a5d6b24f-53c8-438d-9053-a2c28607242f",
                             Name = "client",
                             NormalizedName = "CLIENT"
                         },
                         new
                         {
-                            Id = "4290ff77-8c3f-44a6-a4aa-169c811d8d1b",
+                            Id = "56ac1dce-f9d8-4257-b2ca-66700e918253",
                             Name = "seller",
                             NormalizedName = "SELLER"
                         });
@@ -665,13 +668,13 @@ namespace ModelLayer.Migrations
             modelBuilder.Entity("ClassLibrary.Order", b =>
                 {
                     b.HasOne("ClassLibrary.Customer", "Customer")
-                        .WithMany("Orders")
+                        .WithMany("Sales")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("ClassLibrary.Product", "Product")
-                        .WithMany("Orders")
+                        .WithMany("Sales")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -813,7 +816,7 @@ namespace ModelLayer.Migrations
 
             modelBuilder.Entity("ClassLibrary.Customer", b =>
                 {
-                    b.Navigation("Orders");
+                    b.Navigation("Sales");
                 });
 
             modelBuilder.Entity("ClassLibrary.Order", b =>
@@ -823,9 +826,9 @@ namespace ModelLayer.Migrations
 
             modelBuilder.Entity("ClassLibrary.Product", b =>
                 {
-                    b.Navigation("Orders");
-
                     b.Navigation("Ratings");
+
+                    b.Navigation("Sales");
                 });
 
             modelBuilder.Entity("ModelLayer.Models.Shop", b =>

@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using ModelLayer.Models;
 using DataLayer.Base;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace ClassLibrary
@@ -31,11 +32,16 @@ namespace ClassLibrary
         [Display(Name = "قیمت")]
         public decimal Price {  get; set; }
 
-        public ICollection<Order> Sales { get; set; } = new List<Order>();
+        public string? ShortDescription { get; set; }
 
+        public ICollection<Order> Orders { get; set; } = new List<Order>();
+
+        public Guid ShopId { get; set; }
+        [ForeignKey(nameof(ShopId))]
+        public virtual Shop? Shop { get; set; }
         public ICollection<Customer>? customers { get; set; } // Navigation property
 
-        public ICollection<Shop>? sellers { get; set; }
+        public ICollection<Rating>? Ratings { get; set; } = new List<Rating>();
     }
 }
 

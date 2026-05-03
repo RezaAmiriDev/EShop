@@ -24,7 +24,7 @@ namespace WebFrameWork.Mapper
             CreateMap<CusProDto, Customer>()
                 // اگر Customer دارای collection/navigation است، آن‌ها را ایگنور کن
                 .ForMember(dest => dest.AddressId, opt => opt.MapFrom(src => src.addressDto))
-                .ForMember(dest => dest.Sales, opt => opt.Ignore())   // مثال: collection ها را ایگنور کن
+                .ForMember(dest => dest.Orders, opt => opt.Ignore())   // مثال: collection ها را ایگنور کن
                 .ForMember(dest => dest.products, opt => opt.Ignore()) // بر اساس مدلت
                 .ForMember(dest => dest.CreateDate, opt => opt.Ignore()); // CreateDate معمولاً سمت سرور set می‌شود
 
@@ -34,7 +34,7 @@ namespace WebFrameWork.Mapper
             CreateMap<ProductDto, Product>()
                 .ForMember(d => d.Id, o => o.Ignore())
                 .ForMember(d => d.DateOfOperation, o => o.Ignore())
-                .ForMember(d => d.Sales, o => o.Ignore())
+                .ForMember(d => d.Orders, o => o.Ignore())
                 .ForMember(d => d.customers, o => o.Ignore())
                 .ForMember(d => d.sellers, o => o.Ignore())
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
@@ -55,6 +55,9 @@ namespace WebFrameWork.Mapper
                 .ForMember(d => d.LikesCount, opt => opt.Ignore())
                 .ForMember(d => d.DislikesCount, opt => opt.Ignore())
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<SliderImage, SliderImageDto>()
+                .ForMember(d => d.ImagePath, opt => opt.MapFrom(s => string.IsNullOrEmpty(s.ImagePath) ? "/images/default-slider.jpg" : s.ImagePath)).ReverseMap();
 
         }
     }

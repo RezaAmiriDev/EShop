@@ -1,9 +1,7 @@
 ﻿// ServiceLayer/Services/FileService.cs
 using Microsoft.AspNetCore.Http;
 using ModelLayer.Interface;
-using System;
-using System.IO;
-using System.Threading.Tasks;
+
 
 public class FileService : IFileRepository
 {

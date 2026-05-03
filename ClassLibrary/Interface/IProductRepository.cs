@@ -9,11 +9,12 @@ namespace ClassLibrary.Repository
 {
     public interface IProductRepository : IRepository<Product>
     {
-        //bool Add (Product Model);
-        //Task<bool> UpdateAsync(Product Model);
-        //ServiceResponse Delete (int Id);
-        //Product FindById (int Id);
-        //IEnumerable<Product> FindAll ();
         Task<List<Product>> Search(string FindProductByName);
+
+        Task<List<Product>> GetProductsWithShopAsync(int take);
+        Task<Product?> GetProductWithShopAndRatingsAsync(Guid productId);
+        Task<double> GetAverageRatingAsync(Guid productId);
+        Task<bool> HasUserRatingAsync (Guid productId, Guid customerId);
+
     }
 }

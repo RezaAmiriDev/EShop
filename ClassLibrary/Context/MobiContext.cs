@@ -25,6 +25,7 @@ namespace ClassLibrary.Models
         public DbSet<Logs> Logs { get; set; } = null!;
         public DbSet<Rating> Ratings { get; set; } = null!;
         public DbSet<Payment> Payments { get; set; } = null!;
+        public DbSet<SliderImage> SliderImages { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -88,18 +89,22 @@ namespace ClassLibrary.Models
                 join.ToTable("ProductSeller");
             });
 
+            modelBuilder.Entity<Rating>()
+                .HasOne(r => r.Product)
+                .WithMany(p => p.Ratings)
+                .HasForeignKey(r => r.ProductId);
 
-            // تعریف رابطه بین Sale و Customer
+            // تعریف رابطه بین Order و Customer
             modelBuilder.Entity<Order>()
                 .HasOne(s => s.Customer)
-                .WithMany(c => c.Sales)
+                .WithMany(c => c.Orders)
                 .HasForeignKey(s => s.CustomerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // تعریف رابطه بین Sale و Product
+            // تعریف رابطه بین Order و Product
             modelBuilder.Entity<Order>()
                 .HasOne(s => s.Product)
-                .WithMany(p => p.Sales)
+                .WithMany(p => p.Orders)
                 .HasForeignKey(s => s.ProductId)
                 .OnDelete(DeleteBehavior.NoAction);
 

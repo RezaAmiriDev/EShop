@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ClassLibrary;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,5 +17,6 @@ namespace ModelLayer.Models
         public string? Body { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsApproved { get; set; } = false;
+        public Product Product { get; set; } = null!;
     }
 }

@@ -1,12 +1,7 @@
-﻿using ClassLibrary.Models;
-using DataLayer.Base;
-using System;
-using System.Collections.Generic;
+﻿using DataLayer.Base;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace ClassLibrary
 {
@@ -49,7 +44,7 @@ namespace ClassLibrary
 
         public Guid ProductId { get; set; }
 
-        public ICollection<Order> Sales { get; set; } = new List<Order>();
+        public ICollection<Order> Orders { get; set; } = new List<Order>();
 
         public ICollection<Product>? products { get; set; } // Navigation property
        // public ICollection<ProductCustomer>? ProductCusromer { get; set; } // Many-to-Many

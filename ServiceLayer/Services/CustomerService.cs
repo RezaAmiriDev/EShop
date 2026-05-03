@@ -31,8 +31,8 @@ namespace ServiceLayer.Services
             try
             {
                 var list = await _customerRepository.TableNoTracking
-           .ProjectTo<CusProDto>(_mapper.ConfigurationProvider)
-           .ToListAsync();
+                .ProjectTo<CusProDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
 
                 return list;
 
