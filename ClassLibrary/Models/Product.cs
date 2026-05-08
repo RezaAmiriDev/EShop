@@ -41,7 +41,7 @@ namespace ClassLibrary
         public virtual Shop? Shop { get; set; }
         public ICollection<Customer>? customers { get; set; } // Navigation property
 
-        public ICollection<Rating>? Ratings { get; set; } = new List<Rating>();
+        public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
     }
 }
 

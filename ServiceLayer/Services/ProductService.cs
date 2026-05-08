@@ -10,6 +10,7 @@ using ModelLayer.ViewModel;
 using Microsoft.Extensions.Hosting;
 using Common.Pagination;
 using DataLayer.EnumHellper;
+using ModelLayer.Interface;
 
 
 namespace ServiceLayer.Services
@@ -19,12 +20,14 @@ namespace ServiceLayer.Services
         private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<ProductService> _logger;
+        private readonly IRatingRepository _ratingRepo;
 
-        public ProductService(IProductRepository productRepository, IMapper mapper, ILogger<ProductService> logger)
+        public ProductService(IProductRepository productRepository, IMapper mapper, ILogger<ProductService> logger, IRatingRepository ratingRepository)
         {
             _productRepository = productRepository;
             _mapper = mapper;
             _logger = logger;
+            _ratingRepo = ratingRepository;
         }
 
         public async Task<IEnumerable<ProductDto>> GetAllAsync(CancellationToken ct = default)
@@ -173,33 +176,22 @@ namespace ServiceLayer.Services
             return list;
         }
 
-        public async Task<List<ProductListItemDto>> GetProductsForHomeAsync(int take = 12, CancellationToken ct = default)
+        public async Task<List<ProductCardDto>> GetProductsForHomeAsync(int take = 12, CancellationToken ct = default)
         {
             var query = _productRepository.TableNoTracking
-                .Select(p => new ProductListItemDto
+                .Select(p => new ProductCardDto
                 {
                     Id = p.Id,
                     Name = p.Name,
                     Brand = p.Brand,
-                    ProductCode = p.ProductCode,
-                    ImagePath = p.ImagePath,
                     Price = p.Price,
-                    ShortDescription = p.ShortDescription,
+                    ImagePath = p.ImagePath,
                     AverageRating = p.Ratings!
-                    .Where(r => r.IsApproved).Select(r => (double)r.Review).DefaultIfEmpty(0.0).Average(),
-                    ShopName = p.sellers!.OrderBy(s => s.ShopName).Select(s => s.ShopName).FirstOrDefault()
+                   .Where(r => r.IsApproved).Select(r => (double)r.Review).DefaultIfEmpty(0.0).Average(),
+                    ShopName =  p.Shop.ShopName
                 }).OrderBy(p => p.Name).Take(take);
 
             return await query.ToListAsync(ct);
         }
-
-        //public async Task<List<ProductListItemDto>> GetProductsForHomeAsync(int take = 12, CancellationToken ct = default)
-        //{
-        //    return await _productRepository.TableNoTracking
-        //               .ProjectTo<ProductListItemDto>(_mapper.ConfigurationProvider)
-        //               .OrderBy(p => p.Name)
-        //               .Take(take)
-        //               .ToListAsync(ct);
-        //}
     }
 }

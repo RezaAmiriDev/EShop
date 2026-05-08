@@ -36,7 +36,7 @@ namespace WebFrameWork.Mapper
                 .ForMember(d => d.DateOfOperation, o => o.Ignore())
                 .ForMember(d => d.Orders, o => o.Ignore())
                 .ForMember(d => d.customers, o => o.Ignore())
-                .ForMember(d => d.sellers, o => o.Ignore())
+                .ForMember(d => d.Shop, o => o.Ignore())
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             // Shop -> ShopDto (خواندن)

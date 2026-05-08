@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ModelLayer.Migrations
 {
     /// <inheritdoc />
-    public partial class HelloFirstTime : Migration
+    public partial class FirstOne : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -69,18 +69,35 @@ namespace ModelLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Products",
+                name: "Logs",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Brand = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Price = table.Column<decimal>(type: "decimal(16,2)", precision: 16, scale: 2, nullable: false)
+                    LogType = table.Column<int>(type: "int", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DateOfOperation = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Products", x => x.Id);
+                    table.PrimaryKey("PK_Logs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SliderImages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    Order = table.Column<int>(type: "int", nullable: false),
+                    DateOfOperation = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SliderImages", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -108,20 +125,25 @@ namespace ModelLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Sellers",
+                name: "Shops",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SellerName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SellerDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NationalCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AddressId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    ShopName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ShopCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LikesCount = table.Column<int>(type: "int", nullable: false),
+                    DislikesCount = table.Column<int>(type: "int", nullable: false),
+                    NumberOfproducts = table.Column<int>(type: "int", nullable: true),
+                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AddressId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateOfOperation = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Sellers", x => x.Id);
+                    table.PrimaryKey("PK_Shops", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Sellers_Addresses_AddressId",
+                        name: "FK_Shops_Addresses_AddressId",
                         column: x => x.AddressId,
                         principalTable: "Addresses",
                         principalColumn: "Id",
@@ -235,6 +257,85 @@ namespace ModelLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Products",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Brand = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    ProductCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(16,2)", precision: 16, scale: 2, nullable: false),
+                    ShortDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ShopId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateOfOperation = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Products", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Products_Shops_ShopId",
+                        column: x => x.ShopId,
+                        principalTable: "Shops",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SellerLikes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ShopId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IpAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SellerLikes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SellerLikes_Shops_ShopId",
+                        column: x => x.ShopId,
+                        principalTable: "Shops",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Orders",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrderNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProductNameSnapshot = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    ShippingCost = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SaleDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Currency = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    DateOfOperation = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Orders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Orders_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Orders_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProductCustomer",
                 columns: table => new
                 {
@@ -257,50 +358,59 @@ namespace ModelLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Sales",
+                name: "Ratings",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    SaleDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Review = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Body = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsApproved = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Sales", x => x.Id);
+                    table.PrimaryKey("PK_Ratings", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Sales_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Sales_Products_ProductId",
+                        name: "FK_Ratings_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProductSeller",
+                name: "Payments",
                 columns: table => new
                 {
-                    SellerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Currency = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Provider = table.Column<int>(type: "int", nullable: false),
+                    ProviderTransactionId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Authority = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PaymentDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CallbackUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Method = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Fee = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    TransactionReference = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MetadataJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsVerified = table.Column<bool>(type: "bit", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateOfOperation = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProductSeller", x => new { x.SellerId, x.ProductId });
+                    table.PrimaryKey("PK_Payments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProductSeller_Products_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Products",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_ProductSeller_Sellers_SellerId",
-                        column: x => x.SellerId,
-                        principalTable: "Sellers",
+                        name: "FK_Payments_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
                         principalColumn: "Id");
                 });
 
@@ -309,9 +419,9 @@ namespace ModelLayer.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "469af424-38ba-4ec1-9032-a0016a0d85aa", null, "client", "CLIENT" },
-                    { "f6fab7ec-1fa1-40fd-9d4d-588290163c00", null, "seller", "SELLER" },
-                    { "fb5611be-2018-4ad7-9a02-a63137186a41", null, "admin", "ADMIN" }
+                    { "ae8f49e1-11f3-4c9d-b34b-ca494d204397", null, "seller", "SELLER" },
+                    { "baf59aa4-0e46-447c-b95f-ec308e1305a9", null, "client", "CLIENT" },
+                    { "f38bc4ba-af7a-4037-a988-39a32148bd19", null, "admin", "ADMIN" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -359,28 +469,48 @@ namespace ModelLayer.Migrations
                 column: "AddressId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Orders_CustomerId",
+                table: "Orders",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_ProductId",
+                table: "Orders",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Payments_OrderId",
+                table: "Payments",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Payments_PaymentDate",
+                table: "Payments",
+                column: "PaymentDate");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProductCustomer_ProductId",
                 table: "ProductCustomer",
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProductSeller_ProductId",
-                table: "ProductSeller",
+                name: "IX_Products_ShopId",
+                table: "Products",
+                column: "ShopId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_ProductId",
+                table: "Ratings",
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sales_CustomerId",
-                table: "Sales",
-                column: "CustomerId");
+                name: "IX_SellerLikes_ShopId",
+                table: "SellerLikes",
+                column: "ShopId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sales_ProductId",
-                table: "Sales",
-                column: "ProductId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Sellers_AddressId",
-                table: "Sellers",
+                name: "IX_Shops_AddressId",
+                table: "Shops",
                 column: "AddressId");
         }
 
@@ -403,13 +533,22 @@ namespace ModelLayer.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Logs");
+
+            migrationBuilder.DropTable(
+                name: "Payments");
+
+            migrationBuilder.DropTable(
                 name: "ProductCustomer");
 
             migrationBuilder.DropTable(
-                name: "ProductSeller");
+                name: "Ratings");
 
             migrationBuilder.DropTable(
-                name: "Sales");
+                name: "SellerLikes");
+
+            migrationBuilder.DropTable(
+                name: "SliderImages");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -418,13 +557,16 @@ namespace ModelLayer.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Sellers");
+                name: "Orders");
 
             migrationBuilder.DropTable(
                 name: "Customers");
 
             migrationBuilder.DropTable(
                 name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "Shops");
 
             migrationBuilder.DropTable(
                 name: "Addresses");

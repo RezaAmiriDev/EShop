@@ -1,7 +1,7 @@
-﻿using ClassLibrary.Services;
-using Common.Pagination;
+﻿using Common.Pagination;
 using DataLayer.ApiResult;
 using Microsoft.AspNetCore.Mvc;
+using ModelLayer.Reposetory;
 using ModelLayer.ViewModel;
 using ServiceLayer.Services;
 
@@ -166,21 +166,6 @@ namespace MobileStore.Controllers
             return Ok(result);
         }
 
-        //public IActionResult Chart()
-        //{
-        //    List<Product> pro = new List<Product>
-        //   {
-        //    new Product { Type = ProductType.Bracelet},
-        //    new Product { Type = ProductType.TShirt},
-        //    new Product { Type = ProductType.Thermos},
-        //    new Product { Type = ProductType.SolarCharger},
-        //    new Product { Type = ProductType.Lighter},
-        //   };
-        //    var brandCount = pro.GroupBy(b => b.Type).Select(g => new { Brand = g.Key, Count = g.Count() }).ToList();
-
-        //    ViewBag.Labels = brandCount.Select(b => b.Brand.ToString()).ToList();
-        //    ViewBag.Data = brandCount.Select(b => b.Count).ToList();
-        //    return View();
-        //}
+       
     }
 }

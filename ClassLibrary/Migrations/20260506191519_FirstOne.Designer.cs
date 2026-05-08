@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ModelLayer.Migrations
 {
     [DbContext(typeof(MobiContext))]
-    [Migration("20260428183640_afterwar")]
-    partial class afterwar
+    [Migration("20260506191519_FirstOne")]
+    partial class FirstOne
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -183,6 +183,9 @@ namespace ModelLayer.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("ShortDescription")
                         .HasColumnType("nvarchar(max)");
 
@@ -190,6 +193,8 @@ namespace ModelLayer.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ShopId");
 
                     b.ToTable("Products");
                 });
@@ -223,19 +228,19 @@ namespace ModelLayer.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "415870e9-7202-4d45-b22c-df178f375de9",
+                            Id = "f38bc4ba-af7a-4037-a988-39a32148bd19",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "7bb485e3-d9c2-480e-aa9c-8a191c8f024d",
+                            Id = "baf59aa4-0e46-447c-b95f-ec308e1305a9",
                             Name = "client",
                             NormalizedName = "CLIENT"
                         },
                         new
                         {
-                            Id = "4290ff77-8c3f-44a6-a4aa-169c811d8d1b",
+                            Id = "ae8f49e1-11f3-4c9d-b34b-ca494d204397",
                             Name = "seller",
                             NormalizedName = "SELLER"
                         });
@@ -616,6 +621,12 @@ namespace ModelLayer.Migrations
                     b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
@@ -637,21 +648,6 @@ namespace ModelLayer.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductCustomer", (string)null);
-                });
-
-            modelBuilder.Entity("ProductSeller", b =>
-                {
-                    b.Property<Guid>("SellerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("SellerId", "ProductId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductSeller", (string)null);
                 });
 
             modelBuilder.Entity("ClassLibrary.Customer", b =>
@@ -682,6 +678,17 @@ namespace ModelLayer.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("ClassLibrary.Product", b =>
+                {
+                    b.HasOne("ModelLayer.Models.Shop", "Shop")
+                        .WithMany("products")
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Shop");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -794,21 +801,6 @@ namespace ModelLayer.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ProductSeller", b =>
-                {
-                    b.HasOne("ClassLibrary.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("ModelLayer.Models.Shop", null)
-                        .WithMany()
-                        .HasForeignKey("SellerId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ClassLibrary.Address", b =>
                 {
                     b.Navigation("Customers");
@@ -834,6 +826,8 @@ namespace ModelLayer.Migrations
             modelBuilder.Entity("ModelLayer.Models.Shop", b =>
                 {
                     b.Navigation("Likes");
+
+                    b.Navigation("products");
                 });
 #pragma warning restore 612, 618
         }

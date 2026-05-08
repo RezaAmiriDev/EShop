@@ -68,26 +68,11 @@ namespace ClassLibrary.Models
             });
 
             // تعریف رابطه بین Seller و Product
-            modelBuilder.Entity<Shop>()
-                .HasMany(s => s.products)
-                .WithMany(p => p.sellers)
-                .UsingEntity<Dictionary<string, object>>(
-                    "ProductSeller",
-            right => right
-                .HasOne<Product>()
-                .WithMany()
-                .HasForeignKey("ProductId")
-                .OnDelete(DeleteBehavior.NoAction),
-            left => left
-                .HasOne<Shop>()
-                .WithMany()
-                .HasForeignKey("SellerId")
-                .OnDelete(DeleteBehavior.NoAction),
-            join =>
-            {
-                join.HasKey("SellerId", "ProductId");
-                join.ToTable("ProductSeller");
-            });
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Shop)
+                .WithMany(s => s.products)
+                .HasForeignKey(p => p.ShopId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Rating>()
                 .HasOne(r => r.Product)

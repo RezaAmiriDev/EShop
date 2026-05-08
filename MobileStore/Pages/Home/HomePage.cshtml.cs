@@ -11,7 +11,7 @@ namespace EShope.Pages.Home
         private readonly SettingWeb _settingWeb;
         private readonly ILogger<IndexModel> _logger;
 
-        public List<ProductListItemDto> Products { get; set; } = new();
+        public List<ProductCardDto> Products { get; set; } = new();
         public List<SliderImageDto> Sliders { get; set; } = new();
 
         public HomePage(IHttpClientFactory client, SettingWeb settingWeb, ILogger<IndexModel> logger)
@@ -44,7 +44,7 @@ namespace EShope.Pages.Home
                     return;
                 }
 
-                Products = home.ProductItm ?? new List<ProductListItemDto>();
+                Products = home.ProductItm ?? new List<ProductCardDto>();
                 Sliders = home.SliderImg ?? new List<SliderImageDto>();
 
                 var baseUrl = client.BaseAddress?.ToString().TrimEnd('/') ?? $"{Request.Scheme}://{Request.Host.Value}".TrimEnd('/');
@@ -78,10 +78,10 @@ namespace EShope.Pages.Home
                 new SliderImageDto { Id = Guid.NewGuid(), ImagePath = "/images/hero2.jpg", Title = "New" }
             };
 
-            Products = new List<ProductListItemDto>
+            Products = new List<ProductCardDto>
             {
-                new ProductListItemDto { Id = Guid.NewGuid(), Name = "Sample 1", Brand = "adidas", ProductCode = "SAMPLE1", ImagePath = "/images/p1.jpg", Price = 99, ShortDescription = "?????" , AverageRating = 4.5 },
-                new ProductListItemDto { Id = Guid.NewGuid(), Name = "Sample 2", Brand = "puma", ProductCode = "SAMPLE2", ImagePath = "/images/p2.jpg", Price = 129, ShortDescription = "?????" , AverageRating = 4.0 }
+                new ProductCardDto { Id = Guid.NewGuid(), Name = "Sample 1", Brand = "adidas",/* ProductCode = "SAMPLE1",*/ ImagePath = "/images/p1.jpg", Price = 99,/* ShortDescription = "?????" */ AverageRating = 4.5 },
+                new ProductCardDto { Id = Guid.NewGuid(), Name = "Sample 2", Brand = "puma",/* ProductCode = "SAMPLE2",*/ ImagePath = "/images/p2.jpg", Price = 129,/* ShortDescription = "?????"*/  AverageRating = 4.0 }
             };
         }
     }

@@ -101,5 +101,10 @@ namespace ServiceLayer.Services
                 return new ServiceResult(ResponseStatus.ServerError, null);
             }
         }
+   
+        public async Task<List<SliderImage>> GetActiveSliderAsync(CancellationToken ct = default)
+        {
+            return await _repo.GetActiveSliderAsync(ct);
+        }
     }
 }

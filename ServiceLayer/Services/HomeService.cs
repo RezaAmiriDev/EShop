@@ -16,17 +16,21 @@ namespace ServiceLayer.Services
             _mapper = mapper;
         }
 
-        public async Task<HomeDto> GetHomeAsync(int take = 12)
+        public async Task<HomeDto> GetHomeAsync(int take = 12, string? userIdOrTempId = null, CancellationToken ct = default)
         {
+            // دریافت محصولات (همراه با نام فروشنده، امتیاز و ...)
             var products = await _productService.GetProductsForHomeAsync(take);
-            var sliderDomain = await _sliderService.GetAllAsync();
-            var sliders = _mapper.Map<List<SliderImageDto>>(sliderDomain);
+
+            // دریافت اسلایدرهای فعال (نه همه)
+            var activeSlider = await _sliderService.GetActiveSliderAsync();
+            var sliders = _mapper.Map<List<SliderImageDto>>(activeSlider);
            
 
             var home = new HomeDto
             {
-                ProductItm = products ?? new List<ProductListItemDto>(),
-                SliderImg = sliders ?? new List<SliderImageDto>()
+                ProductItm = products ?? new List<ProductCardDto>(),
+                SliderImg = sliders ?? new List<SliderImageDto>(),
+                CartItemCount = 0,
             };
 
             return home;
