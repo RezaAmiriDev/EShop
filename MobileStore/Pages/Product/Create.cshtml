@@ -18,11 +18,18 @@
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
 
-                        <!-- Brand -->
-                        <div class="mb-3">
-                            <label asp-for="dto.Brand" class="form-label fw-semibold">برند</label>
-                            <input asp-for="dto.Brand" class="form-control" placeholder="مثال: Samsung" />
-                            <span asp-validation-for="dto.Brand" class="text-danger small"></span>
+                        <!-- Name & Brand -->
+                        <div class="row">
+                            <div class="col-md-6 mb3">
+                                <label asp-for="dto.Name" class="form-label fw-semibold"> نام </label>
+                                <input asp-for="dto.Name" class="form-control" pleacholder="مثال: glaxey s6" />
+                                <span asp-validation-for="dto.Name" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="dto.Brand" class="form-label fw-semibold">برند</label>
+                                <input asp-for="dto.Brand" class="form-control" placeholder="مثال: Samsung" />
+                                <span asp-validation-for="dto.Brand" class="text-danger small"></span>
+                            </div>
                         </div>
 
                         <!-- Type & Price -->
@@ -47,15 +54,20 @@
                             </div>
                         </div>
 
-                        <!-- Image -->
-                        <div class="mb-3">
-                            <label asp-for="dto.ImageFile" class="form-label fw-semibold">تصویر محصول</label>
-                            <input asp-for="dto.ImageFile"
-                                   type="file"
-                                   class="form-control"
-                                   accept="image/*"
-                                   onchange="previewImage(this)" />
-                            <span asp-validation-for="dto.ImageFile" class="text-danger small"></span>
+                        <!-- Image & Shop -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="dto.ImageFile" class="form-label fw-semibold">تصویر محصول</label>
+                                <input asp-for="dto.ImageFile" type="file" class="form-control" accept="image/*" onchange="previewImage(this)" />
+                                <span asp-validation-for="dto.ImageFile" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="dto.ShopId" class="form-label fw-semibold">فروشگاه</label>
+                                <select asp-for="dto.ShopId" class="form-select" asp-items="Model.ShopList">
+                                    <option value=""> -- انتخاب فروشگاه -- </option>
+                                </select>
+                                <span asp-validation-for="dto.ShopId" class="text-danger small"></span>
+                            </div>
                         </div>
 
                         <!-- Image Preview -->
@@ -64,6 +76,16 @@
                                  src="/images/no-image.png"
                                  class="img-thumbnail d-none"
                                  style="max-height: 200px;" />
+                        </div>
+
+                        <!-- فیلد توضیحات محصول -->
+                        <div class="mb-3">
+                            <label asp-for="dto.ShortDescription" class="form-label fw-semibold">توضیحات محصول</label>
+                            <textarea asp-for="dto.ShortDescription" class="form-control" rows="4" placeholder="توضیحات محصول را وارد کنید..."></textarea>
+                            <span asp-validation-for="dto.ShortDescription" class="text-danger small"></span>
+                            <div class="form-text text-muted">
+                                حداکثر ۵۰۰ کاراکتر (توضیحات کوتاه درباره محصول)
+                            </div>
                         </div>
 
                         <!-- Actions -->
@@ -100,7 +122,7 @@
                 reader.readAsDataURL(input.files[0]);
             } else {
                 preview.classList.add('d-none');
-                preview.src = '';
+                preview.src = ''
             }
         }
     </script>

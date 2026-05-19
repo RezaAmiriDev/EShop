@@ -21,6 +21,7 @@ namespace WebFrameWork.Configuration
             services.AddScoped<IFileRepository , FileService>();
             services.AddScoped<IDashboardRepository, DashboardRepo>();
             services.AddScoped<ISliderRepository,  SliderRepo>();
+            services.AddScoped<IRatingRepository, RatingRepo>();
 
             services.AddScoped<CustomerService>();
             services.AddScoped<ProductService>();

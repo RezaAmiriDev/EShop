@@ -77,11 +77,14 @@ namespace ServiceLayer.Services
                     .Take(pagedResponse.PageSize).Select(p => new ProductDto
                     {
                         Id = p.Id,
+                        Name = p.Name,
                         Brand = p.Brand,
                         ProductCode = p.ProductCode,
                         Type = p.Type,
+                        Price = p.Price,
                         ImagePath = p.ImagePath,
-                        Price = p.Price
+                        ShortDescription = p.ShortDescription,
+                        ShopId = p.ShopId                        
                     }).ToListAsync();
                 return new PagedResponse<List<ProductDto>>(pagedResponse.PageNumber,pagedResponse.PageSize, Total, list);
             }
@@ -99,10 +102,16 @@ namespace ServiceLayer.Services
                 product.Id = Guid.NewGuid();
                 product.DateOfOperation = DateTime.UtcNow;
 
+                if (dto.ShopId == Guid.Empty)
+                {
+                    _logger.LogWarning("ShopId is empty for new product");
+                    return new ServiceResult(ResponseStatus.BadRequest, "شناسه فروشگاه معتبر نیست");
+                }
+
                 var result = await _productRepository.AddAsync(product , ct);
                 if (result == null)
                 {
-                    _logger.LogWarning("Create product failed: {@Result}", result);
+                    _logger.LogWarning("Create product failed in service: {@Result}", result);
                     return new ServiceResult(ResponseStatus.BadRequest, null);
                 }
 
@@ -110,7 +119,7 @@ namespace ServiceLayer.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating product");
+                _logger.LogError(ex, "Error creating product in service");
                 return new ServiceResult(ResponseStatus.ServerError, null);
             }
         }
@@ -188,7 +197,7 @@ namespace ServiceLayer.Services
                     ImagePath = p.ImagePath,
                     AverageRating = p.Ratings!
                    .Where(r => r.IsApproved).Select(r => (double)r.Review).DefaultIfEmpty(0.0).Average(),
-                    ShopName =  p.Shop.ShopName
+                    ShopName = p.Shop != null ? p.Shop.ShopName : "نامشخص"
                 }).OrderBy(p => p.Name).Take(take);
 
             return await query.ToListAsync(ct);

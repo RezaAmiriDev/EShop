@@ -16,13 +16,19 @@
                 @Html.AntiForgeryToken()
 
                 <input type="hidden" asp-for="UpdateDto.Id" />
-
+                <!-- Name -->
+                <div class="mb-3">
+                    <label asp-for="UpdateDto.Name" class="form-label fw-semibold"></label>
+                    <input asp-for="UpdateDto.Name" class="form-control" />
+                    <span asp-validation-for="UpdateDto.Name" class="text-danger"></span>
+                </div>
+                <!-- Brand -->
                 <div class="mb-3">
                     <label asp-for="UpdateDto.Brand" class="form-label fw-semibold"></label>
                     <input asp-for="UpdateDto.Brand" class="form-control" />
                     <span asp-validation-for="UpdateDto.Brand" class="text-danger"></span>
                 </div>
-
+                <!-- Type -->
                 <div class="mb-3">
                     <label asp-for="UpdateDto.Type" class="form-label fw-semibold"></label>
                     <select asp-for="UpdateDto.Type" class="form-select">
@@ -33,16 +39,30 @@
                     </select>
                     <span asp-validation-for="UpdateDto.Type" class="text-danger"></span>
                 </div>
-
+                <!-- ShopId -->
+                <div class="mb-3">
+                    <label asp-for="UpdateDto.ShopId" class="form-label fw-semibold">فروشگاه</label>
+                    <select asp-for="UpdateDto.ShopId" class="form-select" asp-items="Model.ShopList">
+                            <option value=""> -- انتخاب فروشگاه -- </option>
+                    </select>
+                    <span asp-validation-for="UpdateDto.ShopId" class="text-danger small"></span>
+                </div>
+                <!-- Price -->
                 <div class="mb-3">
                     <label asp-for="UpdateDto.Price" class="form-label fw-semibold"></label>
                     <input asp-for="UpdateDto.Price" class="form-control" type="number" step="0.01" />
                     <span asp-validation-for="UpdateDto.Price" class="text-danger"></span>
                 </div>
-
+                <!-- Image -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">تصویر محصول</label>
                     <input asp-for="UpdateDto.ImageFile" type="file" class="form-control" accept="image/*" />
+                </div>
+                <!-- ShortDescription -->
+                <div class="mb-3">
+                    <label asp-for="UpdateDto.ShortDescription" class="form-label fw-semibold"></label>
+                    <textarea asp-for="UpdateDto.ShortDescription" class="form-control" rows="4" ></textarea>
+                    <span asp-validation-for="UpdateDto.ShortDescription" class="text-danger small"></span>
                 </div>
 
                 <div class="d-flex justify-content-between">

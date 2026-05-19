@@ -1,0 +1,217 @@
+﻿@model EShope.Pages.Shop.IndexModel
+@using System.Linq
+
+
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-5 gap-4 flex-wrap">
+        <h2 class="mb-0">فروشنده‌ها</h2>
+        <div class="flex-grow-1">
+            @if (TempData["Message"] != null)
+            {
+                <div id="messageBox" class="alert alert-success alert-dismissible fade show w-100" role="alert">
+                    @TempData["Message"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            <div asp-validation-summary="All" class="alert alert-danger"></div>
+        </div>
+        <form method="get" class="d-flex align-items-stretch gap-2 ms-auto">
+            <div class="input-group input-group-sm" style="max-width: 300px;">
+                <input name="SearchTerm" value="@Model.SearchTerm" class="form-control"
+                       placeholder="جستجو در نام یا کد فروشگاه..." />
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+            <a asp-page="./Create" class="btn btn-primary btn-sm d-flex align-items-center gap-2">
+                <i class="bi bi-plus-lg"></i>
+                افزودن فروشگاه
+            </a>
+        </form>
+    </div>
+
+    @if (!Model.Sellers.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-shop display-1 text-muted"></i>
+            <h4 class="mt-3">فروشگاهی یافت نشد</h4>
+            <p class="text-muted">می‌توانید اولین فروشگاه را اضافه کنید</p>
+        </div>
+    }
+    else
+    {
+        <div class="row gy-4">
+            @foreach (var seller in Model.Sellers)
+            {
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card shadow border-0 h-100">
+                        <div class="card-body position-relative">
+                            <!-- منو -->
+                            <div class="position-absolute top-0 end-0 mt-2 me-2">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light rounded-circle"
+                                            data-bs-toggle="dropdown"
+                                            style="width: 32px; height: 32px;">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" asp-page="./Update" asp-route-id="@seller.Id">
+                                                <i class="bi bi-pencil me-2"></i>ویرایش
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="showShopDetails('@seller.Id')">
+                                                <i class="bi bi-eye me-2"></i>مشاهده جزئیات
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="post" asp-page-handler="Delete"
+                                                  onsubmit="return confirm('آیا از حذف فروشگاه «@seller.ShopName» مطمئن هستید؟');">
+                                                <input type="hidden" name="id" value="@seller.Id" />
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="bi bi-trash me-2"></i>حذف
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- تصویر -->
+                            <div class="text-center mb-3">
+                                @{
+                                    var imageUrl = Model.GetImageUrl(seller.ImagePath);
+                                }
+                                <img src="@imageUrl"
+                                     class="avatar rounded-circle border border-white"
+                                     style="width:150px;height:150px;object-fit:cover;"
+                                     loading="lazy"
+                                     onerror="this.onerror=null; this.src='/images/default-avatar.jpg';" />
+                            </div>
+
+                            <!-- اطلاعات -->
+                            <h5 class="card-title text-center mb-2">@seller.ShopName</h5>
+                            @if (!string.IsNullOrEmpty(seller.ShopCode))
+                            {
+                                <p class="text-center text-muted small mb-2">Code: @seller.ShopCode</p>
+                            }
+
+                            <p class="text-muted small mb-3 text-center" style="min-height: 10px;">
+                                @(seller.Description?.Length > 60 ? seller.Description.Substring(0, 60) + "..." : seller.Description ?? "بدون توضیحات")
+                            </p>
+
+                            <!-- آمار -->
+                            <div class="d-flex justify-content-center mb-3">
+                                <div class="badge bg-body-secondary text-dark px-3 py-2">
+                                    <div class="fw-bold">@(seller.NumberOfproducts ?? 0)</div>
+                                    <small class="text-muted">محصول</small>
+                                </div>
+                            </div>
+
+                            <!-- لایک/دیسلایک -->
+                            <div class="d-flex justify-content-center gap-2 mb-3">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-success btn-like d-flex align-items-center gap-1"
+                                        onclick="likeShop('@seller.Id', this)">
+                                    <i class="bx bx-like"></i>
+                                    <span class="like-count">@seller.LikesCount</span>
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-dislike d-flex align-items-center gap-1"
+                                        onclick="dislikeShop('@seller.Id', this)">
+                                    <i class="bx bx-dislike"></i>
+                                    <span class="dislike-count">@(seller.DislikesCount)</span>
+                                </button>
+                            </div>
+
+                            <!-- دکمه جزئیات -->
+                            <button class="btn btn-primary btn-sm w-100 mt-auto"
+                                    onclick="showShopDetails('@seller.Id')">
+                                <i class="bi bi-info-circle me-1"></i>
+                                مشاهده جزئیات
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- کنترل‌های صفحه‌بندی -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                <!-- اولین صفحه -->
+                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                    <a class="page-link" href="#" aria-label="First" onclick="GoToPage(1)">
+                        <span aria-hidden="true">«</span>
+                        <span class="sr-only">First</span>
+                    </a>
+                </li>
+
+                <!-- قبلی -->
+                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                    <a class="page-link" href="#" aria-label="Previous" onclick="GoToPage(@(Model.PageNumber - 1))">
+                        <span aria-hidden="true">&lt;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+
+                <!-- صفحات بین -->
+                @{
+                    int startPage = Math.Max(1, Model.PageNumber - 2);
+                    int endPage = Math.Min(Model.TotalPages, Model.PageNumber + 2);
+
+                    if (startPage > 1)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+
+                    for (int i = startPage; i <= endPage; i++)
+                    {
+                        if (i == Model.PageNumber)
+                        {
+                            <li class="page-item active" aria-current="page"><span class="page-link">@i</span></li>
+                        }
+                        else
+                        {
+                            <li class="page-item"><a class="page-link" href="#" onclick="GoToPage(@i)">@i</a></li>
+                        }
+                    }
+
+                    if (endPage < Model.TotalPages)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+                }
+
+                <!-- بعدی -->
+                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="#" aria-label="Next" onclick="GoToPage(@(Model.PageNumber + 1))">
+                        <span aria-hidden="true">&gt;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+
+                <!-- آخرین صفحه -->
+                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="#" aria-label="Last" onclick="GoToPage(@Model.TotalPages)">
+                        <span aria-hidden="true">»</span>
+                        <span class="sr-only">Last</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- تعداد صفحات -->
+        <div>
+            <span>صفحه @Model.PageNumber از @Model.TotalPages</span>
+        </div>
+    </div>
+</div>
+
+

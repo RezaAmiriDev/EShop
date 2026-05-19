@@ -1,7 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using ModelLayer.ViewModel;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -23,10 +25,29 @@ namespace EShope.Pages.Product
 
         [BindProperty]
         public ProductDto UpdateDto { get; set; } = new();
-        public async Task<IActionResult> OnGet(Guid id)
+        public List<SelectListItem> ShopList { get; set; }
+
+        public async Task<IActionResult> OnGet(Guid id, CancellationToken ct)
         {
-            var clienr = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
-            var resp = await clienr.GetAsync($"api/Product/{id}");
+            var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+            // 1. دریافت فروشگاه 
+            var shopResponse = await client.GetAsync($"/api/Shop/{id}", ct);
+            if (shopResponse.IsSuccessStatusCode)
+            {
+                var shopRead = await shopResponse.Content.ReadAsStringAsync();
+                var shopJson = JsonSerializer.Deserialize<List<ShopDto>>(shopRead, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                ShopList = shopJson?.Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.ShopName }).ToList() ?? new();
+            }
+            else
+            {
+                ShopList = new List<SelectListItem>();
+            }
+
+            // 2. دریافت محصول 
+            var resp = await client.GetAsync($"api/Product/{id}", ct);
             if (!resp.IsSuccessStatusCode) return RedirectToPage("/Products/Index");
 
             var json = await resp.Content.ReadAsStringAsync();
@@ -34,13 +55,13 @@ namespace EShope.Pages.Product
             {
                 PropertyNameCaseInsensitive = true
             });
-            if (dto == null) return RedirectToPage("/Products/Index");
+            if (dto == null) return RedirectToPage("/Product/Index");
 
-            UpdateDto.Id = dto.Id; UpdateDto.Brand = dto.Brand; UpdateDto.Price = dto.Price; UpdateDto.Type = dto.Type;
+            UpdateDto = dto;
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(CancellationToken ct)
         {
             if (!ModelState.IsValid) return Page();
             var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
@@ -48,9 +69,12 @@ namespace EShope.Pages.Product
             using var content = new MultipartFormDataContent();
             content.Add(new StringContent(UpdateDto.Id.ToString()) , "Id");
             if(!string.IsNullOrWhiteSpace(UpdateDto.Brand)) content.Add(new StringContent(UpdateDto.Brand) , "Brand");
+            if(!string.IsNullOrWhiteSpace(UpdateDto.Name)) content.Add(new StringContent(UpdateDto.Name), "Name");
             content.Add(new StringContent(((int)UpdateDto.Type).ToString()), "Type");
-            content.Add(new StringContent(UpdateDto.Price.ToString()), "Price");
-
+            content.Add(new StringContent(UpdateDto.Price?.ToString(CultureInfo.InvariantCulture) ?? "0"), "Price");
+            content.Add(new StringContent(UpdateDto.ShopId.ToString()), "ShopId");
+            content.Add(new StringContent(UpdateDto.ShortDescription ?? ""), "ShortDescription");
+            
             if(UpdateDto.ImageFile != null && UpdateDto.ImageFile.Length > 0)
             {
                 using var ms = new MemoryStream();
@@ -66,7 +90,7 @@ namespace EShope.Pages.Product
                 content.Add(fileContent , "ImageFile" ,UpdateDto.ImageFile.FileName);
             }
 
-            var resp = await client.PutAsync($"api/Product/{UpdateDto.Id}", content);
+            var resp = await client.PutAsync($"api/Product/{UpdateDto.Id}", content, ct);
             if (resp.IsSuccessStatusCode) return RedirectToPage("/Product/Index");
 
             ModelState.AddModelError(string.Empty, "Failed to update product");

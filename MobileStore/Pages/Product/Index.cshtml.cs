@@ -37,10 +37,11 @@ namespace EShope.Pages.Product
         public int TotalPages { get; set; }
         public int TotalCount { get; set; }
 
-        public async Task OnGetAsync()
+        public async Task OnGetAsync(CancellationToken ct)
         {
-            if (PageNumber <= 0) PageNumber = 1;
-            if (PageSize <= 0) PageSize = 12;
+            PageNumber = PageNumber <= 0 ? 1 : PageNumber;
+            PageSize = PageSize <= 0 ? 1 : PageSize;
+            SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim();
 
             var request = new PagedRequest<ProductDto>
             {
@@ -49,40 +50,43 @@ namespace EShope.Pages.Product
                 StartIndex = (PageNumber - 1) * PageSize,
                 Data = new ProductDto
                 {
-                    Brand = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim(),
-                    ProductCode = null,
+                    Brand = SearchTerm,
+                  //  Name = SearchTerm,
+                    ProductCode = SearchTerm,
                 }
             };
 
             try
             {
                 var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
-
                 // ذخیره BaseAddress برای استفاده در View
                 var baseAddress = client.BaseAddress?.ToString().TrimEnd('/') ?? "";
-                ViewData["ApiBase"] = baseAddress;
+              //  ViewData["ApiBase"] = baseAddress;
 
-                var response = await client.PostAsJsonAsync("api/Product/paged", request);
+                var response = await client.PostAsJsonAsync("api/Product/paged", request, ct);
                 if (!response.IsSuccessStatusCode)
                 {
+                    _logger.LogError("API returned {StatusCode} for product list", response.StatusCode);
+                    ModelState.AddModelError(string.Empty, $"خطا در دریافت اطلاعات از سرور (کد {response.StatusCode})");
                     proDto = new List<ProductDto>();
-                    ViewData["ApiStatusCode"] = response.StatusCode;
                     return;
                 }
                    
                 //var json = await response.Content.ReadAsStringAsync();
                // readDto = JsonSerializer.Deserialize<List<ProductDto>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
 
-                var result = await response.Content.ReadFromJsonAsync<PagedResponse<List<ProductDto>>>();
-                if(result == null || request.Data == null)
+                var result = await response.Content.ReadFromJsonAsync<PagedResponse<List<ProductDto>>>(ct);
+                if(result?.Data == null /*result == null || request.Data == null*/)
                 {
+                    _logger.LogWarning("API returned empty data for products");
                     proDto = new List<ProductDto>();
+                    TotalCount = 0;
+                    TotalPages = 1;
                     return;
                 }
                 proDto = result.Data;
                 TotalCount = result.TotalRecords;
                 TotalPages = result.TotalPages;
-                PageSize = result.PageSize;
 
                 ViewData["Count"] = TotalCount;
                 ViewData["ApiStatusCode"] = response.StatusCode;
@@ -99,6 +103,9 @@ namespace EShope.Pages.Product
                 _logger.LogError(ex, "Error loading products");
                 proDto = new List<ProductDto>();
                 ViewData["ApiError"] = ex.Message;
+
+                ModelState.AddModelError("TRy", ex.Message);
+
             }
         }
 

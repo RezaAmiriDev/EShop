@@ -19,7 +19,9 @@ namespace ModelLayer.Models
         public string? ImagePath { get; set; }
         public Guid AddressId { get; set; }
         [ForeignKey(nameof(AddressId))]
-        public Address? Address { get; set; }
+        public Address? Address { get; set; } 
+
+        
 
         public ICollection<Product>? products { get; set; }
         public ICollection<SellerLike>? Likes { get; set; }

@@ -35,7 +35,7 @@ namespace EShope.Pages.Home
                     SetFallbackData();
                     return;
                 }
-                // ?????????? ???? ?????? (HomeDto)
+                //  (HomeDto)
                 var home = await resp.Content.ReadFromJsonAsync<HomeDto>(option);
                 if (home == null)
                 {
@@ -71,17 +71,18 @@ namespace EShope.Pages.Home
 
         private void SetFallbackData()
         {
-            // ????? ?????? ???? ???? ??????? ?? ??? ????
             Sliders = new List<SliderImageDto>
             {
                 new SliderImageDto { Id = Guid.NewGuid(), ImagePath = "/images/hero1.jpg", Title = "Summer" },
-                new SliderImageDto { Id = Guid.NewGuid(), ImagePath = "/images/hero2.jpg", Title = "New" }
+                new SliderImageDto { Id = Guid.NewGuid(), ImagePath = "/images/placeholder.jpg", Title = "New" }
             };
 
             Products = new List<ProductCardDto>
             {
-                new ProductCardDto { Id = Guid.NewGuid(), Name = "Sample 1", Brand = "adidas",/* ProductCode = "SAMPLE1",*/ ImagePath = "/images/p1.jpg", Price = 99,/* ShortDescription = "?????" */ AverageRating = 4.5 },
-                new ProductCardDto { Id = Guid.NewGuid(), Name = "Sample 2", Brand = "puma",/* ProductCode = "SAMPLE2",*/ ImagePath = "/images/p2.jpg", Price = 129,/* ShortDescription = "?????"*/  AverageRating = 4.0 }
+                new ProductCardDto { Id = Guid.NewGuid(), Name = "Sample 1", Brand = "adidas", ImagePath = "/images/p1.jpg", Price = 99, AverageRating = 4.5 },
+                new ProductCardDto { Id = Guid.NewGuid(), Name = "Sample 2", Brand = "puma", ImagePath = "/images/p2.jpg", Price = 129, AverageRating = 4.0 },
+                new ProductCardDto { Id = Guid.NewGuid(), Name = "Sample 1", Brand = "adidas", ImagePath = "/images/p3.jpg", Price = 99, AverageRating = 3.5 },
+                new ProductCardDto { Id = Guid.NewGuid(), Name = "Sample 1", Brand = "adidas", ImagePath = "/images/p4.jpg", Price = 99, AverageRating = 2.0 },
             };
         }
     }

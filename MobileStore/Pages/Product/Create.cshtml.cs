@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
+using ModelLayer.Models;
 using ModelLayer.ViewModel;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace EShope.Pages.Product
 {
@@ -11,17 +14,52 @@ namespace EShope.Pages.Product
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly SettingWeb _settingWeb;
+        private readonly ILogger<CreateModel> _logger; 
 
-
-        public CreateModel(IHttpClientFactory httpClientFactory, IOptions<SettingWeb> options)
+        public CreateModel(IHttpClientFactory httpClientFactory, IOptions<SettingWeb> options, ILogger<CreateModel> logger)
         {
             _httpClientFactory = httpClientFactory;
             _settingWeb = options.Value;
+            _logger = logger;
         }
 
         [BindProperty]
         public ProductDto dto { get; set; } = new ProductDto();
-        public void OnGet() {}
+        public List<SelectListItem> ShopList {  get; set; }
+
+        public async Task OnGet(CancellationToken ct = default) 
+        {
+            var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+            try
+            {
+                var response = await client.GetAsync("api/shop", ct);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync(ct);
+                    if (!string.IsNullOrWhiteSpace(content))
+                    {
+                        var shops = System.Text.Json.JsonSerializer.Deserialize<List<ShopDto>>(content,
+                            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        ShopList = shops?.Select(s => new SelectListItem
+                        {
+                            Value = s.Id.ToString(),
+                            Text = s.ShopName
+                        }).ToList() ?? new List<SelectListItem>();
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to load shops. Status: {StatusCode}", response.StatusCode);
+                    ModelState.AddModelError(string.Empty, "erorr in create Product page");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading shops for product creation");
+                ModelState.AddModelError(string.Empty, "erorr in create Product page");
+            }
+        }
 
         public async Task<IActionResult> OnPostAsync()
         {
@@ -29,10 +67,13 @@ namespace EShope.Pages.Product
             var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
 
             using var content = new MultipartFormDataContent();
-        
-            content.Add(new StringContent(dto.Brand ?? "") , "Brand");
+
+            content.Add(new StringContent(dto.Name ?? ""), "Name");
+            content.Add(new StringContent(dto.Brand ?? ""), "Brand");
             content.Add(new StringContent(((int)dto.Type).ToString()), "Type");
             content.Add(new StringContent(dto.Price?.ToString(CultureInfo.InvariantCulture) ?? "0"), "Price");
+            content.Add(new StringContent(dto.ShopId.ToString()), "ShopId");
+            content.Add(new StringContent(dto.ShortDescription ?? ""), "ShortDescription");
 
             if(dto.ImageFile != null && dto.ImageFile.Length > 0)
             {

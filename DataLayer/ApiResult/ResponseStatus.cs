@@ -9,7 +9,7 @@ namespace DataLayer.ApiResult
 {
     public enum ResponseStatus
     {
-        [Description("عملیات  مورد نظر با موفقیت انجام شد ")]
+        [Description("عملیات موفق ")]
         Success = 1,
         [Description("!اطلاعات وارد شده  نا معتبر است")]
         BadRequest = 2,

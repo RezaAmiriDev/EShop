@@ -33,7 +33,7 @@ namespace Api.Controllers
             }
 
             // prefix تصاویر اسلایدر
-            if (dto.ProductItm != null)
+            if (dto.SliderImg != null)
             {
                 foreach (var s in dto.SliderImg!)
                 {

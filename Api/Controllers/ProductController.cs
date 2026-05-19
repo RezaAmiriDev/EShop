@@ -53,7 +53,8 @@ namespace MobileStore.Controllers
         {
             try
             {
-                if(paged == null)
+                //return NoContent();
+                if (paged == null)
                 {
                     return BadRequest(new ServiceResult(ResponseStatus.BadRequest, "Invalid request payload"));
                 }
@@ -92,9 +93,9 @@ namespace MobileStore.Controllers
                 }
 
                 var result = await _productService.CreateAsync(dto , ct);
-                if (result.Status != ResponseStatus.Success)
+                if (result == null && result!.Status == ResponseStatus.Success)
                 {
-                    return BadRequest(result);
+                    return BadRequest(new { error = result.Message });
                 }
 
                 return Ok(result);
@@ -166,6 +167,17 @@ namespace MobileStore.Controllers
             return Ok(result);
         }
 
-       
+        [HttpGet("HomeProduct")]
+        public async Task<IActionResult> HomeProduct()
+        {
+            try
+            {
+                return Ok(await _productService.GetProductsForHomeAsync());
+            }
+            catch
+            {
+                return BadRequest(new ServiceResult(ResponseStatus.ServerError, null));
+            }
+        }
     }
 }

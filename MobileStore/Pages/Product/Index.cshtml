@@ -2,6 +2,7 @@
 @model EShope.Pages.Product.IndexModel
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
+
 @{
     ViewData["Title"] = "Products";
     var antiforgeryToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;

@@ -1,11 +1,10 @@
-﻿using Azure;
-using Common.Pagination;
+﻿using Common.Pagination;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Options;
 using ModelLayer.ViewModel;
 using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
+
 
 namespace EShope.Pages.Shop
 {
@@ -26,7 +25,6 @@ namespace EShope.Pages.Shop
             _setting = setting.Value;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
-
             // تنظیم آدرس API از تنظیمات
             ApiBaseUrl = _setting.BaseAddress;
         }
@@ -36,80 +34,125 @@ namespace EShope.Pages.Shop
 
         [BindProperty(SupportsGet = true)]
         public int PageNumber { get; set; } = 1;
+
         [BindProperty(SupportsGet = true)]
         public int PageSize { get; set; } = 12;
         public int TotalPages { get; set; }
 
-        [BindProperty(SupportsGet = true)] public string? SearchTerm { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string? SearchTerm { get; set; }
 
         // آدرس API از تنظیمات
         public string ApiBaseUrl { get; private set; }
         public SettingWeb Setting => _setting;
 
-        public async Task OnGetAsync()
+        private async Task LoadShopAsync(int pageNumber, int pageSize, string searchTerm, CancellationToken ct)
         {
-            if (PageNumber <= 0) PageNumber = 1;
-            if (PageSize <= 0) PageSize = 12;
-
             var client = _httpClientFactory.CreateClient(_setting.ClinetName);
-
             var request = new PagedRequest<ShopDto>
             {
-                PageNumber = PageNumber,
-                PageSize = PageSize,
-                StartIndex = (PageNumber - 1) * PageSize,
-                Data = new ShopDto
-                {
-                    ShopCode = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim(),
-                    ShopName = null
-                }
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                StartIndex = (pageNumber - 1) * pageSize,
+                Data = new ShopDto { ShopCode = searchTerm, ShopName = null }
             };
 
             try
             {
-                // دریافت لیست فروشگاه‌ها از API
-                var response = await client.PostAsJsonAsync("api/shop/pagination" , request);
-           
+                var response = await client.PostAsJsonAsync("api/shop/pagination", request, ct);
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<PagedResponse<List<ShopDto>>>();
-
-                    if(result != null & result.Data != null)
+                    var result = await response.Content.ReadFromJsonAsync<PagedResponse<List<ShopDto>>>(ct);
+                    if(result?.Data != null)
                     {
-                        Sellers = result.Data ?? new List<ShopDto>();
-                        PageNumber = result.PageNumber > 0 ? result.PageNumber : PageNumber;
-                        PageSize = result.PageSize > 0 ? result.PageSize : PageSize;
-                        TotalPages = result.TotalPages > 0 ? result.TotalPages : 1;
-                        //TotalRecords = result.TotalRecords;
-                      //  TotalPages = (int)Math.Ceiling(result.TotalPages / (double)PageSize);
-                      // _logger.LogInformation("Successfully loaded {Count} shop ", Sellers.Count);
-                    }
-                    else
-                    {
-                        Sellers = new List<ShopDto>();
-                        _logger.LogWarning("API returned empty data for shops");
+                        Sellers = result.Data;
+                        PageNumber = result.PageNumber;
+                        PageSize = result.PageSize;
+                        TotalPages = result.TotalPages;
+                        return;
                     }
                 }
-                else
-                {
-                    Sellers = new List<ShopDto>();
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("API returned {StatusCode} for shop list", response.StatusCode);
-                    Message = "خطا در دریافت لیست فروشگاه‌ها";
-                }
+                ModelState.AddModelError(string.Empty, "خطا در دریافت اطلاعات");
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                _logger.LogError(ex, "خطا در دریافت فروشگاه‌ها از API");
-                Message = "خطا در اتصال به سرور";
-                Sellers = new List<ShopDto>();
+                _logger.LogError(ex, "خطا در دریافت فروشگاه‌ها");
+                ModelState.AddModelError(string.Empty, "خطا در اتصال به شبکه");
             }
+
+            Sellers = new List<ShopDto>();
+            TotalPages = 1;
+        }
+        public async Task<IActionResult> OnGetAsync(CancellationToken ct)
+        {
+            PageNumber = PageNumber <= 0 ? 1 : PageNumber;
+            PageSize = PageSize <= 0 ? 12 : PageSize;    
+            //if (PageNumber <= 0) PageNumber = 1;
+            //if (PageSize <= 0) PageSize = 12;
+            SearchTerm = string .IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim();
+
+            await LoadShopAsync(PageNumber, PageSize, SearchTerm, ct);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Partial("_ShopList", this);
+            }
+
+            return Page();
+            //var client = _httpClientFactory.CreateClient(_setting.ClinetName);
+
+            //var request = new PagedRequest<ShopDto>
+            //{
+            //    PageNumber = PageNumber,
+            //    PageSize = PageSize,
+            //    StartIndex = (PageNumber - 1) * PageSize,
+            //    Data = new ShopDto
+            //    {
+            //        ShopCode = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim(),
+            //        ShopName = null
+            //    }
+            //};
+
+            //try
+            //{
+            //    // دریافت لیست فروشگاه‌ها از API
+            //    var response = await client.PostAsJsonAsync("api/shop/pagination", request, ct);
+            //    if (response.IsSuccessStatusCode)
+            //    {
+            //        var result = await response.Content.ReadFromJsonAsync<PagedResponse<List<ShopDto>>>();
+            //        if (result?.Data != null)
+            //        {
+            //            Sellers = result.Data;
+            //            PageNumber = result.PageNumber;
+            //            PageSize = result.PageSize;
+            //            TotalPages = result.TotalPages;
+            //        }
+            //        else
+            //        {
+            //            Sellers = new List<ShopDto>();
+            //            TotalPages = 1;
+            //            if (!ModelState.ContainsKey(string.Empty))
+            //                ModelState.AddModelError(string.Empty, "امکان دریافت اطلاعات وجود ندارد.");
+            //        }
+            //    }
+            //    else
+            //    {
+            //        //var errorContent = await response.Content.ReadAsStringAsync();
+            //        _logger.LogError("API returned {StatusCode} for shop list", response.StatusCode);
+            //        ModelState.AddModelError(string.Empty, $"خطای سرور: {response.StatusCode}");
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger.LogError(ex, "خطا در دریافت فروشگاه‌ها از API");
+            //    ModelState.AddModelError(string.Empty, "خطا در اتصال به شبکه. لطفاً دوباره تلاش کنید.");
+            //}
         }
 
         // متد کمکی برای ساخت URL تصویر
         public string GetImageUrl(string? imagePath)
         {
-            if (string.IsNullOrWhiteSpace(imagePath)|| imagePath.Equals("null" , StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(imagePath) || imagePath.Equals("null", StringComparison.OrdinalIgnoreCase))
                 return "/images/default-avatar.jpg";
 
             var baseAddress = ApiBaseUrl?.TrimEnd('/') ?? "";
@@ -130,7 +173,7 @@ namespace EShope.Pages.Shop
             {
                 return cleanPath;
             }
-           
+
         }
 
         public async Task<IActionResult> OnGetDetailsAsync(Guid id)
