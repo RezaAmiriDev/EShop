@@ -54,6 +54,13 @@
                     <span asp-validation-for="UpdateDto.Price" class="text-danger"></span>
                 </div>
                 <!-- Image -->
+                @if (!string.IsNullOrEmpty(Model.UpdateDto.ImagePath))
+                {
+                    <div class="mb-3">
+                        <img src="@Model.UpdateDto.ImagePath" style="max-height: 150px;" class="img-thumbnail" />
+                        <div class="form-text">تصویر فعلی</div>
+                    </div>
+                }
                 <div class="mb-3">
                     <label class="form-label fw-semibold">تصویر محصول</label>
                     <input asp-for="UpdateDto.ImageFile" type="file" class="form-control" accept="image/*" />

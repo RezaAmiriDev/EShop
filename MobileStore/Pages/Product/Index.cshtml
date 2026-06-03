@@ -2,7 +2,6 @@
 @model EShope.Pages.Product.IndexModel
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
-
 @{
     ViewData["Title"] = "Products";
     var antiforgeryToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
@@ -46,17 +45,16 @@
         {
             <div class="col product-card" data-id="@product.Id">
                 <div class="card h-100">
-                    <img src="@(string.IsNullOrEmpty(product.ImagePath) ? "/Images/default.png" : product.ImagePath)"
-                         class="card-img-top" alt="Product Image"
-                         onerror="this.src='/Images/default.png'">
+                    <img src="@product.ImagePath" alt="@product.Brand" onerror="this.src='/Images/default.png'">
                     <div class="card-body">
-                        <h5 class="card-title">Brand: @product.Brand</h5>
-                        <p class="card-text">Type: @product.Type</p>
-                        <p class="card-text">Price: @product.Price</p>
+                        <h5 class="card-text">nam: @product.Name</h5>
+                        <p class="card-title">brand: @product.Brand</p>
+                        <p class="card-text">price: @product.Price</p>
                     </div>
-                    <div class="card-footer d-flex justify-content-between">
-                        <a asp-page="/Product/Edit" asp-route-id="@product.Id" class="btn btn-primary btn-sm">Edit</a>
-                        <button class="btn btn-danger btn-sm delete-product" data-id="@product.Id">Remove</button>
+                    <div class="card-footer d-flex gap-2">
+                        <a asp-page="/Product/Edit" asp-route-id="@product.Id" class="btn btn-primary btn-sm flex-fill">Edit</a>
+                        <button class="btn btn-info btn-sm detail-product flex-fill" data-id="@product.Id">Detail</button>
+                        <button class="btn btn-danger btn-sm delete-product flex-fill" data-id="@product.Id">Remove</button>
                     </div>
                 </div>
             </div>
@@ -74,6 +72,26 @@
             Page <span id="currentPage">@Model.PageNumber</span> of <span id="totalPages">@Model.TotalPages</span>
         </div>
     </div>
+
+    <!-- Modal جزئیات محصول -->
+    <div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">جزئیات محصول</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="detailModalBody">
+                    <div class="text-center py-4">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">در حال بارگذاری...</span>
+                        </div>
+                        <p class="mt-2">در حال دریافت اطلاعات...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- توکن برای حذف -->
@@ -87,7 +105,7 @@
             'use strict';
 
             // ---------- config ----------
-            const apiBaseUrl = '@ViewData["ApiBase"]' || '';
+            const apiBaseUrl = '@(Model.ApiBaseUrl ?? "")';
             const apiUrl = apiBaseUrl ? `${apiBaseUrl}/api/Product/paged` : '/api/Product/paged';
             console.log('API URL:', apiUrl);
 
@@ -189,24 +207,26 @@
 
                 const html = items.map(product => {
                     const id = product.id ?? product.Id ?? '';
+                    const name = product.name ?? product.Name ?? '';
                     const brand = product.brand ?? product.Brand ?? '';
-                    const type = product.type ?? product.Type ?? '';
                     const price = product.price ?? product.Price ?? '';
-                    const imagePath = product.imagePath ?? product.ImagePath ?? '/Images/default.png';
+                    const relativePath  = product.imagePath ?? product.ImagePath ?? '/Images/default.png';
+                    const imageUrl = relativePath.startsWith('http') ? relativePath : (apiBaseUrl + relativePath);
                     const formattedPrice = price !== undefined && price !== null && price !== '' ? parseFloat(price).toFixed(2) : '0.00';
 
                     // اضافه کردن attributes width/height و انطباق برای ثبات layout
                     return `
                     <div class="col product-card" data-id="${id}">
                         <div class="card h-100">
-                            <img src="${imagePath}" alt="${brand}" onerror="this.src='/Images/default.png'">
+                            <img src="${imageUrl}" alt="${brand}" onerror="this.src='/Images/default.png'">
                             <div class="card-body">
-                                <h5 class="card-title">${brand}</h5>
-                                <p class="card-text">Type: ${type}</p>
-                                <p class="card-text">Price: $${formattedPrice}</p>
+                                <h5 class="card-title">name: ${name}</h5>
+                                <p class="card-title">brand: ${brand}</p>
+                                <p class="card-text">price: $${formattedPrice}</p>
                             </div>
                             <div class="card-footer d-flex justify-content-between">
-                                <a href="/Product/Edit/${id}" class="btn btn-primary btn-sm">Edit</a>
+                                <a href="/Product/Edit?id=${id}" class="btn btn-primary btn-sm">Edit</a>
+                                <button class="btn btn-info btn-sm detail-product" data-id="${id}">Detail</button>
                                 <button class="btn btn-danger btn-sm delete-product" data-id="${id}">Remove</button>
                             </div>
                         </div>
@@ -437,6 +457,91 @@
             // اگر می‌خواهید لود اولیه هم از API بیاید، این را فعال کنید:
             // fetchPage(state.pageNumber);
 
+        // نمایش جزئیات محصول
+        document.addEventListener('click', async function (e) {
+            const detailBtn = e.target.closest('.detail-product');
+            if (!detailBtn) return;
+
+            const productId = detailBtn.getAttribute('data-id');
+            if (!productId) return;
+
+            // نمایش modal و نشانگر لودینگ
+            const modal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+            const modalBody = document.getElementById('detailModalBody');
+            modalBody.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">در حال دریافت اطلاعات...</p>
+                </div>`;
+            modal.show();
+
+              try {
+            const response = await fetch(`?handler=Detail&id=${productId}`);
+            if (!response.ok) throw new Error('HTTP error ' + response.status);
+
+            const product = await response.json();
+            console.log('Product data:', product); // برای دیباگ – در کنسول ببینید
+
+            // تطابق نام فیلدها (PascalCase از سرور، یا camelCase)
+            const name = product.name ?? product.Name ?? '';
+            const brand = product.brand ?? product.Brand ?? '';
+            const type = product.typeName  ?? product.TypeName ?? '';
+            const price = product.price ?? product.Price ?? 0;
+            const shortDescription = product.shortDescription ?? product.ShortDescription ?? '';
+            const shopName = product.shopName ?? product.ShopName ?? '-';
+            const relativePath = product.imagePath ?? product.ImagePath ?? '/Images/default.png';
+            const imgUrl = relativePath.startsWith('http') ? relativePath : (apiBaseUrl + relativePath);
+            const numericPrice = typeof price === 'number' ? price : parseFloat(price) || 0;
+            const formattedPrice = numericPrice.toLocaleString();
+
+            const detailHtml = `
+                <div class="row">
+                    <div class="col-md-5 text-center mb-3">
+                        <img src="${imgUrl}" class="img-fluid rounded border" style="max-height: 250px; width: auto; object-fit: contain;" onerror="this.src='/Images/default.png'">
+                    </div>
+                    <div class="col-md-7">
+                        <div class="row mb-2">
+                            <div class="col-6"> <strong>name: </strong> ${escapeHtml(name)} </div>
+                            <div class="col-6"> <strong>brand: </strong> ${escapeHtml(brand)} </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-6"><strong>type: </strong> ${escapeHtml(type)} </div>
+                            <div class="col-6"> <strong>price: </strong> ${formattedPrice} تومان </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-6"> <strong>shopName: </strong> ${shopName} </div>
+                            <div class="col-6"></div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <strong>Description: </strong>
+                                <p class="mt-1">${escapeHtml(shortDescription || 'بدون توضیحات')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modalBody.innerHTML = detailHtml;
+        } catch (error) {
+            console.error('Error loading product detail:', error);
+            modalBody.innerHTML = `<div class="alert alert-danger">خطا در دریافت اطلاعات محصول. لطفاً دوباره تلاش کنید.</div>`;
+        }
+        });
+
+        // تابع کمکی برای جلوگیری از XSS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
         })();
     </script>
 }

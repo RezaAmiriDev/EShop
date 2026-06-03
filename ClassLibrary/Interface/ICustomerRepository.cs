@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace ClassLibrary.Repository
 {
-    public interface ICustomerRepository : IRepository<Customer>  {  }
+    public interface ICustomerRepository : IRepository<Customer>  
+    { 
+        Task<Customer?> GetByNationalCodeAsync(string nationalCode, CancellationToken ct = default);
+    }
 
 }

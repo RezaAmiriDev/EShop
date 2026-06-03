@@ -30,5 +30,10 @@ namespace ClassLibrary.Repository
             }
             return await query.ToListAsync(token);
         }
+  
+        public async Task<Customer?> GetByNationalCodeAsync(string nationalCode, CancellationToken ct = default)
+        {
+            return await TableNoTracking.Include(c => c.Address).FirstOrDefaultAsync(c => c.NationalCode == nationalCode, ct);
+        }
     }
 }

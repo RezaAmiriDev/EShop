@@ -60,16 +60,16 @@ namespace ServiceLayer.Services
                 if (pagedResponse == null) throw new ArgumentException(nameof(pagedResponse));
 
                 var filterDto = pagedResponse.Data ?? new ProductDto();
-                var query = _productRepository.TableNoTracking.AsQueryable();
+                var query = _productRepository.TableNoTracking.Include(p => p.Shop).AsQueryable();
 
                 if (!string.IsNullOrEmpty(filterDto.Brand))
                 {
                     query = query.Where(p => p.Brand!.Contains(filterDto.Brand));
                 }
 
-                if (!string.IsNullOrEmpty(filterDto.ProductCode))
+                if (!string.IsNullOrEmpty(filterDto.Name))
                 {
-                    query = query.Where(p => p.ProductCode!.Contains(filterDto.ProductCode));
+                    query = query.Where(p => p.Name!.Contains(filterDto.Name));
                 }
 
                 var Total = await query.CountAsync();
@@ -84,8 +84,13 @@ namespace ServiceLayer.Services
                         Price = p.Price,
                         ImagePath = p.ImagePath,
                         ShortDescription = p.ShortDescription,
-                        ShopId = p.ShopId                        
+                        ShopId = p.ShopId,
+                        ShopName = p.Shop != null ? p.Shop.ShopName : null
                     }).ToListAsync();
+                foreach (var item in list)
+                {
+                    item.TypeName = EnumExtention.GetEnumDescription(item.Type);
+                }
                 return new PagedResponse<List<ProductDto>>(pagedResponse.PageNumber,pagedResponse.PageSize, Total, list);
             }
             catch(Exception)
@@ -196,7 +201,7 @@ namespace ServiceLayer.Services
                     Price = p.Price,
                     ImagePath = p.ImagePath,
                     AverageRating = p.Ratings!
-                   .Where(r => r.IsApproved).Select(r => (double)r.Review).DefaultIfEmpty(0.0).Average(),
+                   .Where(r => r.IsApproved).Select(r => (double?)r.Review).Average() ?? 0,
                     ShopName = p.Shop != null ? p.Shop.ShopName : "نامشخص"
                 }).OrderBy(p => p.Name).Take(take);
 

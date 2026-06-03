@@ -31,7 +31,7 @@ namespace EShope.Pages.Product
         {
             var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
             // 1. دریافت فروشگاه 
-            var shopResponse = await client.GetAsync($"/api/Shop/{id}", ct);
+            var shopResponse = await client.GetAsync($"/api/Shop", ct);
             if (shopResponse.IsSuccessStatusCode)
             {
                 var shopRead = await shopResponse.Content.ReadAsStringAsync();
@@ -39,7 +39,7 @@ namespace EShope.Pages.Product
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                ShopList = shopJson?.Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.ShopName }).ToList() ?? new();
+                ShopList = shopJson?.Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.ShopName }).ToList() ?? new List<SelectListItem>();
             }
             else
             {

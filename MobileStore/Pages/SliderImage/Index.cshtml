@@ -1,0 +1,111 @@
+﻿@page
+@model EShope.Pages.SliderImage.IndexModel
+@{
+    ViewData["Title"] = "مدیریت اسلایدرها";
+}
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success">@Model.Message</div>
+}
+
+<h2>اسلایدرها</h2>
+
+<!-- استایل‌های سفارشی -->
+<style>
+    /* برای نمایش تصاویر به صورت تمام عرض */
+    .full-width-slider {
+        width: 100%;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+        .full-width-slider img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    /* دکمه‌های دایره‌ای */
+    .circle-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+        .circle-btn:hover {
+            background-color: #bb2d3b;
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+
+        .circle-btn i {
+            font-size: 1.4rem;
+        }
+    /* آیکون‌های بوت‌استرپ آیکون (در صورت نداشتن، از Font Awesome یا بی‌آی استفاده کنید) */
+    /* فرض می‌کنیم bootstrap-icons لود شده است */
+    .action-group {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 0.75rem;
+    }
+</style>
+
+<!-- فرم افزودن -->
+<div class="card mb-4">
+    <div class="card-header">افزودن اسلایدر جدید</div>
+    <div class="card-body">
+        <form method="post" asp-page-handler="Create" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-4">
+                    <label>عنوان</label>
+                    <input asp-for="NewSlider.Title" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label>توضیحات</label>
+                    <input asp-for="NewSlider.Description" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label>تصویر</label>
+                    <input asp-for="NewSlider.Slider" type="file" class="form-control" accept="image/*" />
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary mt-4">افزودن</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- لیست اسلایدرها -->
+<div class="row">
+    @foreach (var item in Model.Sliders)
+    {
+        <div class="col-12 mb-4">
+            <div class="card">
+                <img src="@item.ImagePath" class="card-img-top" style="width:100%; max-height:400px; object-fit:cover;" />
+                <div class="card-body text-center">
+                    <h5>@item.Title</h5>
+                    <p>@item.Description</p>
+                    <form method="post" asp-page-handler="Delete" onsubmit="return confirm('حذف شود؟');">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button class="btn btn-danger rounded-circle" style="width:48px;height:48px;">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

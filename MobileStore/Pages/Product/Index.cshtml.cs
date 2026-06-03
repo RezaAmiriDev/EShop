@@ -36,6 +36,7 @@ namespace EShope.Pages.Product
         public int PageSize { get; set; } = 12;
         public int TotalPages { get; set; }
         public int TotalCount { get; set; }
+        public string? ApiBaseUrl { get; set; }
 
         public async Task OnGetAsync(CancellationToken ct)
         {
@@ -60,8 +61,8 @@ namespace EShope.Pages.Product
             {
                 var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
                 // ذخیره BaseAddress برای استفاده در View
-                var baseAddress = client.BaseAddress?.ToString().TrimEnd('/') ?? "";
-              //  ViewData["ApiBase"] = baseAddress;
+                ApiBaseUrl = client.BaseAddress?.ToString().TrimEnd('/') ?? "";
+               // ViewData["ApiBase"] = baseAddress;
 
                 var response = await client.PostAsJsonAsync("api/Product/paged", request, ct);
                 if (!response.IsSuccessStatusCode)
@@ -165,5 +166,40 @@ namespace EShope.Pages.Product
             }
         }
 
+        public async Task<IActionResult> OnGetDetailAsync(Guid id)
+        {
+            try
+            {
+                if (id == Guid.Empty) return BadRequest(new { error = "شناسه نامعتبر است" });
+                var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+
+                var response = await client.GetAsync($"api/Product/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var dto = await response.Content.ReadFromJsonAsync<ProductDto>();
+                    //var stringJson = await response.Content.ReadAsStringAsync();
+                    return new JsonResult(dto, new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    });
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _logger.LogWarning("response from api to get detail faild !");
+                    ModelState.AddModelError(string.Empty, "محصول مورد نظر یافت نشد");
+                    return NotFound();
+                }
+                else
+                {
+                    _logger.LogError("API returned {StatusCode} for product {Id}", response.StatusCode, id);
+                    return StatusCode(500, new { error = "خطای داخلی سرور" });
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "error loging detail");
+                return StatusCode(500, new { error = "خطا در ارتباط با سرور" });
+            }
+        }
     }
 }

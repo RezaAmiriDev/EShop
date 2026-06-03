@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DataLayer.EnumHellper;
+using Microsoft.AspNetCore.Http;
 using System.Text.Json.Serialization;
 
 namespace ModelLayer.ViewModel
@@ -10,9 +11,11 @@ namespace ModelLayer.ViewModel
         public string? Brand { get; set; }
         public string? ProductCode { get; set; }
         public ProductType Type { get; set; }
+        public string? TypeName { get; set; }
         public string? ImagePath { get; set; }
         public decimal? Price { get; set; }
         public string? ShortDescription { get; set; }
+        public string? ShopName { get; set; }
         public Guid ShopId { get; set; }
         [JsonIgnore]
         public IFormFile? ImageFile { get; set; }

@@ -41,6 +41,7 @@ namespace ModelLayer.Reposetory
             {
                 var rating = new Rating
                 {
+                    Id = Guid.NewGuid(),
                     ProductId = productId,
                     CustomerId = customerId,
                     Review = review,
@@ -51,6 +52,7 @@ namespace ModelLayer.Reposetory
                 };
                 await _context.SaveChangesAsync();
             }
+            await _context.SaveChangesAsync();
         }
 
         public async Task<List<Rating>> GetApprovedRatingsForProductAsync(Guid productId)

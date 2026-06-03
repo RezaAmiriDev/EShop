@@ -10,20 +10,20 @@ namespace WebFrameWork.Mapper
     {
         public MapperConfig()
         {
-
             // Address ⇄ AddressDto
             CreateMap<Address, AddressDto>();
             CreateMap<AddressDto, Address>()
                 .ForMember(dest => dest.Customers, opt => opt.Ignore());
 
             // Customer ⇄ CusProDto
-            CreateMap<Customer, CusProDto>().ReverseMap()
-                .ForMember(dest => dest.Address , opt => opt.MapFrom(src => src.addressDto));
+            CreateMap<Customer, CusProDto>()
+                .ForMember(dest => dest.addressDto , opt => opt.MapFrom(src => src.Address));
 
             // برای تبدیل در جهت معکوس (DTO -> Entity) — مفید برای create/update
             CreateMap<CusProDto, Customer>()
-                // اگر Customer دارای collection/navigation است، آن‌ها را ایگنور کن
-                .ForMember(dest => dest.AddressId, opt => opt.MapFrom(src => src.addressDto))
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.addressDto))
+                .ForMember(dest => dest.CreateDate, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.Orders, opt => opt.Ignore())   // مثال: collection ها را ایگنور کن
                 .ForMember(dest => dest.products, opt => opt.Ignore()) // بر اساس مدلت
                 .ForMember(dest => dest.CreateDate, opt => opt.Ignore()); // CreateDate معمولاً سمت سرور set می‌شود

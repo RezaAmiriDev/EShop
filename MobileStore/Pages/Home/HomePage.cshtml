@@ -5,12 +5,56 @@
 }
 
 <style>
+    /* استایل‌های قبلی شما به همراه اضافات جدید */
     body {
         direction: rtl;
         font-family: 'Vazirmatn', sans-serif;
         background: #f7f9fb;
     }
 
+    /* هدر جدید */
+    .custom-header {
+        background: #fff;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        padding: 0.75rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+    }
+
+    .navbar-brand {
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: #0b8f73;
+        letter-spacing: -0.5px;
+    }
+
+    .nav-link {
+        color: #2c3e50;
+        font-weight: 500;
+        margin: 0 0.5rem;
+        transition: 0.2s;
+    }
+
+        .nav-link:hover {
+            color: #0b8f73;
+        }
+
+    .btn-outline-success-custom {
+        border-radius: 30px;
+        padding: 0.3rem 1rem;
+        margin: 0 0.25rem;
+        border: 1px solid #dee2e6;
+        background: transparent;
+        transition: 0.2s;
+    }
+
+        .btn-outline-success-custom:hover {
+            background: #0b8f73;
+            border-color: #0b8f73;
+            color: white;
+        }
+    /* بقیه استایل‌های قبلی */
     .hero-img {
         height: 420px;
         object-fit: cover;
@@ -76,10 +120,35 @@
     }
 </style>
 
+<!-- هدر با طراحی جدید -->
+<header class="custom-header rounded-4 mt-3 ">
+    <div class="container d-flex justify-content-between align-items-center">
+        <!-- لوگو -->
+        <a href="/" class="navbar-brand text-decoration-none">E SHOP</a>
+
+        <!-- کادر مستطیلی -->
+        <div class="d-flex align-items-center gap-2 p-2 rounded-4 border border-secondary-subtle bg-white shadow-sm">
+            <!-- آیکون سبد خرید -->
+            <a href="/Cart" class="btn btn-link text-dark position-relative p-1">
+                <i class="bi bi-cart3 fs-5"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">
+                    0
+                </span>
+            </a>
+            <!-- جداکننده عمودی -->
+            <div class="vr"></div>
+            <!-- دکمه ورود -->
+            <a href="/Identity/Account/Login" class="btn btn-outline-primary rounded-pill px-3 py-1">ورود</a>
+            <!-- دکمه ثبت نام -->
+            <a href="/Identity/Account/Register" class="btn btn-success rounded-pill px-3 py-1">ثبت نام</a>
+        </div>
+    </div>
+</header>
+
 <div class="container py-4">
     <!-- HERO / Carousel -->
     <div class="row mb-3">
-        <div class="col-lg-9">
+        <div class="col-lg-12">
             <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     @for (int i = 0; i < Model.Sliders.Count; i++)
@@ -131,52 +200,52 @@
                     <img src="@(p.ImagePath ?? "/images/placeholder.jpg")" class="card-img-top" alt="@p.Name" />
                     <div class="card-body d-flex flex-column">
                         <div>
-                            <div class="product-brand">@p.Brand @if(!string.IsNullOrWhiteSpace(p.ShopName)){
-                            <span class="text-muted small"> • @p.ShopName</span>
-                        }
-</div>
-                        <div class="product-title">@p.Name</div>
-                        <p class="text-muted small mt-2">@p.ShopName</p>
-                    </div>
-
-                    <div class="mt-auto d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="rating-stars mb-1">
-                                @{
-                                    var stars = (int)Math.Round(p.AverageRating);
-                                    for (int i = 1; i <= 5; i++)
-                                    {
-                                        if (i <= stars)
-                                        {
-                                            <i class="bi bi-star-fill"></i>
-                                            ;
-                                        }
-                                        else
-                                        {
-
-                                            <i class="bi bi-star"></i>
-                                            ;
-                                        }
-                                    }
+                            <div class="product-brand">
+                                @p.Brand
+                                @if (!string.IsNullOrWhiteSpace(p.ShopName))
+                                {
+                                    <span class="text-muted small"> • @p.ShopName</span>
                                 }
                             </div>
-                            <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", p.Price) تومان</div>
+                            <div class="product-title">@p.Name</div>
+                            <p class="text-muted small mt-2">@p.ShopName</p>
                         </div>
 
-                        <div class="d-flex gap-2 align-items-center">
-                            <button class="btn btn-sm btn-success cart-btn" onclick="addToCart('@p.Id','@p.Name')">
-                                <i class="bi bi-cart-plus"></i>
-                            </button>
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="rating-stars mb-1">
+                                    @{
+                                        var stars = (int)Math.Round(p.AverageRating);
+                                        for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= stars)
+                                            {
+                                                <i class="bi bi-star-fill"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-star"></i>
+                                            }
+                                        }
+                                    }
+                                </div>
+                                <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", p.Price) تومان</div>
+                            </div>
 
-                            <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@p.Id" title="ذخیره">
-                                <i class="bi bi-heart"></i>
-                            </button>
+                            <div class="d-flex gap-2 align-items-center">
+                                <button class="btn btn-sm btn-success cart-btn" onclick="addToCart('@p.Id','@p.Name')">
+                                    <i class="bi bi-cart-plus"></i>
+                                </button>
+
+                                <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@p.Id" title="ذخیره">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-                }
+        }
     </div>
 
     <!-- Footer -->
@@ -197,16 +266,16 @@
             <div class="col-md-3 text-md-end">
                 <h6>شبکه‌های اجتماعی</h6>
                 <div>
-                    <i class="bi bi-instagram me-2"></i>
-                    <i class="bi bi-telegram me-2"></i>
-                    <i class="bi bi-youtube"></i>
+                    <i class="bi bi-instagram me-2 fs-4 text-dark"></i>
+                    <i class="bi bi-telegram me-3 fs-4 text-info"></i>
+                    <i class="bi bi-youtube me-3 fs-3 text-danger"></i>
                 </div>
             </div>
         </div>
 
-        <div class="text-center py-3 small text-muted">
+      @*   <div class="text-center py-3 small text-muted">
             © @DateTime.Now.Year - تمامی حقوق محفوظ است.
-        </div>
+        </div> *@
     </footer>
 </div>
 
@@ -247,12 +316,11 @@
     });
 
     function addToCart(id, title) {
-        // TODO: ارسال به API سبد خرید یا ذخیره محلی
         alert(`${title} به سبد اضافه شد.`);
     }
 
     // thumbnails -> carousel
-      document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function () {
         if (typeof bootstrap !== 'undefined') {
             document.querySelectorAll('[data-bs-target="#heroCarousel"]').forEach((el) => {
                 el.addEventListener('click', (ev) => {
@@ -266,6 +334,5 @@
         }
     });
 
-    // init
     refreshSaveButtons();
 </script>

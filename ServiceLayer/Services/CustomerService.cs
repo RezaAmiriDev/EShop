@@ -168,28 +168,38 @@ namespace ServiceLayer.Services
         {
             try
             {
-                var existingCustomer = await _customerRepository.TableNoTracking.AnyAsync(
-                    c => c.NationalCode == customerDto.NationalCode, token);
-                if (existingCustomer)
+                var existingCustomer = await _customerRepository.GetByNationalCodeAsync(customerDto.NationalCode, token);
+                if (existingCustomer != null)
                 {
                     return new ServiceResult(ResponseStatus.BadRequest, "کد ملی تکراری است");
                 }
 
                 var customer = _mapper.Map<Customer>(customerDto);
-                customer.CreateDate = DateTime.Now; // ✅ تنظیم تاریخ ایجاد
+                if(customer == null)
+                {
+                    return new ServiceResult(ResponseStatus.ServerError, "خطا در نگاشت اطلاعات");
+                }
 
-                if (customer.Address != null && (customer.Address.Id == Guid.Empty || customer.Address.Id == null))
+                customer.Id = Guid.NewGuid();
+                customer.CreateDate = DateTime.Now; // ✅ تنظیم تاریخ ایجاد
+                
+                if (customer.Address != null && customer.Address.Id == Guid.Empty)
                 {
                     customer.Address.Id = Guid.NewGuid();
                 }
 
-                var result = await _customerRepository.AddAsync(customer, token);
-                return result;
+                var created = await _customerRepository.AddAsync(customer, token);
+                if (created == null)
+                {
+                    return new ServiceResult(ResponseStatus.ServerError, "خطا در ذخیره مشتری");
+                }
+
+                return new ServiceResult(ResponseStatus.Success, "مشتری با موفقیت ایجاد شد");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in CreateAsync: {ex.Message}");
-                return new ServiceResult(ResponseStatus.ServerError, null);
+                return new ServiceResult(ResponseStatus.ServerError, "خطای داخلی سرور");
             }
         }
 

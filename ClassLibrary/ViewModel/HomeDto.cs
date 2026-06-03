@@ -9,8 +9,8 @@ namespace ModelLayer.ViewModel
         public string? Name { get; set; }
         public string? Brand { get; set; }
         public decimal Price { get; set; }
-        public string ImagePath { get; set; }
-        public string ShopName { get; set; }   // نام فروشنده
+        public string? ImagePath { get; set; }
+        public string? ShopName { get; set; }   // نام فروشنده
 
         //  public string ShopCode { get; set; }   // برای لینک به صفحه فروشگاه
         public double AverageRating { get; set; } // میانگین امتیازات
@@ -19,19 +19,11 @@ namespace ModelLayer.ViewModel
 
     public class ProductDetailDto : ProductCardDto
     {
-        public string Name { get; set; }
-        public string Brand { get; set; }
-        public decimal Price { get; set; }
-        public string? ProductCode { get; set; }
-        public string ImagePath { get; set; }
-        public double AverageRating { get; set; } // میانگین امتیازات
         public string? ShortDescription { get; set; }
-
-        public string ShopName { get; set; }   // نام فروشنده
-        public string ShopCode { get; set; }   // برای لینک به صفحه فروشگاه
+        public string? ShopCode { get; set; }   // برای لینک به صفحه فروشگاه
         public string? Description { get; set; }
-        public AddressDto ShopAddress { get; set; }
-        public List<RatingDto> Rating { get; set; }
+        public AddressDto? ShopAddress { get; set; }
+        public List<RatingDto>? Rating { get; set; }
     }
 
     public class HomeDto
