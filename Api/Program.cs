@@ -8,6 +8,7 @@ using WebFrameWork.Configuration;
 using WebFrameWork.Mapper;
 using ClassLibrary.Repository;
 using ModelLayer.Reposetotry;
+using ModelLayer.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<MobiContext>(options =>
  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<IdentityUser , IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser , IdentityRole>()
     .AddEntityFrameworkStores<MobiContext>().AddDefaultTokenProviders();
 
 // 3. register IHttpContextAccessor اگر نیاز داری

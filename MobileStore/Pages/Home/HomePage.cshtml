@@ -1,145 +1,36 @@
 ﻿@page
+@using System.Security.Claims
 @model EShope.Pages.Home.HomePage
 @{
     Layout = "_Layout";
 }
 
 <style>
-    /* استایل‌های قبلی شما به همراه اضافات جدید */
-    body {
-        direction: rtl;
-        font-family: 'Vazirmatn', sans-serif;
-        background: #f7f9fb;
-    }
-
-    /* هدر جدید */
-    .custom-header {
-        background: #fff;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        padding: 0.75rem 0;
-        position: sticky;
-        top: 0;
-        z-index: 1020;
-    }
-
-    .navbar-brand {
-        font-weight: 700;
-        font-size: 1.5rem;
-        color: #0b8f73;
-        letter-spacing: -0.5px;
-    }
-
-    .nav-link {
-        color: #2c3e50;
-        font-weight: 500;
-        margin: 0 0.5rem;
-        transition: 0.2s;
-    }
-
-        .nav-link:hover {
-            color: #0b8f73;
-        }
-
-    .btn-outline-success-custom {
-        border-radius: 30px;
-        padding: 0.3rem 1rem;
-        margin: 0 0.25rem;
-        border: 1px solid #dee2e6;
-        background: transparent;
-        transition: 0.2s;
-    }
-
-        .btn-outline-success-custom:hover {
-            background: #0b8f73;
-            border-color: #0b8f73;
-            color: white;
-        }
-    /* بقیه استایل‌های قبلی */
-    .hero-img {
-        height: 420px;
-        object-fit: cover;
-        border-radius: 12px;
-    }
-
-    .thumb-img {
-        height: 80px;
-        object-fit: cover;
-        border-radius: 8px;
-        cursor: pointer;
-        border: 1px solid rgba(0,0,0,0.06);
-    }
-
-    .product-card {
-        border-radius: 14px;
-        overflow: hidden;
-        background: #fff;
-        box-shadow: 0 8px 20px rgba(16,24,40,0.04);
-        transition: transform .18s;
-    }
-
-        .product-card:hover {
-            transform: translateY(-6px);
-        }
-
-        .product-card .card-img-top {
-            height: 200px;
-            object-fit: contain;
-            background: #f6f8f9;
-            padding: 1rem;
-        }
-
-    .product-brand {
-        color: #9aa6a7;
-        font-size: .85rem;
-        text-transform: lowercase;
-    }
-
-    .product-title {
-        font-weight: 700;
-        margin-top: .4rem;
-        font-size: 1rem;
-        color: #222;
-    }
-
-    .price {
-        color: #0b8f73;
-        font-weight: 700;
-        font-size: 1.05rem;
-    }
-
-    .rating-stars {
-        color: #f6b01e;
-    }
-
-    .cart-btn {
-        height: 38px;
-    }
-
-    .save-btn.active {
-        color: #e83e8c;
-    }
+#cartItemsContainer .list-group-item {
+    border: none;
+    border-bottom: 1px solid #eee;
+}
+#cartItemsContainer .list-group-item:last-child {
+    border-bottom: none;
+}
+#cartItemsContainer img {
+    border-radius: 8px;
+}
 </style>
 
 <!-- هدر با طراحی جدید -->
 <header class="custom-header rounded-4 mt-3 ">
     <div class="container d-flex justify-content-between align-items-center">
-        <!-- لوگو -->
         <a href="/" class="navbar-brand text-decoration-none">E SHOP</a>
-
-        <!-- کادر مستطیلی -->
         <div class="d-flex align-items-center gap-2 p-2 rounded-4 border border-secondary-subtle bg-white shadow-sm">
-            <!-- آیکون سبد خرید -->
-            <a href="/Cart" class="btn btn-link text-dark position-relative p-1">
+            <button type="button" class="btn btn-link text-dark position-relative p-1" onclick="openCartModal()">
                 <i class="bi bi-cart3 fs-5"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;" id="cartBadge">
                     0
                 </span>
-            </a>
-            <!-- جداکننده عمودی -->
+            </button>
             <div class="vr"></div>
-            <!-- دکمه ورود -->
             <a href="/Identity/Account/Login" class="btn btn-outline-primary rounded-pill px-3 py-1">ورود</a>
-            <!-- دکمه ثبت نام -->
             <a href="/Identity/Account/Register" class="btn btn-success rounded-pill px-3 py-1">ثبت نام</a>
         </div>
     </div>
@@ -147,8 +38,8 @@
 
 <div class="container py-4">
     <!-- HERO / Carousel -->
-    <div class="row mb-3">
-        <div class="col-lg-12">
+    <div class="row mb-4">
+        <div class="col-lg-10">
             <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     @for (int i = 0; i < Model.Sliders.Count; i++)
@@ -171,7 +62,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3 d-flex flex-column gap-2">
+        <div class="col-lg-2 d-flex flex-column gap-2">
             @if (Model.Sliders != null && Model.Sliders.Count > 0)
             {
                 @for (int i = 0; i < Model.Sliders.Count; i++)
@@ -183,6 +74,106 @@
         </div>
     </div>
 
+    <!-- ========= بخش جدید: دایره بهترین فروشگاه‌ها (6 تایی در یک ردیف) ========= -->
+    <div class="my-5">
+        <h5 class="mb-3">🌟 بهترین فروشگاه‌ها</h5>
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-6 g-4 justify-content-center">
+            <!-- فروشگاه 1 -->
+            <div class="col text-center">
+                <a href="#" class="shop-circle">
+                    <div class="circle-img mx-auto">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                    <span class="shop-name">دیجی‌کالا</span>
+                </a>
+            </div>
+            <!-- فروشگاه 2 -->
+            <div class="col text-center">
+                <a href="#" class="shop-circle">
+                    <div class="circle-img mx-auto">
+                        <i class="bi bi-laptop"></i>
+                    </div>
+                    <span class="shop-name">تکنولایف</span>
+                </a>
+            </div>
+            <!-- فروشگاه 3 -->
+            <div class="col text-center">
+                <a href="#" class="shop-circle">
+                    <div class="circle-img mx-auto">
+                        <i class="bi bi-gem"></i>
+                    </div>
+                    <span class="shop-name">زرین‌مد</span>
+                </a>
+            </div>
+            <!-- فروشگاه 4 -->
+            <div class="col text-center">
+                <a href="#" class="shop-circle">
+                    <div class="circle-img mx-auto">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <span class="shop-name">بوک‌لند</span>
+                </a>
+            </div>
+            <!-- فروشگاه 5 -->
+            <div class="col text-center">
+                <a href="#" class="shop-circle">
+                    <div class="circle-img mx-auto">
+                        <i class="bi bi-tsunami"></i>
+                    </div>
+                    <span class="shop-name">اسپرت‌شاپ</span>
+                </a>
+            </div>
+            <!-- فروشگاه 6 -->
+            <div class="col text-center">
+                <a href="#" class="shop-circle">
+                    <div class="circle-img mx-auto">
+                        <i class="bi bi-cup-straw"></i>
+                    </div>
+                    <span class="shop-name">کافه‌بازار</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========= بخش چهار مستطیل ویژه (بالای محصولات) ========= -->
+    <div class="my-5">
+        <h5 class="mb-3">✨ پیشنهادات ویژه</h5>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="feature-rectangle">
+                    <div class="feature-icon"><i class="bi bi-tags"></i></div>
+                    <div class="feature-title">تخفیف شگفت‌انگیز</div>
+                    <div class="feature-desc">تا ۵۰٪ تخفیف برای اولین خرید</div>
+                    <a href="#" class="feature-link">مشاهده محصولات →</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="feature-rectangle">
+                    <div class="feature-icon"><i class="bi bi-clock-history"></i></div>
+                    <div class="feature-title">ارسال فوری</div>
+                    <div class="feature-desc">تحویل درب منزل کمتر از ۲۴ ساعت</div>
+                    <a href="#" class="feature-link">مشاهده محصولات →</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="feature-rectangle">
+                    <div class="feature-icon"><i class="bi bi-gift"></i></div>
+                    <div class="feature-title">هدیه ویژه</div>
+                    <div class="feature-desc">به ازای هر خرید یک جایزه نقدی</div>
+                    <a href="#" class="feature-link">مشاهده محصولات →</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="feature-rectangle">
+                    <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+                    <div class="feature-title">ضمانت اصالت</div>
+                    <div class="feature-desc">بازگشت وجه تا ۷ روز</div>
+                    <a href="#" class="feature-link">مشاهده محصولات →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Products header -->
     <div class="row align-items-center mb-3">
         <div class="col">
@@ -191,60 +182,169 @@
         </div>
     </div>
 
-    <!-- Products grid -->
+    <!-- ========= Products grid با درج چهار مستطیل در وسط ========= -->
+    @{
+        int totalProducts = Model.Products.Count;
+        int halfCount = (int)Math.Ceiling(totalProducts / 1.7);
+        int currentIndex = 0;
+    }
+
     <div class="row g-4">
+        <!-- نیمه اول محصولات -->
         @foreach (var p in Model.Products)
         {
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                <div class="card product-card h-100">
-                    <img src="@(p.ImagePath ?? "/images/placeholder.jpg")" class="card-img-top" alt="@p.Name" />
-                    <div class="card-body d-flex flex-column">
-                        <div>
-                            <div class="product-brand">
-                                @p.Brand
-                                @if (!string.IsNullOrWhiteSpace(p.ShopName))
-                                {
-                                    <span class="text-muted small"> • @p.ShopName</span>
-                                }
-                            </div>
-                            <div class="product-title">@p.Name</div>
-                            <p class="text-muted small mt-2">@p.ShopName</p>
-                        </div>
-
-                        <div class="mt-auto d-flex justify-content-between align-items-center">
+            if (currentIndex < halfCount)
+            {
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card product-card h-100">
+                        <img src="@(p.ImagePath ?? "/images/placeholder.jpg")" class="card-img-top" alt="@p.Name" />
+                        <div class="card-body d-flex flex-column">
                             <div>
-                                <div class="rating-stars mb-1">
-                                    @{
-                                        var stars = (int)Math.Round(p.AverageRating);
-                                        for (int i = 1; i <= 5; i++)
-                                        {
-                                            if (i <= stars)
-                                            {
-                                                <i class="bi bi-star-fill"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="bi bi-star"></i>
-                                            }
-                                        }
+                                <div class="product-brand">
+                                    @p.Brand
+                                    @if (!string.IsNullOrWhiteSpace(p.ShopName))
+                                    {
+                                        <span class="text-muted small"> • @p.ShopName</span>
                                     }
                                 </div>
-                                <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", p.Price) تومان</div>
+                                <div class="product-title">@p.Name</div>
+                                <p class="text-muted small mt-2">@p.ShopName</p>
                             </div>
 
-                            <div class="d-flex gap-2 align-items-center">
-                                <button class="btn btn-sm btn-success cart-btn" onclick="addToCart('@p.Id','@p.Name')">
-                                    <i class="bi bi-cart-plus"></i>
-                                </button>
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="rating-stars mb-1">
+                                        @{
+                                            var stars = (int)Math.Round(p.AverageRating);
+                                            for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= stars)
+                                                {
+                                                    <i class="bi bi-star-fill"></i>
+                                                }
+                                                else
+                                                {
 
-                                <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@p.Id" title="ذخیره">
-                                    <i class="bi bi-heart"></i>
-                                </button>
+                                                    <i class="bi bi-star"></i>
+                                                }
+                                            }
+                                        }
+                                    </div>
+                                    <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", p.Price) تومان</div>
+                                </div>
+
+                                <div class="d-flex gap-2 align-items-center">
+                                    <button class="btn btn-sm btn-success cart-btn" onclick="addToCart('@p.Id','@p.Name')">
+                                        <i class="bi bi-cart-plus"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@p.Id" title="ذخیره">
+                                        <i class="bi bi-bookmark"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            }
+            currentIndex++;
+        }
+
+        <!-- چهار مستطیل وسط صفحه (دو ردیف دو ستونه) -->
+        <div class="row g-4 my-2 w-100 mx-0">
+            <div class="col-md-6">
+                <div class="feature-rectangle">
+                    <div class="feature-icon"><i class="bi bi-lightning-charge"></i></div>
+                    <div class="feature-title">پرفروش‌ترین‌ها</div>
+                    <div class="feature-desc">محصولات داغ این هفته</div>
+                    <a href="#" class="feature-link">مشاهده →</a>
+                </div>
             </div>
+            <div class="col-md-6">
+                <div class="feature-rectangle">
+                    <div class="feature-icon"><i class="bi bi-graph-up"></i></div>
+                    <div class="feature-title">حراج ویژه</div>
+                    <div class="feature-desc">تا ۷۰٪ تخفیف</div>
+                    <a href="#" class="feature-link">مشاهده →</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="feature-rectangle">
+                    <div class="feature-icon"><i class="bi bi-truck"></i></div>
+                    <div class="feature-title">ارسال رایگان</div>
+                    <div class="feature-desc">بالای ۵۰۰ هزار تومان</div>
+                    <a href="#" class="feature-link">مشاهده →</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="feature-rectangle">
+                    <div class="feature-icon"><i class="bi bi-emoji-smile"></i></div>
+                    <div class="feature-title">خرید مطمئن</div>
+                    <div class="feature-desc">بازگشت کالا تا ۳۰ روز</div>
+                    <a href="#" class="feature-link">مشاهده →</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- نیمه دوم محصولات -->
+        @{
+            currentIndex = 0;
+            foreach (var p in Model.Products)
+            {
+                if (currentIndex >= halfCount)
+                {
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <div class="card product-card h-100">
+                            <img src="@(p.ImagePath ?? "/images/placeholder.jpg")" class="card-img-top" alt="@p.Name" />
+                            <div class="card-body d-flex flex-column">
+                                <div>
+                                    <div class="product-brand">
+                                        @p.Brand
+                                        @if (!string.IsNullOrWhiteSpace(p.ShopName))
+                                        {
+                                            <span class="text-muted small"> • @p.ShopName</span>
+                                        }
+                                    </div>
+                                    <div class="product-title">@p.Name</div>
+                                    <p class="text-muted small mt-2">@p.ShopName</p>
+                                </div>
+
+                                <div class="mt-auto d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="rating-stars mb-1">
+                                            @{
+                                                var stars = (int)Math.Round(p.AverageRating);
+                                                for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= stars)
+                                                    {
+                                                        <i class="bi bi-star-fill"></i>
+                                                    }
+                                                    else
+                                                    {
+
+                                                        <i class="bi bi-star"></i>
+                                                    }
+                                                }
+                                            }
+                                        </div>
+                                        <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", p.Price) تومان</div>
+                                    </div>
+
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <button class="btn btn-sm btn-success cart-btn" onclick="addToCart('@p.Id','@p.Name')">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@p.Id" title="ذخیره">
+                                            <i class="bi bi-bookmark"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                currentIndex++;
+            }
         }
     </div>
 
@@ -272,11 +372,40 @@
                 </div>
             </div>
         </div>
-
-      @*   <div class="text-center py-3 small text-muted">
-            © @DateTime.Now.Year - تمامی حقوق محفوظ است.
-        </div> *@
     </footer>
+
+    <!-- مودال سبد خرید -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cartModalLabel">🛒 سبد خرید</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+                </div>
+                <div class="modal-body" id="cartItemsContainer">
+                    <!-- آیتم‌های سبد به‌صورت داینامیک در اینجا قرار می‌گیرند -->
+                    <div class="text-center py-4 text-muted">در حال بارگذاری...</div>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button class="btn btn-danger" id="clearCartBtn">🗑 پاک کردن سبد</button>
+                    <div>
+                        <span class="fw-bold me-3" id="cartTotalPrice">جمع: ۰ تومان</span>
+                        <button class="btn btn-success" id="checkoutBtn">پرداخت</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (User!.Identity!.IsAuthenticated)
+    {
+        <input type="hidden" id="loggedInUserId" value="@User.FindFirstValue(ClaimTypes.NameIdentifier)" />
+    }
+    else
+    {
+        <input type="hidden" id="loggedInUserId" value="" />
+    }
+
 </div>
 
 <script>
@@ -295,15 +424,14 @@
             if (!id) return;
             if (list.includes(id)) {
                 btn.classList.add('active');
-                btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+                btn.innerHTML = '<i class="bi bi-bookmark-fill"></i>';
             } else {
                 btn.classList.remove('active');
-                btn.innerHTML = '<i class="bi bi-heart"></i>';
+                btn.innerHTML = '<i class="bi bi-bookmark"></i>';
             }
         });
     }
 
-    // handle wishlist click
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.save-btn');
         if (!btn) return;
@@ -319,7 +447,6 @@
         alert(`${title} به سبد اضافه شد.`);
     }
 
-    // thumbnails -> carousel
     document.addEventListener('DOMContentLoaded', function () {
         if (typeof bootstrap !== 'undefined') {
             document.querySelectorAll('[data-bs-target="#heroCarousel"]').forEach((el) => {
@@ -329,10 +456,228 @@
                     carousel.to(Number(idx));
                 });
             });
-        } else {
-            console.warn("Bootstrap not loaded");
         }
     });
 
     refreshSaveButtons();
+</script>
+
+<script>
+      // ==================== تنظیمات اولیه ====================
+    const CART_API_BASE = '/api/Cart';
+
+    // ==================== مدیریت CustomerId ====================
+    function getCustomerId() {
+        let cid = localStorage.getItem('customerId');
+        if (!cid) {
+            cid = crypto.randomUUID();
+            localStorage.setItem('customerId', cid);
+        }
+        return cid;
+    }
+
+    const currentUserId = (() => {
+        const loggedInUserId = document.getElementById('loggedInUserId')?.value;
+        if (loggedInUserId && loggedInUserId !== '') {
+            localStorage.setItem('customerId', loggedInUserId);
+            return loggedInUserId;
+        }
+        return getCustomerId();
+    })();
+
+    // ==================== دریافت سبد خرید ====================
+    async function fetchCart() {
+        try {
+            const res = await fetch(`${CART_API_BASE}?userId=${currentUserId}`);
+            if (!res.ok) throw new Error('خطا در دریافت سبد');
+            return await res.json(); // بازگشت مستقیم CartDto
+        } catch (error) {
+            console.error('fetchCart error:', error);
+            return null;
+        }
+    }
+
+    // ==================== نمایش سبد در مودال ====================
+    async function renderCart() {
+        const container = document.getElementById('cartItemsContainer');
+        const totalPriceSpan = document.getElementById('cartTotalPrice');
+        const badge = document.getElementById('cartBadge');
+
+        const cartData = await fetchCart();
+        // استفاده از Items (نه data) و بررسی count (نه quantity)
+        if (!cartData || !cartData.items || cartData.items.length === 0) {
+            container.innerHTML = `<div class="text-center py-4 text-muted">سبد خرید خالی است.</div>`;
+            totalPriceSpan.innerText = 'جمع: ۰ تومان';
+            badge.innerText = '0';
+            return;
+        }
+
+        const items = cartData.items;
+        let totalPrice = 0;
+        let html = '<ul class="list-group list-group-flush">';
+
+        items.forEach(item => {
+            const price = item.price || 0;
+            const count = item.count || 1;      // تغییر از quantity به count
+            const total = price * count;
+            totalPrice += total;
+
+            html += `
+                <li class="list-group-item d-flex justify-content-between align-items-center" data-product-id="${item.productId}">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="${item.imagePath || '/images/placeholder.jpg'}" alt="${item.productName}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                        <div>
+                            <div class="fw-bold">${item.productName}</div>  <!-- استفاده از productName -->
+                            <small class="text-muted">${item.brand || ''}</small>
+                            <div class="text-success">${price.toLocaleString()} تومان</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="changeQuantity('${item.productId}', -1)">−</button>
+                        <span class="fw-bold" style="min-width: 30px; text-align: center;">${count}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="changeQuantity('${item.productId}', 1)">+</button>
+                        <button class="btn btn-sm btn-danger ms-2" onclick="removeFromCart('${item.productId}')">✕</button>
+                    </div>
+                </li>
+            `;
+        });
+
+        html += '</ul>';
+        container.innerHTML = html;
+        totalPriceSpan.innerText = `جمع: ${totalPrice.toLocaleString()} تومان`;
+        badge.innerText = items.reduce((sum, i) => sum + (i.count || 1), 0); // استفاده از count
+    }
+
+    // ==================== باز کردن مودال ====================
+    async function openCartModal() {
+        const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+        await renderCart();
+        modal.show();
+    }
+
+    // ==================== افزودن به سبد خرید ====================
+    async function addToCart(productId, productName) {
+        try {
+            const res = await fetch(CART_API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customerId: currentUserId,   // تغییر از userId به customerId
+                    productId: productId,
+                    count: 1                     // تغییر از quantity به count
+                })
+            });
+            if (!res.ok) {
+                // دریافت پیام خطا از سرور برای نمایش بهتر
+                const errorText = await res.text();
+                throw new Error(errorText || 'خطا در افزودن به سبد');
+            }
+            const result = await res.json();
+            if (result.status !== 'Success') throw new Error(result.message || 'خطا');
+
+            await updateCartBadge();
+            const modalElement = document.getElementById('cartModal');
+            if (modalElement.classList.contains('show')) {
+                await renderCart();
+            }
+        } catch (error) {
+            console.error('addToCart error:', error);
+            alert(`افزودن به سبد با خطا مواجه شد: ${error.message}`);
+        }
+    }
+
+    // ==================== تغییر تعداد ====================
+    async function changeQuantity(productId, delta) {
+        const cartData = await fetchCart();
+        if (!cartData || !cartData.items) return;
+        const item = cartData.items.find(i => i.productId === productId);
+        if (!item) return;
+
+        const newCount = (item.count || 1) + delta; // استفاده از count
+        if (newCount <= 0) {
+            await removeFromCart(productId);
+            return;
+        }
+
+        try {
+            const res = await fetch(CART_API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customerId: currentUserId,
+                    productId: productId,
+                    count: newCount
+                })
+            });
+            if (!res.ok) throw new Error('خطا در به‌روزرسانی تعداد');
+            const result = await res.json();
+            if (result.status !== 'Success') throw new Error(result.message);
+
+            await renderCart();
+            await updateCartBadge();
+        } catch (error) {
+            console.error('changeQuantity error:', error);
+            alert('تغییر تعداد با خطا مواجه شد.');
+        }
+    }
+
+    // ==================== حذف از سبد ====================
+    async function removeFromCart(productId) {
+        try {
+            const res = await fetch(`${CART_API_BASE}/${currentUserId}/${productId}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error('خطا در حذف از سبد');
+            const result = await res.json();
+            if (result.status !== 'Success') throw new Error(result.message);
+
+            await renderCart();
+            await updateCartBadge();
+        } catch (error) {
+            console.error('removeFromCart error:', error);
+            alert('حذف از سبد با خطا مواجه شد.');
+        }
+    }
+
+    // ==================== پاک کردن کل سبد ====================
+    async function clearCart() {
+        if (!confirm('آیا مطمئنید که کل سبد را پاک کنید؟')) return;
+        try {
+            const res = await fetch(`${CART_API_BASE}/clear?userId=${currentUserId}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error('خطا در پاک کردن سبد');
+            const result = await res.json();
+            if (result.status !== 'Success') throw new Error(result.message);
+
+            await renderCart();
+            await updateCartBadge();
+        } catch (error) {
+            console.error('clearCart error:', error);
+            alert('پاک کردن سبد با خطا مواجه شد.');
+        }
+    }
+
+    // ==================== به‌روزرسانی تعداد نشان‌دهنده سبد ====================
+    async function updateCartBadge() {
+        try {
+            const res = await fetch(`${CART_API_BASE}/count?userId=${currentUserId}`);
+            if (!res.ok) throw new Error('خطا در دریافت تعداد');
+            const result = await res.json();
+            if (result.status === 'Success' && result.data !== undefined) {
+                document.getElementById('cartBadge').innerText = result.data;
+            }
+        } catch (error) {
+            console.error('updateCartBadge error:', error);
+        }
+    }
+
+    // ==================== اتصال رویدادها ====================
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('clearCartBtn')?.addEventListener('click', clearCart);
+        document.getElementById('checkoutBtn')?.addEventListener('click', function () {
+            alert('در حال انتقال به درگاه پرداخت...');
+        });
+        updateCartBadge();
+    });
 </script>

@@ -5,6 +5,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using ModelLayer.Models;
+using ClassLibrary;
+using ServiceLayer.Services;
+using ClassLibrary.Repository;
 
 namespace Api.Controllers.Account
 {
@@ -12,15 +16,17 @@ namespace Api.Controllers.Account
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config; 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ICustomerRepository _customer;
 
-        public AccountController (SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager, IConfiguration config)
+        public AccountController (SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, IConfiguration config, ICustomerRepository customer)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _config = config;
+            _customer = customer;
         }
 
         [HttpPost("Login")]
@@ -75,10 +81,19 @@ namespace Api.Controllers.Account
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var user = new IdentityUser{ UserName = model.Username, Email = model.Email };
+            var user = new ApplicationUser{ UserName = model.Username, Email = model.Email };
             var result = await _userManager.CreateAsync(user, model.Password);
-
             if (!result.Succeeded) return BadRequest(result.Errors);
+
+            //var customer = new Customer
+            //{
+            //    Id = Guid.NewGuid(),
+            //    ApplicationUser = user.Id,
+            //    Name = model.Username,
+            //    Family = "",
+            //};
+
+            //await _customer.AddAsync(customer);
 
             // optionally add roles
             return Ok(new { success = true });

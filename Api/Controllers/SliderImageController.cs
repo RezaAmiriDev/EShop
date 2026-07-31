@@ -12,13 +12,12 @@ namespace Api.Controllers
         private readonly SliderService _sliderService;
         private readonly FileService _file;
         private readonly IWebHostEnvironment _env;
-        private readonly IMapper _mapper;
-        public SliderImageController(SliderService sliderService, FileService fileService, IWebHostEnvironment webHost, IMapper mapper)
+      
+        public SliderImageController(SliderService sliderService, FileService fileService, IWebHostEnvironment webHost)
         {
             _sliderService = sliderService;
             _file = fileService;
             _env = webHost;
-            _mapper = mapper;
         }
 
         [HttpGet]
@@ -45,7 +44,6 @@ namespace Api.Controllers
                 return Ok();
 
             return StatusCode(500);
-         //   return CreatedAtAction(nameof(GetAll), new { id = slider.Id }, slider);
         }
 
         [HttpDelete("{id:guid}")]

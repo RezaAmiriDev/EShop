@@ -63,15 +63,18 @@ namespace ServiceLayer.Services
                 var entity = _mapper.Map<SliderImage>(slider);
                 entity.Id = Guid.NewGuid();
 
-                if(slider.Slider != null)
+                if(slider.IFormFile == null)
                 {
-                    var savedPath = await _file.SaveFileAsync(slider.Slider, webRootPath, "uploads/sliders");
-                    entity.ImagePath = savedPath;
+                    return new ServiceResult(ResponseStatus.BadRequest, "فایل تصویر الزامی است");
                 }
 
+                 var savedPath = await _file.SaveFileAsync(slider.IFormFile, webRootPath, "uploads/sliders");
+                 entity.ImagePath = savedPath;
+          
                 await _repo.AddAsync(entity);
                 return new ServiceResult(ResponseStatus.Success, null);
-            }catch(Exception ex)
+            }
+            catch(Exception ex)
             {
                 _logger?.LogError(ex, "Error in CreateAsync");
                 return new ServiceResult(ResponseStatus.ServerError, null);

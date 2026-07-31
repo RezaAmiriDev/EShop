@@ -16,13 +16,12 @@ namespace Api.Controllers
         private readonly ShopService _shopService;
         private readonly FileService _file;
         private readonly IWebHostEnvironment _env;
-        private readonly IMapper _mapper;
+     
 
-        public ShopController(ShopService shopService , IWebHostEnvironment webHostEnvironment, IMapper mapper, FileService fileService)
+        public ShopController(ShopService shopService , IWebHostEnvironment webHostEnvironment, FileService fileService)
         {
             _shopService = shopService;
             _env = webHostEnvironment;
-            _mapper = mapper;
             _file = fileService;
         }
 

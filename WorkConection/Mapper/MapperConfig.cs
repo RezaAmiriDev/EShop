@@ -25,7 +25,6 @@ namespace WebFrameWork.Mapper
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.addressDto))
                 .ForMember(dest => dest.CreateDate, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.Orders, opt => opt.Ignore())   // مثال: collection ها را ایگنور کن
-                .ForMember(dest => dest.products, opt => opt.Ignore()) // بر اساس مدلت
                 .ForMember(dest => dest.CreateDate, opt => opt.Ignore()); // CreateDate معمولاً سمت سرور set می‌شود
 
             // Entity -> ReadDto
@@ -58,6 +57,12 @@ namespace WebFrameWork.Mapper
 
             CreateMap<SliderImage, SliderImageDto>()
                 .ForMember(d => d.ImagePath, opt => opt.MapFrom(s => string.IsNullOrEmpty(s.ImagePath) ? "/images/default-slider.jpg" : s.ImagePath)).ReverseMap();
+
+            CreateMap<Cart, CartDto>();
+
+            CreateMap<CartItem, CartItemDto>()
+                .ForMember(x => x.ProductName, y => y.MapFrom(z => z.Product.Name))
+                .ForMember(x => x.ImagePath, y => y.MapFrom(z => z.Product.ImagePath));
 
         }
     }

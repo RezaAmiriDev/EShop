@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ModelLayer.Migrations
 {
     [DbContext(typeof(MobiContext))]
-    [Migration("20260506191519_FirstOne")]
+    [Migration("20260711182641_FirstOne")]
     partial class FirstOne
     {
         /// <inheritdoc />
@@ -93,12 +93,14 @@ namespace ModelLayer.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<Guid>("ProductId")
+                    b.Property<Guid?>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AddressId");
+
+                    b.HasIndex("ProductId");
 
                     b.ToTable("Customers");
                 });
@@ -228,19 +230,19 @@ namespace ModelLayer.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "f38bc4ba-af7a-4037-a988-39a32148bd19",
+                            Id = "1f9aef65-45fa-4472-a761-8c002f08c49e",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "baf59aa4-0e46-447c-b95f-ec308e1305a9",
+                            Id = "23a32d2d-337e-46e8-a920-35c9a0f6e1cd",
                             Name = "client",
                             NormalizedName = "CLIENT"
                         },
                         new
                         {
-                            Id = "ae8f49e1-11f3-4c9d-b34b-ca494d204397",
+                            Id = "7448fc24-6520-47a4-906b-00aa681c1b3c",
                             Name = "seller",
                             NormalizedName = "SELLER"
                         });
@@ -415,6 +417,53 @@ namespace ModelLayer.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("ModelLayer.Models.Cart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateOfOperation")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.ToTable("Carts");
+                });
+
+            modelBuilder.Entity("ModelLayer.Models.CartItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CartId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("ModelLayer.Models.Logs", b =>
@@ -635,21 +684,6 @@ namespace ModelLayer.Migrations
                     b.ToTable("SliderImages");
                 });
 
-            modelBuilder.Entity("ProductCustomer", b =>
-                {
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("CustomerId", "ProductId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductCustomer", (string)null);
-                });
-
             modelBuilder.Entity("ClassLibrary.Customer", b =>
                 {
                     b.HasOne("ClassLibrary.Address", "Address")
@@ -657,6 +691,10 @@ namespace ModelLayer.Migrations
                         .HasForeignKey("AddressId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("ClassLibrary.Product", null)
+                        .WithMany("customers")
+                        .HasForeignKey("ProductId");
 
                     b.Navigation("Address");
                 });
@@ -742,6 +780,36 @@ namespace ModelLayer.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ModelLayer.Models.Cart", b =>
+                {
+                    b.HasOne("ClassLibrary.Customer", "Customer")
+                        .WithOne("Cart")
+                        .HasForeignKey("ModelLayer.Models.Cart", "CustomerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("ModelLayer.Models.CartItem", b =>
+                {
+                    b.HasOne("ModelLayer.Models.Cart", "Cart")
+                        .WithMany("Items")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ClassLibrary.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cart");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("ModelLayer.Models.Payment", b =>
                 {
                     b.HasOne("ClassLibrary.Order", "Order")
@@ -786,21 +854,6 @@ namespace ModelLayer.Migrations
                     b.Navigation("Address");
                 });
 
-            modelBuilder.Entity("ProductCustomer", b =>
-                {
-                    b.HasOne("ClassLibrary.Customer", null)
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("ClassLibrary.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ClassLibrary.Address", b =>
                 {
                     b.Navigation("Customers");
@@ -808,6 +861,9 @@ namespace ModelLayer.Migrations
 
             modelBuilder.Entity("ClassLibrary.Customer", b =>
                 {
+                    b.Navigation("Cart")
+                        .IsRequired();
+
                     b.Navigation("Orders");
                 });
 
@@ -821,6 +877,13 @@ namespace ModelLayer.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("Ratings");
+
+                    b.Navigation("customers");
+                });
+
+            modelBuilder.Entity("ModelLayer.Models.Cart", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("ModelLayer.Models.Shop", b =>

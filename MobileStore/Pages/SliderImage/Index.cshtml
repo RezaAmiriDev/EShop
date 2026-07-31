@@ -78,7 +78,7 @@
                 </div>
                 <div class="col-md-3">
                     <label>تصویر</label>
-                    <input asp-for="NewSlider.Slider" type="file" class="form-control" accept="image/*" />
+                    <input asp-for="NewSlider.IFormFile" type="file" class="form-control" accept="image/*" />
                 </div>
                 <div class="col-md-1">
                     <button type="submit" class="btn btn-primary mt-4">افزودن</button>
@@ -94,7 +94,7 @@
     {
         <div class="col-12 mb-4">
             <div class="card">
-                <img src="@item.ImagePath" class="card-img-top" style="width:100%; max-height:400px; object-fit:cover;" />
+                <img src="@Model.GetImageUrl(item.ImagePath)" class="card-img-top" style="width:100%; max-height:400px; object-fit:cover;" />
                 <div class="card-body text-center">
                     <h5>@item.Title</h5>
                     <p>@item.Description</p>

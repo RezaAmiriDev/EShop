@@ -4,6 +4,7 @@ using ClassLibrary.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ModelLayer.Migrations
 {
     [DbContext(typeof(MobiContext))]
-    partial class MobiContextModelSnapshot : ModelSnapshot
+    [Migration("20260731065952_AddingCart")]
+    partial class AddingCart
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -234,19 +237,19 @@ namespace ModelLayer.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "83be7cbb-dfd0-410d-b997-eac45ab4840c",
+                            Id = "3daa517e-a204-4eb3-a96d-0941550b4bac",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "3069eac0-ec5a-4b2d-889b-1212d919c7a9",
+                            Id = "b0ab0639-174b-4281-bd09-333195da1ccc",
                             Name = "client",
                             NormalizedName = "CLIENT"
                         },
                         new
                         {
-                            Id = "32fa08f0-bf64-407f-9290-7df2dd68dad3",
+                            Id = "3e16e1c9-274a-478b-a375-b120645b9434",
                             Name = "seller",
                             NormalizedName = "SELLER"
                         });

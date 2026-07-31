@@ -1,0 +1,208 @@
+﻿
+
+/* استایل‌های قبلی به همراه اضافات جدید */
+body {
+    direction: rtl;
+    font-family: 'Vazirmatn', sans-serif;
+    background: #f7f9fb;
+}
+
+/* هدر جدید */
+.custom-header {
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    padding: 0.75rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #0b8f73;
+    letter-spacing: -0.5px;
+}
+
+.nav-link {
+    color: #2c3e50;
+    font-weight: 500;
+    margin: 0 0.5rem;
+    transition: 0.2s;
+}
+
+    .nav-link:hover {
+        color: #0b8f73;
+    }
+
+.btn-outline-success-custom {
+    border-radius: 30px;
+    padding: 0.3rem 1rem;
+    margin: 0 0.25rem;
+    border: 1px solid #dee2e6;
+    background: transparent;
+    transition: 0.2s;
+}
+
+    .btn-outline-success-custom:hover {
+        background: #0b8f73;
+        border-color: #0b8f73;
+        color: white;
+    }
+
+/* بقیه استایل‌های قبلی */
+.hero-img {
+    height: 420px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.thumb-img {
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.product-card {
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(16,24,40,0.04);
+    transition: transform .18s;
+}
+
+    .product-card:hover {
+        transform: translateY(-6px);
+    }
+
+    .product-card .card-img-top {
+        height: 200px;
+        object-fit: contain;
+        background: #f6f8f9;
+        padding: 1rem;
+    }
+
+.product-brand {
+    color: #9aa6a7;
+    font-size: .85rem;
+    text-transform: lowercase;
+}
+
+.product-title {
+    font-weight: 700;
+    margin-top: .4rem;
+    font-size: 1rem;
+    color: #222;
+}
+
+.price {
+    color: #0b8f73;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.rating-stars {
+    color: #f6b01e;
+}
+
+.cart-btn i, .save-btn i {
+    font-size: 1rem;
+}
+
+.save-btn.active {
+    color: #0d6efd; /* آبی اینستاگرامی */
+    border-color: #0d6efd;
+    background-color: transparent;
+}
+
+    .save-btn.active i {
+        color: #0d6efd;
+    }
+
+/* استایل‌های جدید برای دایره فروشگاه‌ها */
+.shop-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s;
+}
+
+    .shop-circle:hover {
+        transform: translateY(-5px);
+    }
+
+.circle-img {
+    width: 100px;
+    height: 100px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    margin-bottom: 10px;
+    border: 1px solid #eef2f5;
+    transition: all 0.2s;
+}
+
+.shop-circle:hover .circle-img {
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    border-color: #0b8f73;
+}
+
+.circle-img i {
+    font-size: 48px;
+    color: #0b8f73;
+}
+
+.shop-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #2c3e50;
+}
+
+/* مستطیل‌های ویژه (دو ردیف دو ستونه) */
+.feature-rectangle {
+    background: white;
+    border-radius: 20px;
+    padding: 1.2rem;
+    transition: 0.2s;
+    height: 100%;
+    border: 1px solid #eef2f5;
+    box-shadow: 0 5px 12px rgba(0,0,0,0.02);
+}
+
+    .feature-rectangle:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+        border-color: #cfe9e3;
+    }
+
+.feature-icon {
+    font-size: 2.4rem;
+    color: #0b8f73;
+    margin-bottom: 12px;
+}
+
+.feature-title {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 6px;
+}
+
+.feature-desc {
+    color: #6c7a89;
+    font-size: 0.85rem;
+}
+
+.feature-link {
+    text-decoration: none;
+    font-weight: 500;
+    color: #0b8f73;
+}
+
+
+

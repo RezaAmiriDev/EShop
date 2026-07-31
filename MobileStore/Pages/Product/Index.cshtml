@@ -52,9 +52,9 @@
                         <p class="card-text">price: @product.Price</p>
                     </div>
                     <div class="card-footer d-flex gap-2">
-                        <a asp-page="/Product/Edit" asp-route-id="@product.Id" class="btn btn-primary btn-sm flex-fill">Edit</a>
-                        <button class="btn btn-info btn-sm detail-product flex-fill" data-id="@product.Id">Detail</button>
-                        <button class="btn btn-danger btn-sm delete-product flex-fill" data-id="@product.Id">Remove</button>
+                        <a asp-page="/Product/Edit" asp-route-id="@product.Id" class="btn btn-outline-primary btn-sm flex-fill">Edit</a>
+                        <button class="btn btn-outline-secondary btn-sm detail-product flex-fill" data-id="@product.Id">Detail</button>
+                        <button class="btn btn-outline-danger btn-sm delete-product flex-fill" data-id="@product.Id">Remove</button>
                     </div>
                 </div>
             </div>
@@ -224,10 +224,10 @@
                                 <p class="card-title">brand: ${brand}</p>
                                 <p class="card-text">price: $${formattedPrice}</p>
                             </div>
-                            <div class="card-footer d-flex justify-content-between">
-                                <a href="/Product/Edit?id=${id}" class="btn btn-primary btn-sm">Edit</a>
-                                <button class="btn btn-info btn-sm detail-product" data-id="${id}">Detail</button>
-                                <button class="btn btn-danger btn-sm delete-product" data-id="${id}">Remove</button>
+                            <div class="card-footer d-flex gap-2">
+                                <a href="/Product/Edit?id=${id}" class="btn btn-outline-primary btn-sm flex-fill">Edit</a>
+                                <button class="btn btn-outline-secondary btn-sm detail-product flex-fill" data-id="${id}">Detail</button>
+                                <button class="btn btn-outline-danger btn-sm delete-product flex-fill" data-id="${id}">Remove</button>
                             </div>
                         </div>
                     </div>`;

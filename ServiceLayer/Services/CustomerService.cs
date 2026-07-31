@@ -42,6 +42,7 @@ namespace ServiceLayer.Services
                 return Enumerable.Empty<CusProDto>();
             }
         }
+        
         public async Task<CusProDto> GetByIdAsync(Guid Id, CancellationToken token = default)
         {
             try
@@ -115,6 +116,7 @@ namespace ServiceLayer.Services
                 throw new Exception("خطا در دریافت مشتری بر اساس کد ملی", ex);
             }
         }
+        
         public async Task<PagedResponse<List<CusProDto>>> GetByPgination(PagedResponse<CusProDto> pageResponse, CancellationToken token = default)
         {
             try
@@ -164,6 +166,7 @@ namespace ServiceLayer.Services
                 throw new Exception(EnumExtention.GetEnumDescription(ResponseStatus.ServerError));
             }
         }
+       
         public async Task<ServiceResult> CreateAsync(CusProDto customerDto, string UserID, CancellationToken token = default)
         {
             try
@@ -261,6 +264,7 @@ namespace ServiceLayer.Services
                 return new ServiceResult(ResponseStatus.ServerError, "خطا در ویرایش مشتری");
             }
         }
+      
         public async Task<ServiceResult> Delete(Guid Id, string UserID)
         {
             try
@@ -322,7 +326,6 @@ namespace ServiceLayer.Services
                 return new ServiceResult(ResponseStatus.BadRequest, null);
             }
         }
-
 
     }
 }

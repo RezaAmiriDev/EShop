@@ -14,7 +14,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
-            <div asp-validation-summary="All" class="alert alert-danger"></div>
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All" class="alert alert-danger"></div>
+            }
         </div>
         <form method="get" class="d-flex align-items-stretch gap-2 ms-auto">
             <div class="input-group input-group-sm" style="max-width: 300px;">

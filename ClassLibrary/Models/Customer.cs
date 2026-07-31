@@ -1,4 +1,5 @@
 ﻿using DataLayer.Base;
+using ModelLayer.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -7,7 +8,6 @@ namespace ClassLibrary
 {
     public class Customer : BaseEntity
     {
-
         [Required(ErrorMessage = "نام الزامی است")]
         [Display(Name = "Name")]
         [MaxLength(20)]
@@ -34,19 +34,15 @@ namespace ClassLibrary
         [DisplayFormat(DataFormatString = "{0: yyyy/MM/dd}")]
         public DateTime CreateDate { get; set; }
 
-        //public DateTime? ModifiedDate { get; set; }
-        //public string? ModifiedBy { get; set; }
-
         public Guid AddressId { get; set; }
-
         [ForeignKey(nameof(AddressId))]
         public Address? Address { get; set; } // Many-to-One
 
-        public Guid ProductId { get; set; }
+        public string? UserId { get; set; }
+        [ForeignKey(nameof(UserId))]
+        public virtual ApplicationUser? ApplicationUser { get; set; }
 
+        public Cart Cart { get; set; }
         public ICollection<Order> Orders { get; set; } = new List<Order>();
-
-        public ICollection<Product>? products { get; set; } // Navigation property
-       // public ICollection<ProductCustomer>? ProductCusromer { get; set; } // Many-to-Many
     }
 }
