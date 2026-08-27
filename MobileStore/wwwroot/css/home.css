@@ -2,7 +2,7 @@
 
 /* استایل‌های قبلی به همراه اضافات جدید */
 body {
-    direction: rtl;
+    direction: ltr;
     font-family: 'Vazirmatn', sans-serif;
     background: #f7f9fb;
 }

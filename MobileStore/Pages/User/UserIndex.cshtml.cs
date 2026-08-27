@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace EShope.Pages.User
 {
-    [Authorize(Roles = "client")]
+    [Authorize(Roles = "admin")]
     public class UserIndexModel : PageModel
     {
         private readonly IHttpClientFactory _httpClient;

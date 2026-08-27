@@ -5,442 +5,320 @@
     Layout = "_Layout"; ;
 }
 
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>@ViewData["Title"] - فروشگاه موبایل</title>
+<!-- ========= هدر ========= -->
+<header class="custom-header rounded-4 mt-3">
+    <div class="container d-flex align-items-center justify-content-between">
+        <!-- سمت راست: نام سایت -->
+        <a href="/" class="navbar-brand text-decoration-none">E SHOP</a>
 
-@*     <!-- کتابخانه‌های CSS -->
-    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/lib/boxicons/css/boxicons.min.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" asp-append-version="true" />
+        <!-- وسط: سرچ بار خفن -->
+        <form action="/Product/Search" method="get" class="search-form mx-3 flex-grow-1" style="max-width: 500px;">
+            <div class="input-group">
+                <input class="form-control rounded-pill" type="search" placeholder="جستجوی محصول..." aria-label="Search" name="q" id="searchInput">
+                <button class="btn btn-outline-secondary rounded-pill" type="submit" id="searchBtn">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
 
-    <!-- فایل‌های CSS شخصی -->
-    <link rel="stylesheet" href="/css/style.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> *@
+        <!-- سمت چپ: سبد خرید + وضعیت کاربر -->
+        <div class="d-flex align-items-center gap-3">
+            <!-- سبد خرید -->
+            <a href="/Cart/Cart" class="btn btn-link text-dark position-relative p-1">
+                <i class="bi bi-cart3 fs-5"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">
+                    @Model.CartCount
+                </span>
+            </a>
 
-    <style>
-        /* استایل‌های مختص این صفحه (در صورت نیاز) */
-        #cartItemsContainer .list-group-item {
-            border: none;
-            border-bottom: 1px solid #eee;
-        }
-
-            #cartItemsContainer .list-group-item:last-child {
-                border-bottom: none;
-            }
-
-        #cartItemsContainer img {
-            border-radius: 8px;
-        }
-
-        .thumb-img {
-            cursor: pointer;
-            border-radius: 8px;
-            transition: 0.2s;
-            height: 80px;
-            object-fit: cover;
-        }
-
-            .thumb-img:hover {
-                opacity: 0.8;
-            }
-
-        .shop-circle .circle-img {
-            width: 80px;
-            height: 80px;
-            background: #f0f0f0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: #333;
-            transition: 0.3s;
-        }
-
-        .shop-circle:hover .circle-img {
-            background: #e0e0e0;
-            transform: scale(1.05);
-        }
-
-        .shop-name {
-            display: block;
-            margin-top: 6px;
-            font-size: 0.85rem;
-            color: #333;
-        }
-
-        .feature-rectangle {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            height: 100%;
-            transition: 0.3s;
-        }
-
-            .feature-rectangle:hover {
-                background: #e9ecef;
-                transform: translateY(-3px);
-            }
-
-        .feature-icon {
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-        }
-
-        .feature-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .feature-desc {
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-
-        .feature-link {
-            display: inline-block;
-            margin-top: 10px;
-            font-weight: 500;
-            text-decoration: none;
-            color: #0d6efd;
-        }
-
-            .feature-link:hover {
-                text-decoration: underline;
-            }
-
-        .product-card .card-img-top {
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .product-title {
-            font-weight: 500;
-            font-size: 1rem;
-            margin: 4px 0;
-        }
-
-        .product-brand {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-
-        .price {
-            font-weight: 700;
-            color: #198754;
-        }
-
-        .rating-stars {
-            color: #ffc107;
-            font-size: 0.9rem;
-        }
-
-        .save-btn.active {
-            color: #dc3545;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- ========= هدر ========= -->
-    <div class="d-flex align-items-center gap-2 p-2 rounded-4 border border-secondary-subtle bg-white shadow-sm">
-        <a href="/Cart/Cart" class="btn btn-link text-dark position-relative p-1">
-            <i class="bi bi-cart3 fs-5"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">
-                @Model.CartCount
-            </span>
-        </a>
-        <div class="vr"></div>
-
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            @if (User.IsInRole("admin") || User.IsInRole("seller"))
+            <!-- وضعیت کاربر -->
+            @if (User.Identity?.IsAuthenticated == true)
             {
-                <a href="/Dashboard/Index" class="btn btn-outline-secondary rounded-pill px-3 py-1">
-                    <i class="bi bi-speedometer2"></i> پنل مدیریت
-                </a>
+                <!-- آیکون کاربر با منوی dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-link text-dark p-0" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-3"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><span class="dropdown-item-text fw-semibold">👤 @User.Identity.Name</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        @if (User.IsInRole("admin") || User.IsInRole("seller"))
+                        {
+                            <li><a class="dropdown-item" href="/Dashboard/Index"><i class="bi bi-speedometer2"></i> پنل مدیریت</a></li>
+                        }
+                        <li><a class="dropdown-item" href="/Profile"><i class="bi bi-person"></i> پروفایل</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right"></i> خروج</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             }
-            <span class="fw-semibold px-2">👤 @User.Identity.Name</span>
-            <form method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" class="d-inline">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-outline-danger rounded-pill px-3 py-1">خروج</button>
-            </form>
-        }
-        else
-        {
-            <a href="/Identity/Account/Login" class="btn btn-outline-primary rounded-pill px-3 py-1">ورود</a>
-            <a href="/Identity/Account/Register" class="btn btn-success rounded-pill px-3 py-1">ثبت نام</a>
-        }
+            else
+            {
+                <!-- دکمه‌های ورود و ثبت‌نام -->
+                <a href="/Identity/Account/Login" class="btn btn-outline-primary rounded-pill px-3 py-1">ورود</a>
+                <a href="/Identity/Account/Register" class="btn btn-success rounded-pill px-3 py-1">ثبت نام</a>
+            }
+        </div>
+    </div>
+</header>
+
+<main class="container py-4">
+
+    <!-- ========= اسلایدر ========= -->
+    <div class="row mb-4">
+        <div class="col-lg-9">
+            <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    @for (int i = 0; i < Model.Sliders.Count; i++)
+                    {
+                        var s = Model.Sliders[i];
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <img src="@(s.ImagePath ?? "/images/hero1.jpg")" class="d-block w-100 hero-img" alt="اسلاید @i" asp-append-version="true" />
+                        </div>
+                    }
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">قبلی</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">بعدی</span>
+                </button>
+            </div>
+        </div>
+        <div class="col-lg-3 d-flex flex-column gap-2">
+            @for (int i = 0; i < Model.Sliders.Count; i++)
+            {
+                var thumb = Model.Sliders[i];
+                <img src="@(thumb.ImagePath ?? "/images/hero1.jpg")" class="thumb-img w-100" data-bs-target="#heroCarousel" data-bs-slide-to="@i" alt="تصویر کوچک @i" asp-append-version="true" />
+            }
+        </div>
     </div>
 
-    <main class="container py-4">
-
-        <!-- ========= اسلایدر ========= -->
-        <div class="row mb-4">
-            <div class="col-lg-9">
-                <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        @for (int i = 0; i < Model.Sliders.Count; i++)
-                        {
-                            var s = Model.Sliders[i];
-                            <div class="carousel-item @(i == 0 ? "active" : "")">
-                                <img src="@(s.ImagePath ?? "/images/hero1.jpg")" class="d-block w-100 hero-img" alt="اسلاید @i" asp-append-version="true" />
-                            </div>
-                        }
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">قبلی</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">بعدی</span>
-                    </button>
+    <!-- ========= بهترین فروشگاه‌ها (دایره‌ای) ========= -->
+    <section class="my-5">
+        <h5 class="mb-3">🌟 بهترین فروشگاه‌ها</h5>
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-6 g-4 justify-content-center">
+            @foreach (var shop in new[] { "دیجی‌کالا", "تکنولایف", "زرین‌مد", "بوک‌لند", "اسپرت‌شاپ", "کافه‌بازار" })
+            {
+                <div class="col text-center">
+                    <a href="#" class="shop-circle text-decoration-none">
+                        <div class="circle-img mx-auto">
+                            <i class="bi bi-shop"></i>  <!-- می‌توانید آیکون مناسب برای هر کدام تعیین کنید -->
+                        </div>
+                        <span class="shop-name">@shop</span>
+                    </a>
                 </div>
-            </div>
-            <div class="col-lg-3 d-flex flex-column gap-2">
-                @for (int i = 0; i < Model.Sliders.Count; i++)
+            }
+        </div>
+    </section>
+
+    <!-- ========= چهار مستطیل ویژه (بالای محصولات) ========= -->
+    <section class="my-5">
+        <h5 class="mb-3">✨ پیشنهادات ویژه</h5>
+        <div class="row g-4">
+            @{
+                var features = new[]
                 {
-                    var thumb = Model.Sliders[i];
-                    <img src="@(thumb.ImagePath ?? "/images/hero1.jpg")" class="thumb-img w-100" data-bs-target="#heroCarousel" data-bs-slide-to="@i" alt="تصویر کوچک @i" asp-append-version="true" />
-                }
+                        new { Icon = "bi-tags", Title = "تخفیف شگفت‌انگیز", Desc = "تا ۵۰٪ تخفیف برای اولین خرید", Link = "#" },
+                        new { Icon = "bi-clock-history", Title = "ارسال فوری", Desc = "تحویل درب منزل کمتر از ۲۴ ساعت", Link = "#" },
+                        new { Icon = "bi-gift", Title = "هدیه ویژه", Desc = "به ازای هر خرید یک جایزه نقدی", Link = "#" },
+                        new { Icon = "bi-shield-check", Title = "ضمانت اصالت", Desc = "بازگشت وجه تا ۷ روز", Link = "#" }
+                        };
+            }
+            @foreach (var f in features)
+            {
+                <div class="col-md-6">
+                    <div class="feature-rectangle">
+                        <div class="feature-icon"><i class="bi @f.Icon"></i></div>
+                        <div class="feature-title">@f.Title</div>
+                        <div class="feature-desc">@f.Desc</div>
+                        <a href="@f.Link" class="feature-link">مشاهده محصولات →</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- ========= محصولات با درج مستطیل‌های وسط ========= -->
+    <section>
+        <div class="row align-items-center mb-3">
+            <div class="col">
+                <h4 class="mb-0">محصولات</h4>
+                <div class="text-muted small">نمایش @Model.Products.Count محصول</div>
             </div>
         </div>
 
-        <!-- ========= بهترین فروشگاه‌ها (دایره‌ای) ========= -->
-        <section class="my-5">
-            <h5 class="mb-3">🌟 بهترین فروشگاه‌ها</h5>
-            <div class="row row-cols-2 row-cols-sm-3 row-cols-md-6 g-4 justify-content-center">
-                @foreach (var shop in new[] { "دیجی‌کالا", "تکنولایف", "زرین‌مد", "بوک‌لند", "اسپرت‌شاپ", "کافه‌بازار" })
+        <div class="row g-4">
+            @{
+                int total = Model.Products.Count;
+                int insertAfter = Math.Min(8, total); // بعد از چند محصول، مستطیل‌ها را درج کنیم
+                int currentIndex = 0;
+
+                // حلقه برای کل محصولات
+                foreach (var product in Model.Products)
                 {
-                    <div class="col text-center">
-                        <a href="#" class="shop-circle text-decoration-none">
-                            <div class="circle-img mx-auto">
-                                <i class="bi bi-shop"></i>  <!-- می‌توانید آیکون مناسب برای هر کدام تعیین کنید -->
-                            </div>
-                            <span class="shop-name">@shop</span>
-                        </a>
-                    </div>
-                }
-            </div>
-        </section>
-
-        <!-- ========= چهار مستطیل ویژه (بالای محصولات) ========= -->
-        <section class="my-5">
-            <h5 class="mb-3">✨ پیشنهادات ویژه</h5>
-            <div class="row g-4">
-                @{
-                    var features = new[]
+                    // اگر به موقعیت مورد نظر رسیدیم، مستطیل‌ها را نمایش بده (فقط یک بار)
+                    if (currentIndex == insertAfter && total > 4)
                     {
-                                new { Icon = "bi-tags", Title = "تخفیف شگفت‌انگیز", Desc = "تا ۵۰٪ تخفیف برای اولین خرید", Link = "#" },
-                                new { Icon = "bi-clock-history", Title = "ارسال فوری", Desc = "تحویل درب منزل کمتر از ۲۴ ساعت", Link = "#" },
-                                new { Icon = "bi-gift", Title = "هدیه ویژه", Desc = "به ازای هر خرید یک جایزه نقدی", Link = "#" },
-                                new { Icon = "bi-shield-check", Title = "ضمانت اصالت", Desc = "بازگشت وجه تا ۷ روز", Link = "#" }
-                                };
-                }
-                @foreach (var f in features)
-                {
-                    <div class="col-md-6">
-                        <div class="feature-rectangle">
-                            <div class="feature-icon"><i class="bi @f.Icon"></i></div>
-                            <div class="feature-title">@f.Title</div>
-                            <div class="feature-desc">@f.Desc</div>
-                            <a href="@f.Link" class="feature-link">مشاهده محصولات →</a>
-                        </div>
-                    </div>
-                }
-            </div>
-        </section>
-
-        <!-- ========= محصولات با درج مستطیل‌های وسط ========= -->
-        <section>
-            <div class="row align-items-center mb-3">
-                <div class="col">
-                    <h4 class="mb-0">محصولات</h4>
-                    <div class="text-muted small">نمایش @Model.Products.Count محصول</div>
-                </div>
-            </div>
-
-            <div class="row g-4">
-                @{
-                    int total = Model.Products.Count;
-                    int insertAfter = Math.Min(8, total); // بعد از چند محصول، مستطیل‌ها را درج کنیم
-                    int currentIndex = 0;
-
-                    // حلقه برای کل محصولات
-                    foreach (var product in Model.Products)
-                    {
-                        // اگر به موقعیت مورد نظر رسیدیم، مستطیل‌ها را نمایش بده (فقط یک بار)
-                        if (currentIndex == insertAfter && total > 4)
-                        {
-                            <div class="col-12">
-                                <div class="row g-4 my-2">
-                                    @{
-                                        var middleFeatures = new[]
-                                        {
-                                                new { Icon = "bi-lightning-charge", Title = "پرفروش‌ترین‌ها", Desc = "محصولات داغ این هفته", Link = "#" },
-                                                new { Icon = "bi-graph-up", Title = "حراج ویژه", Desc = "تا ۷۰٪ تخفیف", Link = "#" },
-                                                new { Icon = "bi-truck", Title = "ارسال رایگان", Desc = "بالای ۵۰۰ هزار تومان", Link = "#" },
-                                                new { Icon = "bi-emoji-smile", Title = "خرید مطمئن", Desc = "بازگشت کالا تا ۳۰ روز", Link = "#" }
-                                                };
-                                    }
-                                    @foreach (var f in middleFeatures)
+                        <div class="col-12">
+                            <div class="row g-4 my-2">
+                                @{
+                                    var middleFeatures = new[]
                                     {
-                                        <div class="col-md-6">
-                                            <div class="feature-rectangle">
-                                                <div class="feature-icon"><i class="bi @f.Icon"></i></div>
-                                                <div class="feature-title">@f.Title</div>
-                                                <div class="feature-desc">@f.Desc</div>
-                                                <a href="@f.Link" class="feature-link">مشاهده →</a>
-                                            </div>
+                                        new { Icon = "bi-lightning-charge", Title = "پرفروش‌ترین‌ها", Desc = "محصولات داغ این هفته", Link = "#" },
+                                        new { Icon = "bi-graph-up", Title = "حراج ویژه", Desc = "تا ۷۰٪ تخفیف", Link = "#" },
+                                        new { Icon = "bi-truck", Title = "ارسال رایگان", Desc = "بالای ۵۰۰ هزار تومان", Link = "#" },
+                                        new { Icon = "bi-emoji-smile", Title = "خرید مطمئن", Desc = "بازگشت کالا تا ۳۰ روز", Link = "#" }
+                                        };
+                                }
+                                @foreach (var f in middleFeatures)
+                                {
+                                    <div class="col-md-6">
+                                        <div class="feature-rectangle">
+                                            <div class="feature-icon"><i class="bi @f.Icon"></i></div>
+                                            <div class="feature-title">@f.Title</div>
+                                            <div class="feature-desc">@f.Desc</div>
+                                            <a href="@f.Link" class="feature-link">مشاهده →</a>
                                         </div>
-                                    }
-                                </div>
+                                    </div>
+                                }
                             </div>
-                        }
+                        </div>
+                    }
 
-                        <!-- کارت محصول -->
-                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                            <div class="card product-card h-100">
-                                <img src="@(product.ImagePath ?? "/images/placeholder.jpg")" class="card-img-top" alt="@product.Name" asp-append-version="true" />
-                                <div class="card-body d-flex flex-column">
+                    <!-- کارت محصول -->
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <div class="card product-card h-100">
+                            <img src="@(product.ImagePath ?? "/images/placeholder.jpg")" class="card-img-top" alt="@product.Name" asp-append-version="true" />
+                            <div class="card-body d-flex flex-column">
+                                <div>
+                                    <div class="product-brand">
+                                        @product.Brand
+                                        @if (!string.IsNullOrWhiteSpace(product.ShopName))
+                                        {
+                                            <span class="text-muted small"> • @product.ShopName</span>
+                                        }
+                                    </div>
+                                    <div class="product-title">@product.Name</div>
+                                    <p class="text-muted small mt-2">@product.ShopName</p>
+                                </div>
+
+                                <div class="mt-auto d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div class="product-brand">
-                                            @product.Brand
-                                            @if (!string.IsNullOrWhiteSpace(product.ShopName))
-                                            {
-                                                <span class="text-muted small"> • @product.ShopName</span>
+                                        <div class="rating-stars mb-1">
+                                            @{
+                                                int stars = (int)Math.Round(product.AverageRating);
+                                                for (int i = 1; i <= 5; i++)
+                                                {
+                                                    <i class="bi @(i <= stars ? "bi-star-fill" : "bi-star")"></i>
+                                                }
                                             }
                                         </div>
-                                        <div class="product-title">@product.Name</div>
-                                        <p class="text-muted small mt-2">@product.ShopName</p>
+                                        <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", product.Price) تومان</div>
                                     </div>
 
-                                    <div class="mt-auto d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <div class="rating-stars mb-1">
-                                                @{
-                                                    int stars = (int)Math.Round(product.AverageRating);
-                                                    for (int i = 1; i <= 5; i++)
-                                                    {
-                                                        <i class="bi @(i <= stars ? "bi-star-fill" : "bi-star")"></i>
-                                                    }
-                                                }
-                                            </div>
-                                            <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", product.Price) تومان</div>
-                                        </div>
-
-                                        <div class="d-flex gap-2 align-items-center">
-                                            <form method="post" asp-page="/Cart/Cart" asp-page-handler="Add" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="productId" value="@product.Id" />
-                                                <input type="hidden" name="count" value="1" />
-                                                <button type="submit" class="btn btn-sm btn-success cart-btn">
-                                                    <i class="bi bi-cart-plus"></i>
-                                                </button>
-                                            </form>
-                                            <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@product.Id" title="ذخیره">
-                                                <i class="bi bi-bookmark"></i>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <form method="post" asp-page="/Cart/Cart" asp-page-handler="Add" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@product.Id" />
+                                            <input type="hidden" name="count" value="1" />
+                                            <button type="submit" class="btn btn-sm btn-success cart-btn">
+                                                <i class="bi bi-cart-plus"></i>
                                             </button>
-                                        </div>
+                                        </form>
+                                        <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@product.Id" title="ذخیره">
+                                            <i class="bi bi-bookmark"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        currentIndex++;
-                    }
-                }
-            </div>
-        </section>
-
-        <!-- ========= فوتر ========= -->
-        <footer class="mt-5 pt-4 border-top">
-            <div class="row">
-                <div class="col-md-6">
-                    <h6>درباره ما</h6>
-                    <p class="text-muted small">توضیح کوتاه درباره فروشگاه و شرایط ارسال و پشتیبانی.</p>
-                </div>
-                <div class="col-md-3">
-                    <h6>لینک‌ها</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#">تماس با ما</a></li>
-                        <li><a href="#">سوالات متداول</a></li>
-                        <li><a href="#">حریم خصوصی</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3 text-md-end">
-                    <h6>شبکه‌های اجتماعی</h6>
-                    <div>
-                        <i class="bi bi-instagram me-2 fs-4 text-dark"></i>
-                        <i class="bi bi-telegram me-2 fs-4 text-info"></i>
-                        <i class="bi bi-youtube me-2 fs-3 text-danger"></i>
                     </div>
+
+                    currentIndex++;
+                }
+            }
+        </div>
+    </section>
+
+    <!-- ========= فوتر ========= -->
+    <footer class="mt-5 pt-4 border-top">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>درباره ما</h6>
+                <p class="text-muted small">توضیح کوتاه درباره فروشگاه و شرایط ارسال و پشتیبانی.</p>
+            </div>
+            <div class="col-md-3">
+                <h6>لینک‌ها</h6>
+                <ul class="list-unstyled">
+                    <li><a href="#">تماس با ما</a></li>
+                    <li><a href="#">سوالات متداول</a></li>
+                    <li><a href="#">حریم خصوصی</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 text-md-end">
+                <h6>شبکه‌های اجتماعی</h6>
+                <div>
+                    <i class="bi bi-instagram me-2 fs-4 text-dark"></i>
+                    <i class="bi bi-telegram me-2 fs-4 text-info"></i>
+                    <i class="bi bi-youtube me-2 fs-3 text-danger"></i>
                 </div>
             </div>
-        </footer>
-    </main>
+        </div>
+    </footer>
+</main>
 
-    // // <!-- ========= اسکریپت‌ها ========= -->
-    // // <script src="~/lib/jquery/jquery.min.js" asp-append-version="true"></script>
-    // // <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
-    // // <script src="~/lib/chart.js/chart.min.js" asp-append-version="true"></script>
-    // // <script src="~/js/site.js" asp-append-version="true"></script>
+<script>
+    const W_KEY = "eshop_wishlist_v1";
 
-    <script>
-        const W_KEY = "eshop_wishlist_v1";
+    function getWishlist() {
+        try { return JSON.parse(localStorage.getItem(W_KEY) || "[]"); } catch { return []; }
+    }
+    function saveWishlist(arr) { localStorage.setItem(W_KEY, JSON.stringify(arr)); }
 
-        function getWishlist() {
-            try { return JSON.parse(localStorage.getItem(W_KEY) || "[]"); } catch { return []; }
-        }
-        function saveWishlist(arr) { localStorage.setItem(W_KEY, JSON.stringify(arr)); }
-
-        function refreshSaveButtons() {
-            const list = getWishlist();
-            document.querySelectorAll('.save-btn').forEach(btn => {
-                const id = btn.getAttribute('data-id');
-                if (!id) return;
-                if (list.includes(id)) {
-                    btn.classList.add('active');
-                    btn.innerHTML = '<i class="bi bi-bookmark-fill"></i>';
-                } else {
-                    btn.classList.remove('active');
-                    btn.innerHTML = '<i class="bi bi-bookmark"></i>';
-                }
-            });
-        }
-
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('.save-btn');
-            if (!btn) return;
+    function refreshSaveButtons() {
+        const list = getWishlist();
+        document.querySelectorAll('.save-btn').forEach(btn => {
             const id = btn.getAttribute('data-id');
-            let list = getWishlist();
-            if (list.includes(id)) list = list.filter(x => x !== id);
-            else list.push(id);
-            saveWishlist(list);
-            refreshSaveButtons();
+            if (!id) return;
+            if (list.includes(id)) {
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="bi bi-bookmark-fill"></i>';
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="bi bi-bookmark"></i>';
+            }
         });
+    }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            // فعال‌سازی کلیک روی تصاویر کوچک برای تغییر اسلاید
-            document.querySelectorAll('[data-bs-target="#heroCarousel"]').forEach((el) => {
-                el.addEventListener('click', function () {
-                    const idx = this.getAttribute('data-bs-slide-to');
-                    const carousel = bootstrap.Carousel.getOrCreateInstance(document.getElementById('heroCarousel'));
-                    carousel.to(Number(idx));
-                });
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.save-btn');
+        if (!btn) return;
+        const id = btn.getAttribute('data-id');
+        let list = getWishlist();
+        if (list.includes(id)) list = list.filter(x => x !== id);
+        else list.push(id);
+        saveWishlist(list);
+        refreshSaveButtons();
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // فعال‌سازی کلیک روی تصاویر کوچک برای تغییر اسلاید
+        document.querySelectorAll('[data-bs-target="#heroCarousel"]').forEach((el) => {
+            el.addEventListener('click', function () {
+                const idx = this.getAttribute('data-bs-slide-to');
+                const carousel = bootstrap.Carousel.getOrCreateInstance(document.getElementById('heroCarousel'));
+                carousel.to(Number(idx));
             });
-
-            refreshSaveButtons();
         });
-    </script>
-</body>
-</html>
+
+        refreshSaveButtons();
+    });
+</script>
