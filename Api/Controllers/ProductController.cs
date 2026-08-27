@@ -25,7 +25,7 @@ namespace MobileStore.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(Guid id)
+        public async Task<IActionResult> GetAll()
         {
             try
             {
@@ -93,7 +93,7 @@ namespace MobileStore.Controllers
                 }
 
                 var result = await _productService.CreateAsync(dto , ct);
-                if (result == null && result!.Status == ResponseStatus.Success)
+                if (result.Status != ResponseStatus.Success)
                 {
                     return BadRequest(new { error = result.Message });
                 }

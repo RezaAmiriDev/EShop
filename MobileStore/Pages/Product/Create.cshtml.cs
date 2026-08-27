@@ -6,6 +6,7 @@ using ModelLayer.Models;
 using ModelLayer.ViewModel;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace EShope.Pages.Product
@@ -30,8 +31,12 @@ namespace EShope.Pages.Product
         public async Task OnGet(CancellationToken ct = default) 
         {
             var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("admin");
+
             try
             {
+                var url = isAdmin ? "api/shop" : $"api/shop?sellerId={Uri.EscapeDataString(userId!)}";
                 var response = await client.GetAsync("api/shop", ct);
                 if (response.IsSuccessStatusCode)
                 {
@@ -65,6 +70,24 @@ namespace EShope.Pages.Product
         {
             if (!ModelState.IsValid) return Page();
             var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("admin");
+
+            if (!isAdmin)
+            {
+                var shopResp = await client.GetAsync($"api/shop/{dto.ShopId}");
+                if (!shopResp.IsSuccessStatusCode)
+                {
+                    ModelState.AddModelError(string.Empty, "فروشگاه انتخاب‌شده معتبر نیست.");
+                    return Page();
+                }
+                var shop = await shopResp.Content.ReadFromJsonAsync<ShopDto>();
+                if(shop == null || shop.SellerId != userId)
+                {
+                    return Forbid();
+                }
+            }
 
             using var content = new MultipartFormDataContent();
 

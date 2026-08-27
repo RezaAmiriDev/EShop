@@ -25,22 +25,26 @@ namespace ServiceLayer.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<ShopDto>> GetAllAsync()
+        public async Task<IEnumerable<ShopDto>> GetAllAsync(string? sellerId = null)
         {
             try
             {
-                var list = await _sellerRepository.TableNoTracking
+                var query = _sellerRepository.TableNoTracking
                     .Include(s => s.Address)
                     .Include(s => s.products)
-                    .ToListAsync();
+                    .AsQueryable();
 
+                if (!string.IsNullOrEmpty(sellerId))
+                {
+                    query = query.Where(s => s.SellerId == sellerId);
+                }
+
+                var list = await query.ToListAsync();
                 return _mapper.Map<IEnumerable<ShopDto>>(list);
             }
             catch (Exception ex)
             {
-                // بهتر است لاگ بگیرید
-                Console.WriteLine($"Error in GetAllAsync: {ex.Message}");
-                // در صورت نیاز می‌توان لاگ اضافه کرد
+                _logger.LogError(ex, "Error in GetAllAsync");
                 return Enumerable.Empty<ShopDto>();
             }
         }
@@ -82,6 +86,12 @@ namespace ServiceLayer.Services
                 {
                     Query = Query.Where(d => d.ShopName!.Contains(filter.ShopName));
                 }
+
+                if (!string.IsNullOrEmpty(filter.SellerId))
+                {
+                    Query = Query.Where(d => d.SellerId == filter.SellerId);
+                }
+
                 var Total = await Query.CountAsync();
                 var list = await Query.Skip(paged.StartIndex)
                     .Take(paged.PageSize)
@@ -91,6 +101,7 @@ namespace ServiceLayer.Services
                         Description = s.Description,
                         ShopCode = s.ShopCode,
                         ImagePath = s.ImagePath,
+                        SellerId = s.SellerId,
                         AddressDto = s.Address == null ? null : new AddressDto
                         {
                             Id = s.Address.Id,

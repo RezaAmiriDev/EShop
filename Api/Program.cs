@@ -18,7 +18,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<MobiContext>(options =>
  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<ApplicationUser , IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser , IdentityRole>(options =>
+{
+    options.Lockout.AllowedForNewUsers = true; // اجازه قفل برای کاربران جدید
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);  // مدت زمان قفل (۱۵ دقیقه)
+    options.Lockout.MaxFailedAccessAttempts = 5; // تعداد تلاش‌های مجاز قبل از قفل
+})
     .AddEntityFrameworkStores<MobiContext>().AddDefaultTokenProviders();
 
 // 3. register IHttpContextAccessor اگر نیاز داری

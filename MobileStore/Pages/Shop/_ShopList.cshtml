@@ -34,7 +34,7 @@
         </form>
     </div>
 
-    @if (!Model.Sellers.Any())
+    @if (!Model.Dtos.Any())
     {
         <div class="text-center py-5">
             <i class="bi bi-shop display-1 text-muted"></i>
@@ -45,7 +45,7 @@
     else
     {
         <div class="row gy-4">
-            @foreach (var seller in Model.Sellers)
+            @foreach (var seller in Model.Dtos)
             {
                 <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                     <div class="card shadow border-0 h-100">

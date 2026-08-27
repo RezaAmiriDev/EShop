@@ -36,46 +36,66 @@ namespace ServiceLayer.Services
         }
 
         // ========== متد کمکی: اطمینان از وجود مشتری (برای مهمان) ==========
-        private async Task<Customer> EnsureCustomerExistsAsync(Guid customerId, CancellationToken token)
+        private async Task<ServiceResultByData<Customer>> EnsureCustomerExistsAsync(Guid customerId, CancellationToken token)
         {
             var customer = await _customerRepository.GetByIdAsync(customerId, token);
-            if(customer == null)
+            if (customer != null)
+                return ServiceResultByData<Customer>.Success(customer);
+
+            customer = new Customer
             {
-                customer = new Customer
-                {
-                    Id = customerId,
-                    Name = "مهمان",
-                    Family = "",
-                    UserId = null
-                };
-                await _customerRepository.AddAsync(customer, token);
-                _logger.LogInformation("Customer {CustomerId} created as guest.", customerId);
+                Id = customerId,
+                Name = "مهمان",
+                Family = "",
+                UserId = null,
+                CreateDate = DateTime.UtcNow,
+            };
+
+            var addResult = await _customerRepository.AddAsync(customer, token);
+            if (addResult.Status != ResponseStatus.Success)
+            {
+                _logger.LogError("Failed to create guest customer {CustomerId}: {Message}", customerId, addResult.Message);
+                return new ServiceResultByData<Customer>(addResult.Status, addResult.Message ?? "خطا در ایجاد مشتری", null!);
             }
-            return customer;
+
+            _logger.LogInformation("Customer {CustomerId} created as guest.", customerId);
+            return ServiceResultByData<Customer>.Success(customer);
         }
-
-        // ========== متد کمکی: دریافت CustomerId از کاربر لاگین ==========
-        private async Task<Guid?> GetCustomerIdFromUserAsync(ClaimsPrincipal user)
-        {
-            if(user?.Identity?.IsAuthenticated != true) return null;
-
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if(string.IsNullOrEmpty(userId)) return null;
-
-            var customer = await _customerRepository.Table.FirstOrDefaultAsync(c => c.UserId == userId);
-            return customer?.Id;
-        }
-
         // ========== متد عمومی: تبدیل شناسه ورودی به Guid ==========
         public async Task<Guid?> ResolveCustomerIdAsync(string userId, ClaimsPrincipal? user = null)
         {
-            if(user?.Identity?.IsAuthenticated == true)
+            if (user?.Identity?.IsAuthenticated == true)
             {
-                var customerId = await GetCustomerIdFromUserAsync(user);
-                if(customerId.HasValue) return customerId;
+                var appUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(appUserId))
+                {
+                    var customer = await _customerRepository.Table.FirstOrDefaultAsync(c => c.UserId == appUserId);
+                    if (customer != null) return customer.Id;
+
+                    var newCustomer = new Customer
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = appUserId,
+                        Name = "کاربر",
+                        Family = "",
+                        CreateDate = DateTime.UtcNow,
+                    };
+
+                    var addResult = await _customerRepository.AddAsync(newCustomer, CancellationToken.None);
+                    if (addResult.Status != ResponseStatus.Success)
+                    {
+                        _logger.LogError("Failed to create customer for user {UserId}: {Message}", appUserId, addResult.Message);
+                        return null; // ← دیگه با یک Id جعلی ادامه نمی‌ده
+                    }
+
+                    _logger.LogInformation("Customer created for user {UserId} with Id {CustomerId}", appUserId, newCustomer.Id);
+                    return newCustomer.Id;
+                }
             }
 
-            if(Guid.TryParse(userId, out var guestId)) return guestId;
+            if (Guid.TryParse(userId, out var guestId))
+                return guestId;
+
             return null;
         }
 
@@ -83,6 +103,7 @@ namespace ServiceLayer.Services
         {
             try
             {
+                await EnsureCustomerExistsAsync(userId, token);
                 var cart = await _cartRepository.TableNoTracking
                     .Include(c => c.Items)
                     .ThenInclude(i => i.Product)
@@ -111,10 +132,40 @@ namespace ServiceLayer.Services
             }
         }
 
+        public async Task<ServiceResult> UpdateCartItemAsync(Guid customerId, Guid productId, int count, CancellationToken token)
+        {
+            try
+            {
+                if (customerId == Guid.Empty || productId == Guid.Empty)
+                    return new ServiceResult(ResponseStatus.BadRequest, "Invalid identifiers");
+
+                await EnsureCustomerExistsAsync(customerId, token);
+                var cart = await _cartRepository.GetCartWithItemsAsync(customerId, token);
+                if (cart == null)
+                {
+                    return new ServiceResult(ResponseStatus.NotFound, "Cart not found");
+                }
+
+                var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
+                if (item == null) return new ServiceResult(ResponseStatus.NotFound, "Item not found in cart");
+
+                if (count <= 0) return await _cartItemRepository.DeleteAsync(item, token);
+
+                item.Count = count;
+                return await _cartItemRepository.UpdateAsync(item);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error updating cart item for user {UserId}", customerId);
+                return new ServiceResult(ResponseStatus.BadRequest, ex.Message);
+            }
+        }
+
         public async Task<ServiceResultByData<int>> GetCartCountAsync(Guid userId, CancellationToken token)
         {
             try
             {
+                await EnsureCustomerExistsAsync(userId, token);
                 if (userId == Guid.Empty)
                 {
                     return new ServiceResultByData<int>(ResponseStatus.NotFound, "UserId is empty", 0);
@@ -129,17 +180,20 @@ namespace ServiceLayer.Services
             }
         }
 
-        public async Task<ServiceResult> AddToCartAsync(AddToCartDto dto, CancellationToken token)
+        public async Task<ServiceResult> AddToCartAsync(Guid customerId, Guid productId, int count, CancellationToken token)
         {
             try
             {
-                if (dto.CustomerId == null || dto.ProductId == null || dto.Count <= 0)
+                if (customerId == Guid.Empty || productId == Guid.Empty || count <= 0)
                 {
                     return new ServiceResult(ResponseStatus.BadRequest, "Invalid input data");
                 }
 
-                var userId = dto.CustomerId.Value;
-                var productId = dto.ProductId.Value;
+                var cusResult = await EnsureCustomerExistsAsync(customerId, token);
+                if (cusResult.Status != ResponseStatus.Success)
+                {
+                    return new ServiceResult(cusResult.Status, cusResult.Message);
+                }
 
                 // بررسی وجود محصول
                 var product = await _productRepository.GetByIdAsync(productId);
@@ -149,19 +203,24 @@ namespace ServiceLayer.Services
                 }
 
                 // دریافت سبد کاربر با آیتم‌های آن
-                var cart = await _cartRepository.GetCartWithItemsAsync(userId, token);
+                var cart = await _cartRepository.GetCartWithItemsAsync(customerId, token);
                 if (cart == null)
                 {
                     // ایجاد سبد جدید
-                    cart = new Cart { CustomerId = userId };
+                    cart = new Cart { CustomerId = customerId };
                     cart = await _cartRepository.InsertAndReturnAsync(cart, token);
+                    if (cart == null)
+                    {
+                        _logger.LogError("Failed to create cart for customer {CustomerId}", customerId);
+                        return new ServiceResult(ResponseStatus.BadRequest, "خطا در ایجاد سبد خرید");
+                    }
                 }
 
                 // جستجوی آیتم تکراری
                 var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
                 if (existingItem != null)
                 {
-                    existingItem.Count += dto.Count;
+                    existingItem.Count += count;
                     existingItem.Price = product.Price;
 
                     var updateResult = await _cartItemRepository.UpdateAsync(existingItem);
@@ -174,7 +233,7 @@ namespace ServiceLayer.Services
                     {
                         CartId = cart.Id,
                         ProductId = productId,
-                        Count = dto.Count,
+                        Count = count,
                         Price = product.Price
                     };
 
@@ -187,7 +246,7 @@ namespace ServiceLayer.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding item to cart for user {UserId}", dto?.CustomerId);
+                _logger.LogError(ex, "Error adding item to cart for user {UserId}", customerId);
                 return new ServiceResult(ResponseStatus.BadRequest, ex.Message);
             }
         }
@@ -196,6 +255,7 @@ namespace ServiceLayer.Services
         {
             try
             {
+                await EnsureCustomerExistsAsync(userId, token);
                 if (userId == Guid.Empty || productId == Guid.Empty)
                 {
                     return new ServiceResult(ResponseStatus.BadRequest, "Invalid identifiers");
@@ -227,6 +287,7 @@ namespace ServiceLayer.Services
         {
             try
             {
+                await EnsureCustomerExistsAsync(userId, token);
                 if (userId == Guid.Empty)
                 {
                     return new ServiceResult(ResponseStatus.BadRequest, "UserId is empty");

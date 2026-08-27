@@ -1,0 +1,16 @@
+﻿@page
+@model EShope.Areas.Identity.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "خروج از سیستم";
+    Layout = null;
+}
+
+<div class="container mt-5">
+    <h2>@ViewData["Title"]</h2>
+    <p>آیا مطمئن هستید که می‌خواهید خارج شوید؟</p>
+    <form method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-danger">بله، خروج</button>
+        <a href="/" class="btn btn-secondary">انصراف</a>
+    </form>
+</div>

@@ -26,9 +26,9 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GeyAll()
+        public async Task<IActionResult> GeyAll(string? sellerId)
         {
-            var items = await _shopService.GetAllAsync();
+            var items = await _shopService.GetAllAsync(sellerId);
             return Ok(items);
         }
 

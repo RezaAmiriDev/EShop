@@ -72,6 +72,11 @@ namespace ServiceLayer.Services
                     query = query.Where(p => p.Name!.Contains(filterDto.Name));
                 }
 
+                if (!string.IsNullOrEmpty(filterDto.SellerId))
+                {
+                    query = query.Where(p => p.Shop != null && p.Shop.SellerId == filterDto.SellerId);
+                }
+
                 var Total = await query.CountAsync();
                 var list = await query.Skip(pagedResponse.StartIndex)
                     .Take(pagedResponse.PageSize).Select(p => new ProductDto
@@ -146,9 +151,9 @@ namespace ServiceLayer.Services
 
                 _mapper.Map(dto, existing);
 
-                var res = await _productRepository.UpdateAsync(existing , ct);
+                var result = await _productRepository.UpdateAsync(existing , ct);
 
-                return new ServiceResult(ResponseStatus.ServerError, "خطا در به‌روزرسانی محصول");
+                return result;
             }
             catch(Exception ex)
             {

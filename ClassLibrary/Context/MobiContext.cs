@@ -28,11 +28,11 @@ namespace ClassLibrary.Models
         {
             base.OnModelCreating(modelBuilder);
 
-            var admin = new IdentityRole("admin") { NormalizedName = "ADMIN" };
+            var admin = new IdentityRole("admin") {Id = "1", NormalizedName = "ADMIN" };
 
-            var client = new IdentityRole("client") { NormalizedName = "CLIENT" };
+            var client = new IdentityRole("client") {Id = "2", NormalizedName = "CLIENT" };
 
-            var seller = new IdentityRole("seller") { NormalizedName = "SELLER" };
+            var seller = new IdentityRole("seller") {Id = "3", NormalizedName = "SELLER" };
 
             modelBuilder.Entity<IdentityRole>().HasData(admin,client, seller);
 
@@ -48,6 +48,12 @@ namespace ClassLibrary.Models
                 .WithMany(a => a.Customers) // یک آدرس به چند مشتری
                 .HasForeignKey(c => c.AddressId) // تنظیم ForeignKey
                 .OnDelete(DeleteBehavior.NoAction);  // تنظیم رفتار حذف اختیاری
+
+            modelBuilder.Entity<Shop>()
+                .HasOne(s => s.Owner)
+                .WithMany()
+                .HasForeignKey(s => s.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // تعریف رابطه بین Seller و Product
             modelBuilder.Entity<Product>()

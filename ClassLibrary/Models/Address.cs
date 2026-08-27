@@ -9,12 +9,12 @@ namespace ClassLibrary
 
         [Required(ErrorMessage = "شهر الزامی است")]
         [Display(Name = "City")]
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? City { get; set; }
 
         [Required(ErrorMessage = "استان الزامی است")]
         [Display(Name = "State")]
-        [MaxLength(20)]
+        [MaxLength(100)]
         public string? State { get; set; }
 
         [Required(ErrorMessage = "شماره تماس الزامی است")]
@@ -24,7 +24,7 @@ namespace ClassLibrary
 
         [Required(ErrorMessage = "آدرس الزامی است")]
         [Display(Name = "Adress Detail")]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string? AdressDetail { get; set; }
 
         public ICollection<Customer>? Customers { get; set; } // One-to-Many

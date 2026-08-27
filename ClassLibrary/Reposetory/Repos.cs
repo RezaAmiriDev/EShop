@@ -41,14 +41,13 @@ namespace ModelLayer.Reposetotry
         {
             try
             {
-                Guid newId = Guid.NewGuid();
                 var prop = entity.GetType().GetProperty("Id");
-                if (prop != null)
+                if (prop != null && prop.PropertyType == typeof(Guid))
                 {
-                    var typeId = prop.PropertyType.Name;
-                    if(typeId == "Guid")
+                    var currentValue = (Guid)prop.GetValue(entity)!;
+                    if(currentValue == Guid.Empty)
                     {
-                        prop.SetValue(entity, newId);
+                        prop.SetValue(entity, Guid.NewGuid());
                     }
                 }
                 await Entities.AddAsync(entity , token);
@@ -57,18 +56,12 @@ namespace ModelLayer.Reposetotry
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine("Repo AddAsync error: " + ex.Message);
-                    return new ServiceResult(ResponseStatus.BadRequest, null);
-                }
-                else
-                {
-                    Console.WriteLine("Repo AddAsync error: " + ex.Message);
-                    return new ServiceResult(ResponseStatus.ServerError, null);
-                }
+                var detail = ex.InnerException?.Message ?? ex.Message;
+                Console.WriteLine("Repo AddAsync error: " + detail);
+                return new ServiceResult(ResponseStatus.BadRequest, detail);
             }
         }
+
         public virtual async Task<ServiceResult> AddRangeAsync(IEnumerable<TEntity> entities , CancellationToken token = default)
         {
             try
@@ -146,18 +139,29 @@ namespace ModelLayer.Reposetotry
 
         //موجودیت (entity) را به DbSet اضافه می‌کند (AddAsync).
         // با SaveChangesAsync تغییرات را در پایگاه داده ذخیره می‌کند.
-        public virtual async Task<TEntity> InsertAndReturnAsync(TEntity entity , CancellationToken token = default)
+        public virtual async Task<TEntity> InsertAndReturnAsync(TEntity entity, CancellationToken token = default)
         {
             try
             {
-                await Entities.AddAsync(entity);
+                var prop = entity.GetType().GetProperty("Id");
+                if (prop != null && prop.PropertyType == typeof(Guid))
+                {
+                    var currentValue = (Guid)prop.GetValue(entity)!;
+                    if (currentValue == Guid.Empty)
+                    {
+                        prop.SetValue(entity, Guid.NewGuid());
+                    }
+                }
+
+                await Entities.AddAsync(entity, token);
                 await _mobiContext.SaveChangesAsync(token);
                 return entity;
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException dbEx)
             {
-                // لاگ کن
-                // _logger?.LogError(dbEx, "Insert failed");
+                var detail = dbEx.InnerException?.Message ?? dbEx.Message;
+                Console.WriteLine("Repo InsertAndReturnAsync error: " + detail);
+                // بهتره ILogger تزریق کنی به‌جای Console.WriteLine
                 return null!;
             }
             catch (Exception)
@@ -165,6 +169,25 @@ namespace ModelLayer.Reposetotry
                 throw;
             }
         }
+        //public virtual async Task<TEntity> InsertAndReturnAsync(TEntity entity , CancellationToken token = default)
+        //{
+        //    try
+        //    {
+        //        await Entities.AddAsync(entity);
+        //        await _mobiContext.SaveChangesAsync(token);
+        //        return entity;
+        //    }
+        //    catch (DbUpdateException)
+        //    {
+        //        // لاگ کن
+        //        // _logger?.LogError(dbEx, "Insert failed");
+        //        return null!;
+        //    }
+        //    catch (Exception)
+        //    {
+        //        throw;
+        //    }
+        //}
 
     }
 }

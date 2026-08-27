@@ -19,8 +19,8 @@ namespace ModelLayer.Models
 
         public decimal Price { get; set; }
 
-        public Cart Cart { get; set; }
+        public Cart? Cart { get; set; }
 
-        public Product Product { get; set; }
+        public Product? Product { get; set; }
     }
 }

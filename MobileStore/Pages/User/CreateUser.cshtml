@@ -1,0 +1,70 @@
+﻿@page
+@model EShope.Pages.User.CreateUserModel
+@{
+    ViewData["Title"] = "ایجاد کاربر جدید";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-plus"></i> ایجاد کاربر جدید</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+                        <!-- نام کاربری -->
+                        <div class="mb-3">
+                            <label asp-for="Dto.UserName" class="form-label fw-bold"></label>
+                            <input asp-for="Dto.UserName" class="form-control" placeholder="نام کاربری را وارد کنید" />
+                            <span asp-validation-for="Dto.UserName" class="text-danger"></span>
+                        </div>
+
+                        <!-- ایمیل -->
+                        <div class="mb-3">
+                            <label asp-for="Dto.Email" class="form-label fw-bold"></label>
+                            <input asp-for="Dto.Email" class="form-control" placeholder="ایمیل را وارد کنید" />
+                            <span asp-validation-for="Dto.Email" class="text-danger"></span>
+                        </div>
+
+                        <!-- رمز عبور -->
+                        <div class="mb-3">
+                            <label asp-for="Dto.Password" class="form-label fw-bold"></label>
+                            <input asp-for="Dto.Password" type="password" class="form-control" placeholder="رمز عبور (حداقل ۶ کاراکتر)" />
+                            <span asp-validation-for="Dto.Password" class="text-danger"></span>
+                            <div class="form-text">رمز عبور باید حداقل ۶ کاراکتر باشد.</div>
+                        </div>
+
+                        <!-- نقش -->
+                        <div class="mb-3">
+                            <label asp-for="Dto.Role" class="form-label fw-bold"></label>
+                            <select asp-for="Dto.Role" class="form-select">
+                                <option value="">-- انتخاب نقش --</option>
+                                <option value="admin">ادمین</option>
+                                <option value="seller">فروشنده</option>
+                                <option value="client">مشتری</option>
+                            </select>
+                            <span asp-validation-for="Dto.Role" class="text-danger"></span>
+                        </div>
+
+                        <!-- دکمه‌ها -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> ایجاد
+                            </button>
+                            <a asp-page="UserIndex" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> بازگشت
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ModelLayer.ViewModel;
 using System.Text.Json;
+using EShope.Helpers;
 
 namespace EShope.Pages.Home
 {
@@ -13,6 +14,7 @@ namespace EShope.Pages.Home
 
         public List<ProductCardDto> Products { get; set; } = new();
         public List<SliderImageDto> Sliders { get; set; } = new();
+        public int CartCount { get; set; }
 
         public HomePage(IHttpClientFactory client, SettingWeb settingWeb, ILogger<IndexModel> logger)
         {
@@ -59,6 +61,15 @@ namespace EShope.Pages.Home
                 {
                     if (!string.IsNullOrWhiteSpace(s.ImagePath) && !s.ImagePath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                         s.ImagePath = $"{baseUrl}/{s.ImagePath.TrimStart('/')}";
+                }
+
+                var userId = CartIdentityHelper.GetOrCreateCustomerId(HttpContext, User); 
+                var countResp = await client.GetAsync($"api/cart/count?userId={Uri.EscapeDataString(userId)}");
+                if (countResp.IsSuccessStatusCode)
+                {
+                    var json = await countResp.Content.ReadFromJsonAsync<JsonElement>();
+                    if (json.TryGetProperty("data", out var dataEl))
+                        CartCount = dataEl.GetInt32();
                 }
             }
             catch (Exception ex)

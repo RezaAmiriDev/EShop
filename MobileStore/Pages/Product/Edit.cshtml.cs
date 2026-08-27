@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using ModelLayer.ViewModel;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace EShope.Pages.Product
@@ -21,8 +22,6 @@ namespace EShope.Pages.Product
             _settingWeb = options.Value;
         }
 
-
-
         [BindProperty]
         public ProductDto UpdateDto { get; set; } = new();
         public List<SelectListItem> ShopList { get; set; }
@@ -30,6 +29,9 @@ namespace EShope.Pages.Product
         public async Task<IActionResult> OnGet(Guid id, CancellationToken ct)
         {
             var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("admin");
+
             // 1. دریافت فروشگاه 
             var shopResponse = await client.GetAsync($"/api/Shop", ct);
             if (shopResponse.IsSuccessStatusCode)
@@ -57,7 +59,18 @@ namespace EShope.Pages.Product
             });
             if (dto == null) return RedirectToPage("/Product/Index");
 
+            if (!isAdmin)
+            {
+                var shopResp = await client.GetAsync($"/api/shop/{dto.ShopId}", ct);
+                if (!shopResp.IsSuccessStatusCode) return Forbid();
+                var shop = await shopResp.Content.ReadFromJsonAsync<ShopDto>(cancellationToken: ct);
+                if (shop == null || shop.SellerId != userId) return Forbid();
+            }
+
             UpdateDto = dto;
+            // 2. دریافت لیست فروشگاه (فیلترشده)
+            var shopUrl = isAdmin ? "/api/Shop" : $"/api/Shop?sellerId={Uri.EscapeDataString(userId!)}";
+            var shopListResp = await client.GetAsync(shopUrl, ct);
             return Page();
         }
 
@@ -65,6 +78,20 @@ namespace EShope.Pages.Product
         {
             if (!ModelState.IsValid) return Page();
             var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+            var existing = await client.GetFromJsonAsync<ShopDto>($"api/Product/{UpdateDto.Id}");
+            if (existing == null)
+            {
+                ModelState.AddModelError(string.Empty, "فروشگاه یافت نشد.");
+                return Page();
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("admin");
+            if (!isAdmin && existing.SellerId != userId)
+            {
+                return Forbid();
+            }
+
 
             using var content = new MultipartFormDataContent();
             content.Add(new StringContent(UpdateDto.Id.ToString()) , "Id");

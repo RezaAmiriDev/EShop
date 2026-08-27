@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ModelLayer.ViewModel;
+using System.Security.Claims;
 
 namespace EShope.Pages.Shop
 {
@@ -15,17 +16,16 @@ namespace EShope.Pages.Shop
         }
 
         [BindProperty]
-        public ShopDto Seller { get; set; } = new ShopDto();
+        public ShopDto Dtos { get; set; } = new ShopDto();
 
         [TempData]
         public string? Message { get; set; }
 
         public async Task<IActionResult> OnGetAsync(Guid id)
-        {
-            var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+        {           
             try
             {
-
+                var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
                 var dto = await client.GetFromJsonAsync<ShopDto>($"api/Shop/{id}");
                 if (dto == null)
                 {
@@ -33,7 +33,11 @@ namespace EShope.Pages.Shop
                     return RedirectToPage("./Index");
                 }
 
-                Seller = dto;
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var isAdmin = User.IsInRole("admin");
+                if (!isAdmin && dto.SellerId != userId) return Forbid();
+
+                Dtos = dto;
                 return Page();
             }
             catch (HttpRequestException ex)
@@ -53,26 +57,41 @@ namespace EShope.Pages.Shop
         {
             if (!ModelState.IsValid) return Page();
 
-            if (Seller.Id == null || Seller.Id == Guid.Empty)
+            if (Dtos.Id == null || Dtos.Id == Guid.Empty)
             {
                 ModelState.AddModelError(string.Empty, "شناسه فروشنده معتبر نیست.");
                 return Page();
             }
             var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+
+            var existing = await client.GetFromJsonAsync<ShopDto>($"api/shop/{Dtos.Id}");
+            if (existing == null)
+            {
+                ModelState.AddModelError(string.Empty, "فروشگاه یافت نشد.");
+                return Page();
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("admin");
+            if (!isAdmin && existing.SellerId != userId)
+            {
+                return Forbid();
+            }
+
             try
             {
                 using var form = new MultipartFormDataContent();
 
-                if (Seller.Avatar != null && Seller.Avatar.Length > 0)
+                if (Dtos.Avatar != null && Dtos.Avatar.Length > 0)
                 {
                     using var ms = new MemoryStream();
-                    await Seller.Avatar.CopyToAsync(ms);
+                    await Dtos.Avatar.CopyToAsync(ms);
                     var bytes = ms.ToArray();
                     //ms.Position = 0;
                     var fileContent = new ByteArrayContent(bytes);
                     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
-                        Seller.Avatar.ContentType ?? "application/octet-stream");
-                    form.Add(fileContent, "Avatar", Seller.Avatar.FileName);
+                        Dtos.Avatar.ContentType ?? "application/octet-stream");
+                    form.Add(fileContent, "Avatar", Dtos.Avatar.FileName);
                 }
                 void AddString(string name, string? value)
                 {
@@ -80,26 +99,26 @@ namespace EShope.Pages.Shop
                         form.Add(new StringContent(value), name);
                 }
 
-                AddString("Id", Seller.Id.Value.ToString());
-                AddString("ShopName", Seller.ShopName);
-                AddString("Description", Seller.Description);
-                AddString("ShopCode", Seller.ShopCode);
-                AddString("ImagePath", Seller.ImagePath ?? ""); // در صورت نیاز
+                AddString("Id", Dtos.Id.Value.ToString());
+                AddString("ShopName", Dtos.ShopName);
+                AddString("Description", Dtos.Description);
+                AddString("ShopCode", Dtos.ShopCode);
+                AddString("ImagePath", Dtos.ImagePath ?? ""); // در صورت نیاز
 
                 // AddressDto فیلدها با نام AddressDto.PropertyName
-                if (Seller.AddressDto != null)
+                if (Dtos.AddressDto != null)
                 {
                     //if (Seller.AddressDto.Id.HasValue)
                     //    AddString("AddressId", Seller.AddressDto.Id.Value.ToString());
-                    AddString("AddressDto.Id", Seller.AddressDto.Id?.ToString());
-                    AddString("AddressDto.City", Seller.AddressDto.City);
-                    AddString("AddressDto.State", Seller.AddressDto.State);
-                    AddString("AddressDto.Tellphone", Seller.AddressDto.Tellphone);
-                    AddString("AddressDto.AdressDetail", Seller.AddressDto.AdressDetail);
+                    AddString("AddressDto.Id", Dtos.AddressDto.Id?.ToString());
+                    AddString("AddressDto.City", Dtos.AddressDto.City);
+                    AddString("AddressDto.State", Dtos.AddressDto.State);
+                    AddString("AddressDto.Tellphone", Dtos.AddressDto.Tellphone);
+                    AddString("AddressDto.AdressDetail", Dtos.AddressDto.AdressDetail);
                 }
 
                 // ارسال PUT (بعضی سرورها با PUT+multipart مشکلی ندارند، اگر داشتین از POST مسیر جدا استفاده کنین)
-                var requestUri = $"api/shop/{Seller.Id}";
+                var requestUri = $"api/shop/{Dtos.Id}";
                 var request = new HttpRequestMessage(HttpMethod.Put, requestUri) { Content = form };
                 var resp = await client.SendAsync(request);
 

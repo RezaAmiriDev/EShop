@@ -1,0 +1,76 @@
+﻿@page
+@model EShope.Pages.User.EditUserModel
+@{
+    ViewData["Title"] = "ویرایش کاربر";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-gear"></i> ویرایش کاربر</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <input type="hidden" asp-for="Dto.Id" />
+
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+                        <!-- نام کاربری -->
+                        <div class="mb-3">
+                            <label asp-for="Dto.UserName" class="form-label fw-bold"></label>
+                            <input asp-for="Dto.UserName" class="form-control" placeholder="نام کاربری را وارد کنید" />
+                            <span asp-validation-for="Dto.UserName" class="text-danger"></span>
+                        </div>
+
+                        <!-- ایمیل -->
+                        <div class="mb-3">
+                            <label asp-for="Dto.Email" class="form-label fw-bold"></label>
+                            <input asp-for="Dto.Email" class="form-control" placeholder="ایمیل را وارد کنید" />
+                            <span asp-validation-for="Dto.Email" class="text-danger"></span>
+                        </div>
+
+                        <!-- رمز عبور (اختیاری) -->
+                        <div class="mb-3">
+                            <label asp-for="Dto.Password" class="form-label fw-bold"></label>
+                            <input asp-for="Dto.Password" type="password" class="form-control" placeholder="برای تغییر رمز عبور، مقدار جدید وارد کنید" />
+                            <span asp-validation-for="Dto.Password" class="text-danger"></span>
+                            <div class="form-text">برای عدم تغییر، این فیلد را خالی بگذارید.</div>
+                        </div>
+
+                        <!-- نقش -->
+                        <div class="mb-3">
+                            <label asp-for="Dto.Role" class="form-label fw-bold"></label>
+                            <select asp-for="Dto.Role" class="form-select">
+                                <option value="">-- انتخاب نقش --</option>
+                                <option value="admin">ادمین</option>
+                                <option value="seller">فروشنده</option>
+                                <option value="client">مشتری</option>
+                            </select>
+                            <span asp-validation-for="Dto.Role" class="text-danger"></span>
+                            @if (!string.IsNullOrEmpty(Model.Dto.Role))
+                            {
+                                <div class="form-text">نقش فعلی: <span class="badge bg-info">@Model.Dto.Role</span></div>
+                            }
+                        </div>
+
+                        <!-- دکمه‌ها -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> ذخیره تغییرات
+                            </button>
+                            <a asp-page="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> بازگشت
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

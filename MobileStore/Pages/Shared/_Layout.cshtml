@@ -20,90 +20,107 @@
 </head>
 <body>
     <div class="container">
-        <nav class="sidebar close">
-            <header>
-                <div class="image-text">
-                    <span class="image">
-                        <img src="~/Images/pngegg.png" alt="">
-                    </span>
-                    <div class="text logo-text">
-                        <span class="name">@ViewBag.Username</span>
-                        <span class="profession">Web developer</span>
+        @if (User.IsInRole("admin") || User.IsInRole("seller"))
+        {
+            <nav class="sidebar close">
+                <header>
+                    <div class="image-text">
+                        <span class="image">
+                            <img src="~/Images/pngegg.png" alt="">
+                        </span>
+                        <div class="text logo-text">
+                            <span class="name">@ViewBag.Username</span>
+                            <span class="profession">Web developer</span>
+                        </div>
+                    </div>
+                    <i class='bx bx-chevron-right toggle'></i>
+                </header>
+                <div class="menu-bar">
+                    <div class="menu">
+                        <ul style="list-style:none ; margin:0 ; padding: 0;">
+
+                            <li class="search-box">
+                                <a href="/">
+                                    <i class='bx bx-globe icon'></i>
+                                    <span class="text nav-text">Web Site</span>
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("admin") || User.IsInRole("seller"))
+                            {
+                                <li class="search-box">
+                                    <a href="/Dashboard/Index">
+                                        <i class='bx bx-bar-chart-alt-2 icon'></i>
+                                        <span class="text nav-text">Revenue</span>
+                                    </a>
+                                </li>
+                                <li class="search-box">
+                                    <a href="/Shop/Index">
+                                        <i class='bx bx-store icon'></i>
+                                        <span class="text nav-text">Shops</span>
+                                    </a>
+                                </li>
+
+                                <li class="search-box">
+                                    <a href="/Product/Index">
+                                        <i class='bx bx-wallet icon'></i>
+                                        <span class="text nav-text">Product</span>
+                                    </a>
+                                </li>
+
+                                <li class="search-box">
+                                    <a href="/Order/Index">
+                                        <i class='bx bx-pie-chart-alt icon'></i>
+                                        <span class="text nav-text">Analytics</span>
+                                    </a>
+                                </li>
+
+
+                                <li class="search-box">
+                                    <a href="/Order/Index">
+                                        <i class='bx bx-community icon'></i>
+                                        <span class="text nav-text">Users</span>
+                                    </a>
+                                </li>
+                            }
+
+                            @if (User.IsInRole("admin"))
+                            {
+                                <li class="search-box">
+                                    <a href="/SliderImage/Index">
+                                        <i class='bx bx-slider-alt icon'></i>
+                                        <span class="text nav-text">Dashboard</span>
+                                    </a>
+                                </li>
+
+                                <li class="search-box">
+                                    <a href="/Customer/Index">
+                                        <i class='bx bx-user icon'></i>
+                                        <span class="text nav-text">Customer</span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="bottom-content">
+                        <ul style="list-style:none ; margin:0 ; padding:0">
+                            <li class="mode">
+
+                                <div class="sun-moon">
+                                    <i class='bx bx-moon icon moon'></i>
+                                    <i class='bx bx-sun icon sun'></i>
+                                </div>
+
+                                <span class="mode-text text">Dark mode</span>
+                                <div class="toggle-switch">
+                                    <span class="switch"></span>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
                 </div>
-                <i class='bx bx-chevron-right toggle'></i>
-            </header>
-            <div class="menu-bar">
-                <div class="menu">
-                    <ul style="list-style:none ; margin:0 ; padding: 0;">
-                        <li class="search-box">
-                            <a href="/Home/HomePage">
-                                <i class='bx bx-globe icon'></i>
-                                <span class="text nav-text">Web Site</span>
-                            </a>
-                        </li>
-
-                        <li class="search-box">
-                            <a href="/SliderImage/Index">
-                                <i class='bx bx-slider-alt icon'></i>
-                                <span class="text nav-text">Dashboard</span>
-                            </a>
-                        </li>
-
-                        <li class="search-box">
-                            <a href="/Dashboard/Index">
-                                <i class='bx bx-bar-chart-alt-2 icon'></i>
-                                <span class="text nav-text">Revenue</span>
-                            </a>
-                        </li>
-
-                        <li class="search-box">
-                            <a href="/Customer/Index">
-                                <i class='bx bx-user icon'></i>
-                                <span class="text nav-text">Customer</span>
-                            </a>
-                        </li>
-
-                        <li class="search-box">
-                            <a href="/Order/Index">
-                                <i class='bx bx-pie-chart-alt icon'></i>
-                                <span class="text nav-text">Analytics</span>
-                            </a>
-                        </li>
-
-                        <li class="search-box">
-                            <a href="/Shop/Index">
-                                <i class='bx bx-store icon'></i>
-                                <span class="text nav-text">Shops</span>
-                            </a>
-                        </li>
-
-                        <li class="search-box">
-                            <a href="/Product/Index">
-                                <i class='bx bx-wallet icon'></i>
-                                <span class="text nav-text">Product</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="bottom-content">
-                    <ul style="list-style:none ; margin:0 ; padding:0">
-                       <li class="mode">
-
-                         <div class="sun-moon">
-                           <i class='bx bx-moon icon moon'></i>
-                           <i class='bx bx-sun icon sun'></i>
-                         </div>
-
-                         <span class="mode-text text">Dark mode</span>
-                         <div class="toggle-switch">
-                           <span class="switch"></span>
-                         </div>
-                       </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
+            </nav>
+        }
     </div>
 
     <div class="container">

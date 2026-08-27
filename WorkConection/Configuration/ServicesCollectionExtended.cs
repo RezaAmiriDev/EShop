@@ -23,6 +23,7 @@ namespace WebFrameWork.Configuration
             services.AddScoped<ISliderRepository,  SliderRepo>();
             services.AddScoped<IRatingRepository, RatingRepo>();
             services.AddScoped<ICartRepository, CartRepository>();
+            services.AddScoped<IUserService, UserService>();
 
             services.AddScoped<CustomerService>();
             services.AddScoped<ProductService>();
@@ -33,6 +34,7 @@ namespace WebFrameWork.Configuration
             services.AddScoped<SliderService>();
             services.AddScoped<HomeService>();
             services.AddScoped<CartService>();
+            services.AddScoped<UserService>();
 
         }
         //public static void RegisterJwtService(this IServiceCollection services, SecuritySetting _siteSetting)

@@ -34,7 +34,6 @@ namespace WebFrameWork.Mapper
                 .ForMember(d => d.Id, o => o.Ignore())
                 .ForMember(d => d.DateOfOperation, o => o.Ignore())
                 .ForMember(d => d.Orders, o => o.Ignore())
-                .ForMember(d => d.customers, o => o.Ignore())
                 .ForMember(d => d.Shop, o => o.Ignore())
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
@@ -47,7 +46,7 @@ namespace WebFrameWork.Mapper
             // ShopDto -> Shop (برای Create/Update)
             CreateMap<ShopDto, Shop>()
                 // Id را فقط درصورتی که DTO شامل Id معتبر است نگاشت کن (تا در آپدیت Id موجود حفظ شود)
-                .ForMember(d => d.Id, opt => opt.Condition((src, dest, srcMember) => srcMember != null && srcMember != Guid.Empty))
+                .ForMember(d => d.Id, opt => opt.Condition((src, dest, srcMember) => srcMember != Guid.Empty))
                 .ForMember(d => d.Address, opt => opt.MapFrom(s => s.AddressDto))
                 .ForMember(d => d.ImagePath, opt => opt.MapFrom(s => s.ImagePath))
                 .ForMember(d => d.products, opt => opt.Ignore())

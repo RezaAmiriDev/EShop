@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ModelLayer.ViewModel;
+using System.Security.Claims;
 using System.Text.Json;
 
 
@@ -40,6 +41,10 @@ namespace EShope.Pages.Product
 
         public async Task OnGetAsync(CancellationToken ct)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("admin");
+            var sellerFilter = isAdmin ? null : userId;
+
             PageNumber = PageNumber <= 0 ? 1 : PageNumber;
             PageSize = PageSize <= 0 ? 1 : PageSize;
             SearchTerm = string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm.Trim();
@@ -52,8 +57,8 @@ namespace EShope.Pages.Product
                 Data = new ProductDto
                 {
                     Brand = SearchTerm,
-                  //  Name = SearchTerm,
                     ProductCode = SearchTerm,
+                    SellerId = sellerFilter
                 }
             };
 

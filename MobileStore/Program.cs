@@ -1,9 +1,10 @@
-﻿using WebFrameWork.Configuration;
+﻿using DataLayer.Hellper;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
-using DataLayer.Hellper;
 using System.Net.Http.Headers;
+using WebFrameWork.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,6 @@ builder.Services.Configure<SettingWeb>(builder.Configuration.GetSection("Setting
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<SettingWeb>>().Value);
 
 // --- Services ---
-builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDistributedMemoryCache();
@@ -61,8 +61,27 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(option =>
+{
+    option.AddPolicy("AdminOnly", policy => policy.RequireRole("admin"));
+    option.AddPolicy("SellerOnly", policy => policy.RequireRole("seller", "admin"));
+    option.AddPolicy("ClientOnly", policy => policy.RequireRole("client","seller", "admin")); 
+});
 
+builder.Services.AddRazorPages(option =>
+{
+    option.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
+    option.Conventions.AuthorizeFolder("/Customer", "AdminOnly");
+    option.Conventions.AuthorizeFolder("/Dashboard", "SellerOnly");
+    option.Conventions.AuthorizeFolder("/Order", "SellerOnly");
+    option.Conventions.AuthorizeFolder("/Product", "SellerOnly");
+    option.Conventions.AuthorizeFolder("/Shop", "SellerOnly");
+    option.Conventions.AuthorizeFolder("/SliderImage", "AdminOnly");
+
+    // این‌ها باید برای همه (حتی مهمان) باز بمونن
+    option.Conventions.AllowAnonymousToPage("/Home/HomePage");
+    option.Conventions.AllowAnonymousToPage("/Cart/Cart");
+});
 
 var app = builder.Build();
 
@@ -93,19 +112,14 @@ app.UseAuthorization();
 // Map Razor Pages first or along with controllers:
 app.MapRazorPages();
 
-//app.MapControllerRoute(
-//    name: "default",
-//    pattern: "{controller=Customer}/{action=IndexModel}/{id?}");
-
 // Map area controller route (اختیاری، فقط در صورت وجود controller در Area)
 app.MapControllerRoute(
     name: "area",
     pattern: "{area:exists}/{controller=Account}/{action=Login}/{id?}");
 
-//// Root را به صفحهٔ لاگین هدایت می‌کنیم (تا کاربر اول لاگین ببیند)
-//app.MapGet("/", () => Results.Redirect("/Identity/Account/Login"));
+app.MapGet("/", () => Results.LocalRedirect("~/Home/HomePage")); // 
 
 // keep root to Login so user first sees login page:
-app.MapGet("/", () => Results.Redirect("/Identity/Account/Login"));
+//app.MapGet("/", () => Results.Redirect("/Identity/Account/Login"));
 
 app.Run();

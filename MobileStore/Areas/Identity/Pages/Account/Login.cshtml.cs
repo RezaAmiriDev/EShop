@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using DataLayer.Hellper;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ModelLayer.ViewModel;
-using System.Net.Http.Headers;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.Json;
+
 
 namespace EShope.Areas.Identity.Pages.Account
 {
@@ -26,7 +28,7 @@ namespace EShope.Areas.Identity.Pages.Account
 
         public void OnGet(string returnUrl = null!)
         {
-            ReturnUrl = returnUrl ?? Url.Content("~/Customer");
+            ReturnUrl = returnUrl ?? Url.Content("~/Home/HomePage");
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -44,36 +46,51 @@ namespace EShope.Areas.Identity.Pages.Account
                 _logger.LogInformation("HttpClient.BaseAddress = {BaseAddress}, SettingWeb.BaseAddress = {SettingBase}", client.BaseAddress, _settingWeb.BaseAddress);
 
                 // try/catch around the HTTP call to log details
-                HttpResponseMessage respon;
+                HttpResponseMessage response;
                 try
                 {
-                    respon = await client.PostAsJsonAsync("api/Account/Login", Input);
+                    // ارسال POST به API
+                    response = await client.PostAsJsonAsync("api/Account/Login", Input);
                 }
                 catch (HttpRequestException httpEx)
                 {
                     _logger.LogError(httpEx, "HttpRequestException calling API Login (Base: {Base})", client.BaseAddress);
                     ErrorMessage = "خطا در ارتباط با سرویس اعتبارسنجی: " + httpEx.Message;
-                    if (httpEx.InnerException != null) _logger.LogError(httpEx.InnerException, "InnerException");
-                    return Page();
-                }
-                catch (Exception exHttp)
-                {
-                    _logger.LogError(exHttp, "Unexpected exception when calling API Login");
-                    ErrorMessage = "خطا در تماس با سرویس: " + exHttp.Message;
                     return Page();
                 }
 
-                // now we have a response object
-                _logger.LogInformation("Login API returned {StatusCode}", respon.StatusCode);
-
-                // ارسال POST به API
-                var response = await client.PostAsJsonAsync("api/Account/Login", Input);
+               
+                var content = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    // گزینه: خواندن پیام خطا از بدنه
-                    var err = await response.Content.ReadAsStringAsync();
-                    ErrorMessage = "خطا در ورود: " + (string.IsNullOrWhiteSpace(err) ? response.ReasonPhrase : err);
+                    try
+                    {
+                        var errorObj = JsonSerializer.Deserialize<Dictionary<string, object>>(content);
+                        if(errorObj != null)
+                        {
+                            if(errorObj.TryGetValue("isLockedOut", out var locked) && locked is true)
+                            {
+                                ErrorMessage = errorObj.GetValueOrDefault("message")?.ToString() ?? "حساب کاربری شما قفل شده است.";
+                                return Page();
+                            }
+
+                            // نمایش تعداد تلاش‌های باقی‌مانده
+                            if (errorObj.TryGetValue("remainingAttempts", out var remaining))
+                            {
+                                ErrorMessage = errorObj.GetValueOrDefault("message")?.ToString()
+                                               ?? "نام کاربری یا رمز عبور اشتباه است.";
+                                return Page();
+                            }
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger.LogError(ex, "Unhandled error in Login ");
+                        ErrorMessage = $"خطای داخلی رخ داد.{ex.Message}";
+                    }
+
+                    ErrorMessage = string.IsNullOrWhiteSpace(content) ? response.ReasonPhrase : content;
                     return Page();
                 }
 
@@ -96,12 +113,29 @@ namespace EShope.Areas.Identity.Pages.Account
 
                 // Ensure token claim name is not null/empty
                 var tokenClaimName = string.IsNullOrWhiteSpace(_settingWeb.TokenName) ? "access_token" : _settingWeb.TokenName;
+
+                //var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                var payload = JwtHelper.DecodeJwtPayload(loginResp.Token);
                 // 2) ساخت ClaimsPrincipal و ساین-این محلی (Cookie auth)
                 var claims = new List<Claim>
                 {
                   new Claim(ClaimTypes.Name, loginResp.Username ?? Input.Username),
                   new Claim(tokenClaimName, loginResp.Token!)
                 };
+
+                if (payload.TryGetValue(ClaimTypes.Role, out var roleValue))
+                {
+                    if (roleValue.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var r in roleValue.EnumerateArray())
+                            claims.Add(new Claim(ClaimTypes.Role, r.GetString()!));
+                    }
+                    else if (roleValue.ValueKind == JsonValueKind.String)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, roleValue.GetString()!));
+                    }
+                }
+
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
@@ -111,7 +145,7 @@ namespace EShope.Areas.Identity.Pages.Account
                     return LocalRedirect(ReturnUrl);
                 }
 
-                return RedirectToPage("/Customer/Index");
+                return RedirectToPage("/Home/HomePage");
             }
             catch (HttpRequestException ex)
             {

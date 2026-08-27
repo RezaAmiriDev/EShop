@@ -38,7 +38,6 @@ namespace Api.Controllers
             }
         }
 
-
         [HttpGet("count")]
         public async Task<IActionResult> GetCartCount(string userId, CancellationToken token)
         {
@@ -63,15 +62,40 @@ namespace Api.Controllers
         {
             try
             {
-                if(dto.CustomerId == null) return BadRequest("CustomerId is required");
+                if(string.IsNullOrEmpty(dto.CustomerId) || dto.ProductId == null)
+                {
+                    return BadRequest("CustomerId and ProductId are required");
+                }
 
-                var result = await _cartService.AddToCartAsync(dto, token);
+                var customerId = await _cartService.ResolveCustomerIdAsync(dto.CustomerId, User);
+                if(!customerId.HasValue) return BadRequest("Invalid customer identifier");
+
+                var result = await _cartService.AddToCartAsync(customerId.Value, dto.ProductId.Value,dto.Count, token);
                 if(result.Status != ResponseStatus.Success) { return BadRequest(result); }
                 return Ok(result);
             }
             catch(Exception ex) 
             {
                 _logger.LogError(ex, "Error add to cart");
+                return StatusCode(500);
+            }
+        }
+
+        [HttpPut("{userId}/{productId}")]
+        public async Task<IActionResult> UpdateCartItem(string userId, Guid productId, AddToCartDto dto, CancellationToken token)
+        {
+            try
+            {
+                var customerId = await _cartService.ResolveCustomerIdAsync(userId, User);
+                if (!customerId.HasValue) return BadRequest("Invalid user identifier");
+
+                var result = await _cartService.UpdateCartItemAsync(customerId.Value, productId, dto.Count, token);
+                if (result.Status != ResponseStatus.Success) return BadRequest(result);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating cart item");
                 return StatusCode(500);
             }
         }
@@ -101,7 +125,7 @@ namespace Api.Controllers
             try
             {
                 var customerId = await _cartService.ResolveCustomerIdAsync(userId, User);
-                if(customerId.HasValue) return BadRequest("Invalid user identifier");
+                if(!customerId.HasValue) return BadRequest("Invalid user identifier");
 
                 var result = await _cartService.ClearCartAsync(customerId.Value, token);
                 if (result.Status != ResponseStatus.Success) { return BadRequest(result); }

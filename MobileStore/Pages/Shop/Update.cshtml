@@ -10,27 +10,27 @@
     <h3 class="mb-3">ویرایش فروشنده</h3>
 
     <form method="post" class="needs-validation" novalidate enctype="multipart/form-data">
-        <input asp-for="Seller.Id" type="hidden" />
-        <input asp-for="Seller.ImagePath" type="hidden" />
-        <input asp-for="Seller.AddressDto.Id" type="hidden" />
+        <input asp-for="Dtos.Id" type="hidden" />
+        <input asp-for="Dtos.ImagePath" type="hidden" />
+        <input asp-for="Dtos.AddressDto.Id" type="hidden" />
 
 
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label asp-for="Seller.ShopName" class="form-label">نام فروشنده</label>
-                <input asp-for="Seller.ShopName" class="form-control" />
-                <span asp-validation-for="Seller.ShopName" class="text-danger"></span>
+                <label asp-for="Dtos.ShopName" class="form-label">نام فروشنده</label>
+                <input asp-for="Dtos.ShopName" class="form-control" />
+                <span asp-validation-for="Dtos.ShopName" class="text-danger"></span>
             </div>
             <div class="col-md-6 mb-3">
-                <label asp-for="Seller.ShopCode" class="form-label">کد فروشگاه</label>
-                <input asp-for="Seller.ShopCode" class="form-control" />
-                <span asp-validation-for="Seller.ShopCode" class="text-danger"></span>
+                <label asp-for="Dtos.ShopCode" class="form-label">کد فروشگاه</label>
+                <input asp-for="Dtos.ShopCode" class="form-control" />
+                <span asp-validation-for="Dtos.ShopCode" class="text-danger"></span>
             </div>
         </div>
         <div class="mb-3">
-            <label asp-for="Seller.Description" class="form-label">توضیحات</label>
-            <textarea asp-for="Seller.Description" class="form-control" rows="4"></textarea>
-            <span asp-validation-for="Seller.Description" class="text-danger"></span>
+            <label asp-for="Dtos.Description" class="form-label">توضیحات</label>
+            <textarea asp-for="Dtos.Description" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Dtos.Description" class="text-danger"></span>
         </div>
 
  
@@ -38,31 +38,31 @@
         <div class="row">
             <!-- شهر -->
             <div class="col-md-6 mb-3">
-                <label asp-for="Seller.AddressDto.City" class="form-label">شهر</label>
-                <input asp-for="Seller.AddressDto.City" class="form-control" />
-                <span asp-validation-for="Seller.AddressDto.City" class="text-danger"></span>
+                <label asp-for="Dtos.AddressDto.City" class="form-label">شهر</label>
+                <input asp-for="Dtos.AddressDto.City" class="form-control" />
+                <span asp-validation-for="Dtos.AddressDto.City" class="text-danger"></span>
             </div>
             <!-- استان -->
             <div class="col-md-6 mb-3">
-                <label asp-for="Seller.AddressDto.State" class="form-label">استان</label>
-                <input asp-for="Seller.AddressDto.State" class="form-control" />
-                <span asp-validation-for="Seller.AddressDto.State" class="text-danger"></span>
+                <label asp-for="Dtos.AddressDto.State" class="form-label">استان</label>
+                <input asp-for="Dtos.AddressDto.State" class="form-control" />
+                <span asp-validation-for="Dtos.AddressDto.State" class="text-danger"></span>
             </div>
         </div>
 
         <div class="row">
             <!-- تلفن -->
             <div class="col-md-6 mb-3">
-                <label asp-for="Seller.AddressDto.Tellphone" class="form-label">تلفن</label>
-                <input asp-for="Seller.AddressDto.Tellphone" class="form-control" />
-                <span asp-validation-for="Seller.AddressDto.Tellphone" class="text-danger"></span>
+                <label asp-for="Dtos.AddressDto.Tellphone" class="form-label">تلفن</label>
+                <input asp-for="Dtos.AddressDto.Tellphone" class="form-control" />
+                <span asp-validation-for="Dtos.AddressDto.Tellphone" class="text-danger"></span>
             </div>
 
             <!-- آدرس کامل -->
             <div class="col-md-6 mb-3">
-                <label asp-for="Seller.AddressDto.AdressDetail" class="form-label">آدرس کامل</label>
-                <input asp-for="Seller.AddressDto.AdressDetail" class="form-control" />
-                <span asp-validation-for="Seller.AddressDto.AdressDetail" class="text-danger"></span>
+                <label asp-for="Dtos.AddressDto.AdressDetail" class="form-label">آدرس کامل</label>
+                <input asp-for="Dtos.AddressDto.AdressDetail" class="form-control" />
+                <span asp-validation-for="Dtos.AddressDto.AdressDetail" class="text-danger"></span>
             </div>
         </div>
         <!-- بخش آپلود و پیش‌نمایش -->
@@ -71,15 +71,15 @@
 
             <div class="text-center mb-3">
                 <img id="avatarPreview"
-                     src="@Model.Seller.ImagePath"
+                     src="@Model.Dtos.ImagePath"
                      alt="پیش‌نمایش تصویر"
                      class="img-thumbnail rounded shadow-sm"
-                     style="max-width: 220px; display:@(string.IsNullOrEmpty(Model.Seller.ImagePath) ? "none" : "block");" />
+                     style="max-width: 220px; display:@(string.IsNullOrEmpty(Model.Dtos.ImagePath) ? "none" : "block");" />
             </div>
 
             <div class="input-group">
                 <input type="file"
-                       asp-for="Seller.Avatar"
+                       asp-for="Dtos.Avatar"
                        class="form-control"
                        accept=".jpg,.jpeg,.png,.webp"
                        id="avatarInput" />

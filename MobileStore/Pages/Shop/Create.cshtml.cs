@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ModelLayer.ViewModel;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 
 
 namespace EShope.Pages.Shop
@@ -24,12 +25,16 @@ namespace EShope.Pages.Shop
             // مطمئن شوید AddressDto مقداردهی شده است
             Seller.AddressDto ??= new AddressDto();
         }
+      
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid) return BadRequest();
 
-            var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Forbid();
 
+            var client = _httpClientFactory.CreateClient(_settingWeb.ClinetName);
+      
             try
             {
                 using var form = new MultipartFormDataContent();
@@ -44,11 +49,12 @@ namespace EShope.Pages.Shop
                 AddString("Description", Seller.Description);
                 AddString("ShopCode", Seller.ShopCode);
                 AddString("ImagePath", Seller.ImagePath);
-
+                AddString("SellerId", userId);
                 // ===== AddressDto fields =====
                 if (Seller.AddressDto != null)
                 {
                     AddString("AddressDto.Id", Seller.AddressDto.Id?.ToString());
+
                     AddString("AddressDto.City", Seller.AddressDto.City);
                     AddString("AddressDto.State", Seller.AddressDto.State);
                     AddString("AddressDto.Tellphone", Seller.AddressDto.Tellphone);

@@ -35,14 +35,37 @@ namespace Api.Controllers.Account
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user == null) return Unauthorized(new { success = false, message = "Invalid credentials." });
 
-           var result = await _signInManager.CheckPasswordSignInAsync(user , model.Password , lockoutOnFailure: false);
-            if (!result.Succeeded)
+            if(await _userManager.IsLockedOutAsync(user))
             {
+                var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
+                var remainingMinutes = lockoutEnd.HasValue ? Math.Max(0, (lockoutEnd.Value - DateTimeOffset.UtcNow).TotalMinutes) : 0;
+
                 return Unauthorized(new
                 {
                     success = false,
-                    message = "Invalid credentials."
+                    message = $"حساب کاربری شما به دلیل تلاش‌های ناموفق قفل شده است. {Math.Ceiling(remainingMinutes)} دقیقه دیگر مجدداً تلاش کنید.",
+                    isLockOut = true,
+                    lockoutEnd = lockoutEnd?.ToString("yyyy-MM-dd HH:mm:ss")
                 });
+            }
+
+           var result = await _signInManager.CheckPasswordSignInAsync(user , model.Password , lockoutOnFailure: true);
+            if (!result.Succeeded)
+            {
+                if (result.IsLockedOut)
+                {
+                    var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
+                    var remainingMinutes = lockoutEnd.HasValue ? Math.Max(0, (lockoutEnd.Value - DateTimeOffset.UtcNow).TotalMinutes) : 0;
+
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = $"حساب کاربری شما به دلیل تلاش‌های ناموفق قفل شده است. {Math.Ceiling(remainingMinutes)} دقیقه دیگر مجدداً تلاش کنید.",
+                        isLockOut = true,
+                        lockoutEnd = lockoutEnd?.ToString("yyyy-MM-dd HH:mm:ss")
+                    });
+                }
+                return Unauthorized(new { success = false, message = "Invalid credentials." });
             }
 
             // Generate JWT
@@ -53,11 +76,17 @@ namespace Api.Controllers.Account
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
             var creds = new SigningCredentials(key , SecurityAlgorithms.HmacSha256);
 
+            var roles = await _userManager.GetRolesAsync(user);
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name , user.UserName),
+                new Claim(ClaimTypes.Name , user.UserName!),
                 new Claim(ClaimTypes.NameIdentifier , user.Id)
             };
+
+            foreach(var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
@@ -85,15 +114,22 @@ namespace Api.Controllers.Account
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded) return BadRequest(result.Errors);
 
-            //var customer = new Customer
-            //{
-            //    Id = Guid.NewGuid(),
-            //    ApplicationUser = user.Id,
-            //    Name = model.Username,
-            //    Family = "",
-            //};
+            var customer = new Customer
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Name = model.Username,
+                Family = "",
+                Birth = DateTime.Now,
+                NationalCode = "",
+                CreateDate = DateTime.UtcNow,
+                AddressId = null,
+            };
 
-            //await _customer.AddAsync(customer);
+            await _customer.AddAsync(customer, CancellationToken.None);
+
+            // Roles ‌
+            //await _userManager.AddToRoleAsync(user, "Cilent");
 
             // optionally add roles
             return Ok(new { success = true });

@@ -30,21 +30,21 @@ namespace ModelLayer.Migrations
 
                     b.Property<string>("AdressDetail")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("DateOfOperation")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("State")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Tellphone")
                         .IsRequired()
@@ -62,11 +62,10 @@ namespace ModelLayer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AddressId")
+                    b.Property<Guid?>("AddressId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("Birth")
-                        .IsRequired()
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreateDate")
@@ -76,22 +75,16 @@ namespace ModelLayer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Family")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("NationalCode")
-                        .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
-
-                    b.Property<Guid?>("ProductId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
@@ -99,8 +92,6 @@ namespace ModelLayer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AddressId");
-
-                    b.HasIndex("ProductId");
 
                     b.HasIndex("UserId")
                         .IsUnique()
@@ -234,19 +225,19 @@ namespace ModelLayer.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "83be7cbb-dfd0-410d-b997-eac45ab4840c",
+                            Id = "1",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "3069eac0-ec5a-4b2d-889b-1212d919c7a9",
+                            Id = "2",
                             Name = "client",
                             NormalizedName = "CLIENT"
                         },
                         new
                         {
-                            Id = "32fa08f0-bf64-407f-9290-7df2dd68dad3",
+                            Id = "3",
                             Name = "seller",
                             NormalizedName = "SELLER"
                         });
@@ -649,6 +640,10 @@ namespace ModelLayer.Migrations
                     b.Property<int?>("NumberOfproducts")
                         .HasColumnType("int");
 
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("ShopCode")
                         .HasColumnType("nvarchar(max)");
 
@@ -658,6 +653,8 @@ namespace ModelLayer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AddressId");
+
+                    b.HasIndex("SellerId");
 
                     b.ToTable("Shops");
                 });
@@ -696,12 +693,7 @@ namespace ModelLayer.Migrations
                     b.HasOne("ClassLibrary.Address", "Address")
                         .WithMany("Customers")
                         .HasForeignKey("AddressId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("ClassLibrary.Product", null)
-                        .WithMany("customers")
-                        .HasForeignKey("ProductId");
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("ModelLayer.Models.ApplicationUser", "ApplicationUser")
                         .WithOne("Customer")
@@ -864,7 +856,15 @@ namespace ModelLayer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ModelLayer.Models.ApplicationUser", "Owner")
+                        .WithMany()
+                        .HasForeignKey("SellerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Address");
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("ClassLibrary.Address", b =>
@@ -874,8 +874,7 @@ namespace ModelLayer.Migrations
 
             modelBuilder.Entity("ClassLibrary.Customer", b =>
                 {
-                    b.Navigation("Cart")
-                        .IsRequired();
+                    b.Navigation("Cart");
 
                     b.Navigation("Orders");
                 });
@@ -890,8 +889,6 @@ namespace ModelLayer.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("Ratings");
-
-                    b.Navigation("customers");
                 });
 
             modelBuilder.Entity("ModelLayer.Models.ApplicationUser", b =>

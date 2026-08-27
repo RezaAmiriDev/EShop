@@ -1,0 +1,173 @@
+﻿@page
+@model EShope.Pages.Cart.CartModel
+@{
+    Layout = "_Layout";
+}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">
+                🛒 سبد خرید
+            </h2>
+            <small class="text-muted">
+                تعداد کالا:
+                <span class="badge bg-primary rounded-pill">
+                    @Model.Cart.TotalCount
+                </span>
+            </small>
+        </div>
+
+        <a asp-page="/Products/Index" class="btn btn-outline-primary">
+            ← ادامه خرید
+        </a>
+    </div>
+
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success shadow-sm">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger shadow-sm">
+            @TempData["Error"]
+        </div>
+    }
+
+
+    @if (!Model.Cart.Items.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center p-5">
+
+                <div class="display-3 mb-3">
+                    🛒
+                </div>
+
+                <h4 class="mb-3">
+                    سبد خرید شما خالی است
+                </h4>
+
+                <p class="text-muted">
+                    هنوز محصولی به سبد خرید اضافه نکرده‌اید.
+                </p>
+
+                <a asp-page="/Products/Index"
+                   class="btn btn-primary mt-2">
+                    مشاهده محصولات
+                </a>
+
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow">
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th class="text-start">محصول</th>
+                            <th>قیمت</th>
+                            <th>تعداد</th>
+                            <th>جمع</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Cart.Items)
+                        {
+                            <tr>
+
+                                <td>
+                                    <strong>@item.ProductName</strong>
+                                </td>
+                                <td class="text-center">
+                                    @item.Price.ToString("N0")
+                                    <small>تومان</small>
+                                </td>
+                                <td class="text-center">
+                                    <form method="post"
+                                          asp-page-handler="Update"
+                                          class="d-flex justify-content-center gap-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="productId"
+                                               value="@item.ProductId" />
+                                        <input type="number"
+                                               class="form-control form-control-sm"
+                                               style="width:80px"
+                                               name="count"
+                                               value="@item.Count"
+                                               min="1" />
+                                        <button class="btn btn-primary btn-sm">
+                                            بروزرسانی
+                                        </button>
+                                    </form>
+                                </td>
+                                <td class="text-center fw-bold text-success">
+                                    @item.TotalPrice.ToString("N0")
+                                </td>
+                                <td class="text-center">
+                                    <form method="post"
+                                          asp-page-handler="Remove">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="productId"
+                                               value="@item.ProductId" />
+                                        <button class="btn btn-outline-danger btn-sm">
+                                            حذف
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <div class="row mt-4">
+            <div class="col-md-5 ms-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-4">
+                            خلاصه سفارش
+                        </h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>تعداد کالا</span>
+                            <strong>@Model.Cart.TotalCount</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>جمع کل</span>
+                            <strong class="text-success fs-5">
+                                @Model.Cart.TotalPrice.ToString("N0") تومان
+                            </strong>
+                        </div>
+                        <hr />
+                        <div class="d-grid gap-2">
+                            <a asp-page="/Checkout"
+                               class="btn btn-success">
+                                ادامه فرایند خرید
+                            </a>
+                            <form method="post"
+                                  asp-page-handler="Clear">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-outline-danger w-100"
+                                        onclick="return confirm('آیا از پاک کردن سبد خرید مطمئن هستید؟')">
+                                    پاک کردن سبد
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

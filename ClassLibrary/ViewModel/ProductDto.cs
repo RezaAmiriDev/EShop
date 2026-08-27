@@ -16,6 +16,7 @@ namespace ModelLayer.ViewModel
         public decimal? Price { get; set; }
         public string? ShortDescription { get; set; }
         public string? ShopName { get; set; }
+        public string? SellerId { get; set; }
         public Guid ShopId { get; set; }
         [JsonIgnore]
         public IFormFile? ImageFile { get; set; }

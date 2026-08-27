@@ -19,9 +19,9 @@ namespace ModelLayer.ViewModel
         public int DislikesCount { get; set; } = 0;
         public int? NumberOfproducts { get; set; }
         public string? ImagePath { get; set; }
-
         [JsonIgnore]
         public IFormFile? Avatar { get; set; }
+        public string? SellerId { get; set; }
         public AddressDto? AddressDto { get; set; } 
     }
 }
