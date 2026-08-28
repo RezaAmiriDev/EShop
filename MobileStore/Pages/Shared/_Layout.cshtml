@@ -55,6 +55,14 @@
                                         <span class="text nav-text">Revenue</span>
                                     </a>
                                 </li>
+
+                                <li class="search-box">
+                                    <a href="/Order/Index">
+                                        <i class='bx bx-pie-chart-alt icon'></i>
+                                        <span class="text nav-text">Analytics</span>
+                                    </a>
+                                </li>
+
                                 <li class="search-box">
                                     <a href="/Shop/Index">
                                         <i class='bx bx-store icon'></i>
@@ -68,25 +76,17 @@
                                         <span class="text nav-text">Product</span>
                                     </a>
                                 </li>
+                            }
 
-                                <li class="search-box">
-                                    <a href="/Order/Index">
-                                        <i class='bx bx-pie-chart-alt icon'></i>
-                                        <span class="text nav-text">Analytics</span>
-                                    </a>
-                                </li>
-
-
+                            @if (User.IsInRole("admin"))
+                            {
                                 <li class="search-box">
                                     <a href="/User/UserIndex">
                                         <i class='bx bx-user-circle icon'></i>
                                         <span class="text nav-text">Users</span>
                                     </a>
                                 </li>
-                            }
 
-                            @if (User.IsInRole("admin"))
-                            {
                                 <li class="search-box">
                                     <a href="/SliderImage/Index">
                                         <i class='bx bx-slider-alt icon'></i>

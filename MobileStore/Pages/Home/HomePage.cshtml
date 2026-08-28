@@ -71,14 +71,14 @@
 
     <!-- ========= اسلایدر ========= -->
     <div class="row mb-4">
-        <div class="col-lg-9">
+        <div class="col-lg-11">
             <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     @for (int i = 0; i < Model.Sliders.Count; i++)
                     {
                         var s = Model.Sliders[i];
                         <div class="carousel-item @(i == 0 ? "active" : "")">
-                            <img src="@(s.ImagePath ?? "/images/hero1.jpg")" class="d-block w-100 hero-img" alt="اسلاید @i" asp-append-version="true" />
+                            <img src="@(s.ImagePath ?? "/images/hero1.jpg")" class="d-block w-100 hero-img" alt="اسلاید @i" asp-append-version="true" loading="lazy" decoding="async" />
                         </div>
                     }
                 </div>
@@ -92,11 +92,11 @@
                 </button>
             </div>
         </div>
-        <div class="col-lg-3 d-flex flex-column gap-2">
+        <div class="col-lg-1 d-flex flex-column gap-2">
             @for (int i = 0; i < Model.Sliders.Count; i++)
             {
                 var thumb = Model.Sliders[i];
-                <img src="@(thumb.ImagePath ?? "/images/hero1.jpg")" class="thumb-img w-100" data-bs-target="#heroCarousel" data-bs-slide-to="@i" alt="تصویر کوچک @i" asp-append-version="true" />
+                <img src="@(thumb.ImagePath ?? "/images/hero1.jpg")" class="thumb-img w-100" data-bs-target="#heroCarousel" data-bs-slide-to="@i" alt="تصویر کوچک @i" asp-append-version="true" loading="lazy" decoding="async" />
             }
         </div>
     </div>
@@ -126,16 +126,16 @@
             @{
                 var features = new[]
                 {
-                        new { Icon = "bi-tags", Title = "تخفیف شگفت‌انگیز", Desc = "تا ۵۰٪ تخفیف برای اولین خرید", Link = "#" },
-                        new { Icon = "bi-clock-history", Title = "ارسال فوری", Desc = "تحویل درب منزل کمتر از ۲۴ ساعت", Link = "#" },
-                        new { Icon = "bi-gift", Title = "هدیه ویژه", Desc = "به ازای هر خرید یک جایزه نقدی", Link = "#" },
-                        new { Icon = "bi-shield-check", Title = "ضمانت اصالت", Desc = "بازگشت وجه تا ۷ روز", Link = "#" }
+                        new { Icon = "bi-tags", Title = "تخفیف شگفت‌انگیز", Desc = "تا ۵۰٪ تخفیف برای اولین خرید", Link = "#", Class = "feature-gold" },
+                        new { Icon = "bi-clock-history", Title = "ارسال فوری", Desc = "تحویل درب منزل کمتر از ۲۴ ساعت", Link = "#", Class = "feature-teal" },
+                        new { Icon = "bi-gift", Title = "هدیه ویژه", Desc = "به ازای هر خرید یک جایزه نقدی", Link = "#", Class = "feature-rose" },
+                        new { Icon = "bi-shield-check", Title = "ضمانت اصالت", Desc = "بازگشت وجه تا ۷ روز", Link = "#", Class = "feature-indigo" }
                         };
             }
             @foreach (var f in features)
             {
                 <div class="col-md-6">
-                    <div class="feature-rectangle">
+                    <div class="feature-rectangle @f.Class">
                         <div class="feature-icon"><i class="bi @f.Icon"></i></div>
                         <div class="feature-title">@f.Title</div>
                         <div class="feature-desc">@f.Desc</div>
@@ -147,6 +147,7 @@
     </section>
 
     <!-- ========= محصولات با درج مستطیل‌های وسط ========= -->
+    <!-- ========= محصولات با درج مستطیل‌های وسط ========= -->
     <section>
         <div class="row align-items-center mb-3">
             <div class="col">
@@ -155,99 +156,149 @@
             </div>
         </div>
 
+        @{
+            int total = Model.Products.Count;
+            int takeFirst = 12; // تعداد محصولات قبل از کارت‌های وسط
+            var firstProducts = Model.Products.Take(takeFirst).ToList();
+            var remainingProducts = Model.Products.Skip(takeFirst).ToList();
+        }
+
         <div class="row g-4">
-            @{
-                int total = Model.Products.Count;
-                int insertAfter = Math.Min(8, total); // بعد از چند محصول، مستطیل‌ها را درج کنیم
-                int currentIndex = 0;
-
-                // حلقه برای کل محصولات
-                foreach (var product in Model.Products)
-                {
-                    // اگر به موقعیت مورد نظر رسیدیم، مستطیل‌ها را نمایش بده (فقط یک بار)
-                    if (currentIndex == insertAfter && total > 4)
-                    {
-                        <div class="col-12">
-                            <div class="row g-4 my-2">
-                                @{
-                                    var middleFeatures = new[]
+            @* ===== ۱. نمایش ۱۲ محصول اول ===== *@
+            @foreach (var product in firstProducts)
+            {
+                <!-- کارت محصول -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card product-card h-100">
+                        <img src="@(product.ImagePath ?? "/images/placeholder.jpg")" class="card-img-top" alt="@product.Name" asp-append-version="true" loading="lazy" decoding="async" />
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="product-brand">
+                                    @product.Brand
+                                    @if (!string.IsNullOrWhiteSpace(product.ShopName))
                                     {
-                                        new { Icon = "bi-lightning-charge", Title = "پرفروش‌ترین‌ها", Desc = "محصولات داغ این هفته", Link = "#" },
-                                        new { Icon = "bi-graph-up", Title = "حراج ویژه", Desc = "تا ۷۰٪ تخفیف", Link = "#" },
-                                        new { Icon = "bi-truck", Title = "ارسال رایگان", Desc = "بالای ۵۰۰ هزار تومان", Link = "#" },
-                                        new { Icon = "bi-emoji-smile", Title = "خرید مطمئن", Desc = "بازگشت کالا تا ۳۰ روز", Link = "#" }
-                                        };
-                                }
-                                @foreach (var f in middleFeatures)
-                                {
-                                    <div class="col-md-6">
-                                        <div class="feature-rectangle">
-                                            <div class="feature-icon"><i class="bi @f.Icon"></i></div>
-                                            <div class="feature-title">@f.Title</div>
-                                            <div class="feature-desc">@f.Desc</div>
-                                            <a href="@f.Link" class="feature-link">مشاهده →</a>
-                                        </div>
-                                    </div>
-                                }
+                                        <span class="text-muted small"> • @product.ShopName</span>
+                                    }
+                                </div>
+                                <div class="product-title">@product.Name</div>
+                                <p class="text-muted small mt-2">@product.ShopName</p>
                             </div>
-                        </div>
-                    }
 
-                    <!-- کارت محصول -->
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                        <div class="card product-card h-100">
-                            <img src="@(product.ImagePath ?? "/images/placeholder.jpg")" class="card-img-top" alt="@product.Name" asp-append-version="true" />
-                            <div class="card-body d-flex flex-column">
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="product-brand">
-                                        @product.Brand
-                                        @if (!string.IsNullOrWhiteSpace(product.ShopName))
-                                        {
-                                            <span class="text-muted small"> • @product.ShopName</span>
+                                    <div class="rating-stars mb-1">
+                                        @{
+                                            int stars = (int)Math.Round(product.AverageRating);
+                                            for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi @(i <= stars ? "bi-star-fill" : "bi-star")"></i>
+                                            }
                                         }
                                     </div>
-                                    <div class="product-title">@product.Name</div>
-                                    <p class="text-muted small mt-2">@product.ShopName</p>
+                                    <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", product.Price) تومان</div>
                                 </div>
 
-                                <div class="mt-auto d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="rating-stars mb-1">
-                                            @{
-                                                int stars = (int)Math.Round(product.AverageRating);
-                                                for (int i = 1; i <= 5; i++)
-                                                {
-                                                    <i class="bi @(i <= stars ? "bi-star-fill" : "bi-star")"></i>
-                                                }
-                                            }
-                                        </div>
-                                        <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", product.Price) تومان</div>
-                                    </div>
-
-                                    <div class="d-flex gap-2 align-items-center">
-                                        <form method="post" asp-page="/Cart/Cart" asp-page-handler="Add" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="productId" value="@product.Id" />
-                                            <input type="hidden" name="count" value="1" />
-                                            <button type="submit" class="btn btn-sm btn-success cart-btn">
-                                                <i class="bi bi-cart-plus"></i>
-                                            </button>
-                                        </form>
-                                        <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@product.Id" title="ذخیره">
-                                            <i class="bi bi-bookmark"></i>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <form method="post" asp-page="/Cart/Cart" asp-page-handler="Add" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@product.Id" />
+                                        <input type="hidden" name="count" value="1" />
+                                        <button type="submit" class="btn btn-sm btn-success cart-btn">
+                                            <i class="bi bi-cart-plus"></i>
                                         </button>
-                                    </div>
+                                    </form>
+                                    <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@product.Id" title="ذخیره">
+                                        <i class="bi bi-bookmark"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            }
 
-                    currentIndex++;
-                }
+            @* ===== ۲. نمایش کارت‌های وسط (فقط ۲ کارت) ===== *@
+            @if (total > 12)
+            {
+                <div class="col-12">
+                    <div class="row g-4 my-3">
+                        @{
+                            // فقط دو کارت
+                            var middleFeatures = new[]
+                            {
+                                        new { Icon = "bi-lightning-charge", Title = "پرفروش‌ترین‌ها", Desc = "محصولات داغ این هفته", Link = "#", Class = "feature-purple" },
+                                        new { Icon = "bi-graph-up", Title = "حراج ویژه", Desc = "تا ۷۰٪ تخفیف", Link = "#", Class = "feature-olive" }
+                                        };
+                        }
+                        @foreach (var f in middleFeatures)
+                        {
+                            <div class="col-md-6">
+                                <div class="feature-rectangle @f.Class">
+                                    <div class="feature-icon"><i class="bi @f.Icon"></i></div>
+                                    <div class="feature-title">@f.Title</div>
+                                    <div class="feature-desc">@f.Desc</div>
+                                    <a href="@f.Link" class="feature-link">مشاهده →</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @* ===== نمایش بقیه محصولات ===== *@
+            @foreach (var product in remainingProducts)
+            {
+                <!-- کارت محصول (همان ساختار بالا) -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card product-card h-100">
+                        <img src="@(product.ImagePath ?? "/images/placeholder.jpg")" class="card-img-top" alt="@product.Name" asp-append-version="true" loading="lazy" decoding="async" />
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="product-brand">
+                                    @product.Brand
+                                    @if (!string.IsNullOrWhiteSpace(product.ShopName))
+                                    {
+                                        <span class="text-muted small"> • @product.ShopName</span>
+                                    }
+                                </div>
+                                <div class="product-title">@product.Name</div>
+                                <p class="text-muted small mt-2">@product.ShopName</p>
+                            </div>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="rating-stars mb-1">
+                                        @{
+                                            int stars = (int)Math.Round(product.AverageRating);
+                                            for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi @(i <= stars ? "bi-star-fill" : "bi-star")"></i>
+                                            }
+                                        }
+                                    </div>
+                                    <div class="price">@string.Format(new System.Globalization.CultureInfo("fa-IR"), "{0:N0}", product.Price) تومان</div>
+                                </div>
+
+                                <div class="d-flex gap-2 align-items-center">
+                                    <form method="post" asp-page="/Cart/Cart" asp-page-handler="Add" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@product.Id" />
+                                        <input type="hidden" name="count" value="1" />
+                                        <button type="submit" class="btn btn-sm btn-success cart-btn">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
+                                    </form>
+                                    <button class="btn btn-sm btn-outline-secondary save-btn" data-id="@product.Id" title="ذخیره">
+                                        <i class="bi bi-bookmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
         </div>
     </section>
-
     <!-- ========= فوتر ========= -->
     <footer class="mt-5 pt-4 border-top">
         <div class="row">

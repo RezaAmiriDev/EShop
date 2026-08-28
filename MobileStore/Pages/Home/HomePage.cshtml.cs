@@ -23,7 +23,7 @@ namespace EShope.Pages.Home
             _logger = logger;
         }
 
-        public async Task OnGetAsync(int take = 12)
+        public async Task OnGetAsync(int take = 24)
         {
             var client = _client.CreateClient(_settingWeb.ClinetName);
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };

@@ -9,8 +9,6 @@
     <div class="alert alert-success">@Model.Message</div>
 }
 
-<h2>اسلایدرها</h2>
-
 <!-- استایل‌های سفارشی -->
 <style>
     /* برای نمایش تصاویر به صورت تمام عرض */
@@ -62,9 +60,12 @@
     }
 </style>
 
+<div class="col-md-6 d-flex align-items-center">
+    <h2 class="p-3">Manage Sliders</h2>
+</div>
+
 <!-- فرم افزودن -->
 <div class="card mb-4">
-    <div class="card-header">افزودن اسلایدر جدید</div>
     <div class="card-body">
         <form method="post" asp-page-handler="Create" enctype="multipart/form-data">
             <div class="row">

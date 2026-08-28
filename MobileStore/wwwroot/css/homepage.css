@@ -5,20 +5,30 @@
     border-bottom: 1px solid #eee;
 }
 
-#cartItemsContainer .list-group-item:last-child {
-    border-bottom: none;
-}
+    #cartItemsContainer .list-group-item:last-child {
+        border-bottom: none;
+    }
 
 #cartItemsContainer img {
     border-radius: 8px;
 }
 
+/* ===== اسلایدر اصلی ===== */
+.hero-img {
+    height: 40vh;
+    /*aspect-ratio: 21 / 11;*/ /* نسبت ۲۱ به ۹ (یا ۱۶/۶ برای اسلایدر) */
+    object-fit: cover;
+    width: 100%;
+    border-radius: 16px;
+}
+
 .thumb-img {
+    aspect-ratio: 1 / 1; /* نسبت ۱ به ۱ (مربع) */
+    object-fit: cover;
+    width: 100%;
     cursor: pointer;
     border-radius: 8px;
     transition: 0.2s;
-    height: 80px;
-    object-fit: cover;
 }
 
     .thumb-img:hover {
@@ -36,6 +46,7 @@
     font-size: 2rem;
     color: #333;
     transition: 0.3s;
+    flex-shrink: 0; /* اضافه شد تا در صورت تغییر عرض کوچک نشود */
 }
 
 .shop-circle:hover .circle-img {
@@ -92,8 +103,11 @@
     }
 
 .product-card .card-img-top {
-    height: 200px;
+   /* aspect-ratio: 16 / 11;*/
     object-fit: cover;
+    width: 100%;
+    height: 300px;
+    min-height: unset;
 }
 
 .product-title {
@@ -156,4 +170,159 @@
 
     .search-form .btn:hover {
         color: #0d6efd;
+    }
+
+/* ===== کارت‌های پیشنهادات ویژه با رنگ‌های اختصاصی ===== */
+.feature-rectangle {
+    padding: 24px 20px;
+    border-radius: 16px;
+    text-align: center;
+    height: 100%;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+    .feature-rectangle:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+    }
+
+.feature-icon {
+    font-size: 2.6rem;
+    margin-bottom: 8px;
+}
+
+.feature-title {
+    font-weight: 700;
+    font-size: 1.15rem;
+}
+
+.feature-desc {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin: 4px 0 10px;
+}
+
+.feature-link {
+    display: inline-block;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: 0.2s;
+}
+
+    .feature-link:hover {
+        text-decoration: none;
+        border-bottom-color: currentColor;
+    }
+
+/* ۱. تخفیف شگفت‌انگیز (طلایی-نارنجی) */
+.feature-gold {
+    background: linear-gradient(145deg, #FFFBEB, #FEF3C7);
+    color: #92400E;
+}
+
+    .feature-gold .feature-icon {
+        color: #F59E0B;
+    }
+
+    .feature-gold .feature-title {
+        color: #B45309;
+    }
+
+    .feature-gold .feature-link {
+        color: #D97706;
+    }
+
+/* ۲. ارسال فوری (فیروزه‌ای-آبی) */
+.feature-teal {
+    background: linear-gradient(145deg, #ECFDF5, #D1FAE5);
+    color: #064E3B;
+}
+
+    .feature-teal .feature-icon {
+        color: #10B981;
+    }
+
+    .feature-teal .feature-title {
+        color: #047857;
+    }
+
+    .feature-teal .feature-link {
+        color: #059669;
+    }
+
+/* ۳. هدیه ویژه (صورتی-ارغوانی) */
+.feature-rose {
+    background: linear-gradient(145deg, #FDF2F8, #FCE7F3);
+    color: #831843;
+}
+
+    .feature-rose .feature-icon {
+        color: #EC4899;
+    }
+
+    .feature-rose .feature-title {
+        color: #BE185D;
+    }
+
+    .feature-rose .feature-link {
+        color: #DB2777;
+    }
+
+/* ۴. ضمانت اصالت (آبی-بنفش) */
+.feature-indigo {
+    background: linear-gradient(145deg, #EEF2FF, #E0E7FF);
+    color: #312E81;
+}
+
+    .feature-indigo .feature-icon {
+        color: #6366F1;
+    }
+
+    .feature-indigo .feature-title {
+        color: #4338CA;
+    }
+
+    .feature-indigo .feature-link {
+        color: #4F46E5;
+    }
+
+/* ===== رنگ‌های اختصاصی برای مستطیل‌های وسط ===== */
+/* 1. پرفروش‌ترین‌ها (بنفش-ارغوانی) */
+.feature-purple {
+    background: linear-gradient(145deg, #F5F3FF, #EDE9FE);
+    color: #4C1D95;
+}
+
+    .feature-purple .feature-icon {
+        color: #8B5CF6;
+    }
+
+    .feature-purple .feature-title {
+        color: #6D28D9;
+    }
+
+    .feature-purple .feature-link {
+        color: #7C3AED;
+    }
+
+/* 2. خرید مطمئن (سبز-زیتونی) */
+.feature-olive {
+    background: linear-gradient(145deg, #F7FEE7, #ECFCCB);
+    color: #3F6212;
+}
+
+    .feature-olive .feature-icon {
+        color: #84CC16;
+    }
+
+    .feature-olive .feature-title {
+        color: #4D7C0F;
+    }
+
+    .feature-olive .feature-link {
+        color: #65A30D;
     }
